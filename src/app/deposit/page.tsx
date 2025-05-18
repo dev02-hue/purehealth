@@ -1,0 +1,362 @@
+'use client'
+
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { motion, AnimatePresence } from 'framer-motion'
+import { initiateDeposit } from '../api/transactions/deposit'
+
+export default function DepositPage() {
+  const [amount, setAmount] = useState('')
+  const [email, setEmail] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  
+  interface PaymentDetails {
+    bankName: string
+    accountNumber: string
+    accountName: string
+    amount: string
+    narration: string
+    expiresAt: Date
+  }
+
+  const [paymentDetails, setPaymentDetails] = useState<PaymentDetails | null>(null)
+  const router = useRouter()
+
+  // Quick deposit amounts
+  const quickAmounts = [3000, 5000, 10000, 20000, 50000, 100000]
+
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/[^0-9]/g, '')
+    const numValue = parseInt(value || '0')
+    
+    if (numValue > 2000000) {
+      setError('Maximum deposit is ₦2,000,000')
+      return
+    }
+    
+    setError('')
+    setAmount(value === '' ? '' : numValue.toLocaleString())
+  }
+
+  const handleQuickSelect = (selectedAmount: number) => {
+    setAmount(selectedAmount.toLocaleString())
+    setError('')
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+    
+    const numAmount = parseFloat(amount.replace(/,/g, ''))
+    
+    if (isNaN(numAmount)) {
+      setError('Please enter a valid amount')
+      setLoading(false)
+      return
+    }
+
+    if (numAmount < 3000) {
+      setError('Minimum deposit is ₦3,000')
+      setLoading(false)
+      return
+    }
+
+    if (numAmount > 2000000) {
+      setError('Maximum deposit is ₦2,000,000')
+      setLoading(false)
+      return
+    }
+
+    try {
+      const { success, error, paymentDetails } = await initiateDeposit(numAmount, email)
+      
+      if (error) {
+        setError(error)
+      } else if (success && paymentDetails) {
+        setPaymentDetails(paymentDetails)
+      }
+    } catch  {
+      setError('An unexpected error occurred.')
+    }
+
+    setLoading(false)
+  }
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  }
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        duration: 0.5
+      }
+    }
+  }
+
+  const copyToClipboard = (text: string, message: string) => {
+    navigator.clipboard.writeText(text)
+    alert(message)
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-50 py-8 px-4">
+      <AnimatePresence mode="wait">
+        {paymentDetails ? (
+          <motion.div
+            key="payment-details"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="max-w-md mx-auto bg-white rounded-xl shadow-lg overflow-hidden p-6"
+          >
+            <motion.div
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              className="text-center mb-6"
+            >
+              <h2 className="text-2xl font-bold text-gray-800 mb-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text ">
+                Payment Instructions
+              </h2>
+              <p className="text-gray-600">Follow the instructions below to complete your deposit</p>
+            </motion.div>
+
+            <motion.div 
+              className="bg-gradient-to-r from-blue-50 to-purple-50 border-l-4 border-blue-500 p-4 mb-6 rounded-r-lg"
+              initial={{ x: -50 }}
+              animate={{ x: 0 }}
+            >
+              <p className="font-medium text-gray-800">
+                Send <span className="font-bold text-blue-600">{paymentDetails.amount}</span> to the account below
+              </p>
+              <p className="text-sm text-red-500 mt-1">
+                Important: Send exactly {paymentDetails.amount}. Incorrect amounts may result in loss of funds.
+              </p>
+            </motion.div>
+
+            <motion.div 
+              className="space-y-4"
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+            >
+              <motion.div 
+                className="bg-gradient-to-br from-gray-50 to-blue-50 p-4 rounded-lg border border-gray-100"
+                variants={itemVariants}
+              >
+                <h3 className="font-semibold text-gray-700 mb-2">Bank Name</h3>
+                <p className="text-lg font-bold text-gray-900">{paymentDetails.bankName}</p>
+              </motion.div>
+
+              <motion.div 
+                className="bg-gradient-to-br from-gray-50 to-blue-50 p-4 rounded-lg border border-gray-100"
+                variants={itemVariants}
+              >
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="font-semibold text-gray-700">Account Number</h3>
+                  <button 
+                    onClick={() => copyToClipboard(paymentDetails.accountNumber, 'Account number copied!')}
+                    className="text-blue-600 hover:text-blue-800 text-sm flex items-center"
+                  >
+                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                    </svg>
+                    Copy
+                  </button>
+                </div>
+                <p className="text-lg font-mono text-gray-900">{paymentDetails.accountNumber}</p>
+              </motion.div>
+
+              <motion.div 
+                className="bg-gradient-to-br from-gray-50 to-blue-50 p-4 rounded-lg border border-gray-100"
+                variants={itemVariants}
+              >
+                <h3 className="font-semibold text-gray-700 mb-2">Account Name</h3>
+                <p className="text-lg text-gray-900">{paymentDetails.accountName}</p>
+              </motion.div>
+
+              <motion.div 
+                className="bg-gradient-to-br from-gray-50 to-blue-50 p-4 rounded-lg border border-gray-100"
+                variants={itemVariants}
+              >
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="font-semibold text-gray-700">Narration</h3>
+                  <button 
+                    onClick={() => copyToClipboard(paymentDetails.narration, 'Narration copied!')}
+                    className="text-blue-600 hover:text-blue-800 text-sm flex items-center"
+                  >
+                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                    </svg>
+                    Copy
+                  </button>
+                </div>
+                <p className="text-lg text-gray-900">{paymentDetails.narration}</p>
+              </motion.div>
+
+              <motion.div 
+                className="text-center text-sm text-gray-500 mt-4"
+                variants={itemVariants}
+              >
+                Payment expires on: {paymentDetails.expiresAt.toLocaleString()}
+              </motion.div>
+            </motion.div>
+
+            <motion.div 
+              className="mt-8"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+            >
+              <button 
+                onClick={() => router.push('/')}
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 rounded-lg transition-all font-medium shadow-md hover:shadow-lg"
+              >
+                I have made the payment
+              </button>
+            </motion.div>
+          </motion.div>
+        ) : (
+          <motion.form
+            key="deposit-form"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            onSubmit={handleSubmit}
+            className="max-w-md mx-auto bg-white rounded-xl shadow-lg overflow-hidden p-6"
+            variants={containerVariants}
+             
+          >
+            <motion.div 
+              className="text-center mb-8"
+              variants={itemVariants}
+            >
+              <h1 className="text-2xl font-bold text-gray-800 mb-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text">
+                Deposit 
+              </h1>
+              <p className="text-gray-600">Enter amount </p>
+            </motion.div>
+
+            <motion.div 
+              className="mb-6"
+              variants={itemVariants}
+            >
+              <label htmlFor="amount" className="block text-sm font-medium text-gray-700 mb-2">
+                Amount (₦)
+              </label>
+              <div className="relative">
+                <input
+                  id="amount"
+                  type="text"
+                  value={amount}
+                  onChange={handleAmountChange}
+                  placeholder="e.g. 50,000"
+                  className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-lg font-medium"
+                />
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                  <span className="text-gray-500 font-medium">₦</span>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Quick Select Amounts */}
+            <motion.div 
+              className="mb-6"
+              variants={itemVariants}
+            >
+              <p className="text-sm font-medium text-gray-700 mb-2">Quick Select</p>
+              <div className="grid grid-cols-3 gap-2">
+                {quickAmounts.map((quickAmount) => (
+                  <motion.button
+                    key={quickAmount}
+                    type="button"
+                    onClick={() => handleQuickSelect(quickAmount)}
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.98 }}
+                    className={`p-2 rounded-lg text-sm font-medium transition-all ${
+                      amount === quickAmount.toLocaleString()
+                        ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-md'
+                        : 'bg-gray-100 hover:bg-gray-200 text-gray-800'
+                    }`}
+                  >
+                    ₦{quickAmount.toLocaleString()}
+                  </motion.button>
+                ))}
+              </div>
+            </motion.div>
+
+            <motion.div 
+              className="mb-6"
+              variants={itemVariants}
+            >
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                Phone Number
+              </label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                placeholder="your@email.com"
+              />
+            </motion.div>
+
+            <AnimatePresence>
+              {error && (
+                <motion.div 
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mb-4 overflow-hidden"
+                >
+                  <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg">
+                    <p className="text-red-700">{error}</p>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <motion.div
+              variants={itemVariants}
+            >
+              <button
+                type="submit"
+                disabled={loading}
+                className={`w-full py-3 px-4 rounded-lg font-medium text-white transition-all shadow-md ${
+                  loading 
+                    ? 'bg-gradient-to-r from-blue-400 to-purple-400 cursor-not-allowed' 
+                    : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 hover:shadow-lg'
+                }`}
+              >
+                {loading ? (
+                  <span className="flex items-center justify-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Processing...
+                  </span>
+                ) : (
+                  'Proceed to Payment'
+                )}
+              </button>
+            </motion.div>
+          </motion.form>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
