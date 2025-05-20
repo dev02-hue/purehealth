@@ -24,7 +24,7 @@ export default function DepositPage() {
   const router = useRouter()
 
   // Quick deposit amounts
-  const quickAmounts = [3000, 5000, 10000, 20000, 50000, 100000]
+  const quickAmounts = [3000, 6000, 20000, 50000, 100000, 150000,200000,250000,350000,650000,1000000,2000000]
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/[^0-9]/g, '')
@@ -305,12 +305,12 @@ export default function DepositPage() {
               </label>
               <input
                 id="email"
-                type="email"
+                type="text"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                placeholder="your@email.com"
+                placeholder="Phone Number"
               />
             </motion.div>
 
