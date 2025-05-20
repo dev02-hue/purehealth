@@ -1,8 +1,9 @@
 import React from 'react'
+import UserProfileDisplay from '../components/layout/UserProfileDisplay'
 
 const page = () => {
   return (
-    <div>page</div>
+    <div><UserProfileDisplay /></div>
   )
 }
 

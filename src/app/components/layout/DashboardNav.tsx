@@ -36,7 +36,7 @@ export default function DashboardNav() {
         }
 
         // Use the imported utility function
-        const profile = await getUserProfile(accessToken)
+        const profile = await getUserProfile()
         
         setUserData({
           firstName: profile.first_name || '',

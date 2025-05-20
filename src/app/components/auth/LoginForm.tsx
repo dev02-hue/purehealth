@@ -4,12 +4,14 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { signIn } from '@/app/api/auth/login'
 import { motion } from 'framer-motion'
-import { FiMail, FiLock, FiArrowRight, FiCheckCircle } from 'react-icons/fi'
+import { FiMail, FiPhone, FiLock, FiArrowRight, FiCheckCircle } from 'react-icons/fi'
 
 export default function LoginForm() {
   const [form, setForm] = useState({
     email: '',
+    phone: '',
     password: '',
+    loginMethod: 'email' as 'email' | 'phone'
   })
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
@@ -20,6 +22,16 @@ export default function LoginForm() {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
 
+  const toggleLoginMethod = () => {
+    setForm({
+      ...form,
+      email: '',
+      phone: '',
+      loginMethod: form.loginMethod === 'email' ? 'phone' : 'email'
+    })
+    setError('')
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
@@ -27,8 +39,13 @@ export default function LoginForm() {
   
     try {
       console.log('Submitting form with:', form)
-  
-      const res = await signIn(form)
+      
+      // Prepare the data to send based on login method
+      const loginData = form.loginMethod === 'email' 
+        ? { email: form.email, password: form.password }
+        : { phone: form.phone, password: form.password }
+
+      const res = await signIn(loginData)
       console.log('signIn response:', res)
   
       if (res.error) {
@@ -51,6 +68,7 @@ export default function LoginForm() {
             localStorage.setItem('supabase.auth.user', JSON.stringify({
               id: res.user.id,
               email: res.user.email,
+              phone: res.user.phone,
               created_at: res.user.created_at
             }))
           }
@@ -117,18 +135,45 @@ export default function LoginForm() {
         <p className="text-gray-500">Sign in to your account</p>
       </div>
 
-      <div className="relative">
-        <FiMail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-        <input
-          name="email"
-          type="email"
-          placeholder="Email"
-          value={form.email}
-          onChange={handleChange}
-          required
-          className="w-full pl-10 p-3 border text-black border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
+      <div className="flex justify-center mb-4">
+        <button
+          type="button"
+          onClick={toggleLoginMethod}
+          className="text-xl text-blue-600 hover:underline"
+        >
+          {form.loginMethod === 'email' 
+            ? 'Use phone number instead' 
+            : 'Use email instead'}
+        </button>
       </div>
+
+      {form.loginMethod === 'email' ? (
+        <div className="relative">
+          <FiMail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          <input
+            name="email"
+            type="email"
+            placeholder="Email address"
+            value={form.email}
+            onChange={handleChange}
+            required
+            className="w-full pl-10 p-3 border text-black border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+      ) : (
+        <div className="relative">
+          <FiPhone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          <input
+            name="phone"
+            type="tel"
+            placeholder="Phone number"
+            value={form.phone}
+            onChange={handleChange}
+            required
+            className="w-full pl-10 p-3 border text-black border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+      )}
 
       <div className="relative">
         <FiLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -144,7 +189,7 @@ export default function LoginForm() {
         />
       </div>
 
-      <div className="flex justify-end">
+      <div className="flex justify-between items-center">
         <button 
           type="button" 
           onClick={() => router.push('/forgot-password')}

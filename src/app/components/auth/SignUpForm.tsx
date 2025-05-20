@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { signUp } from '@/app/api/auth/signup'
 import { motion } from 'framer-motion'
-import { FiUser, FiMail, FiPhone, FiLock, FiArrowRight, FiCheckCircle } from 'react-icons/fi'
+import { FiUser, FiMail, FiPhone, FiLock, FiArrowRight, FiCheckCircle, FiGift } from 'react-icons/fi'
 
 export default function SignupForm() {
   const [form, setForm] = useState({
@@ -13,6 +13,7 @@ export default function SignupForm() {
     email: '',
     phone: '',
     password: '',
+    referredCode: '', // New field for invite code
   })
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
@@ -29,7 +30,10 @@ export default function SignupForm() {
     setLoading(true)
 
     try {
-      const res = await signUp(form)
+      const res = await signUp({
+        ...form,
+        referredCode: form.referredCode || undefined, // Convert empty string to undefined
+      })
 
       if (res.error) {
         setError(res.error)
@@ -129,6 +133,17 @@ export default function SignupForm() {
           onChange={handleChange}
           required
           minLength={6}
+          className="w-full pl-10 p-3 border text-black border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+
+      <div className="relative">
+        <FiGift className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+        <input
+          name="referredCode"
+          placeholder="Invite Code (optional)"
+          value={form.referredCode}
+          onChange={handleChange}
           className="w-full pl-10 p-3 border text-black border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>

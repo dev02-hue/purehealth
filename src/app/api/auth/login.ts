@@ -1,80 +1,133 @@
 'use server'
+
 import { supabase } from '@/lib/supabaseClient'
 import { cookies } from 'next/headers'
 
 type SignInInput = {
-  email: string
+  email?: string
+  phone?: string
   password: string
 }
 
-export async function signIn({ email, password }: SignInInput) {
-  console.log('signIn called with:', { email, password })
+export async function signIn({ email, phone, password }: SignInInput) {
+  // Structured logging with clear labels
+  console.log('[Auth] Login attempt:', { 
+    method: phone ? 'phone' : 'email',
+    identifier: phone || email,
+    hasPassword: !!password 
+  })
 
-  if (!email || !password) {
-    console.log('Missing email or password')
-    return { error: 'Email and password are required' }
+  if (!email && !phone) {
+    console.error('[Auth] Validation failed: Missing email or phone')
+    return { error: 'Email or phone is required' }
   }
 
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  })
-
-  console.log('Supabase response:', { data, error })
-
-  if (error) {
-    console.log('Login error:', error.message)
-    return { error: error.message }
+  if (!password) {
+    console.error('[Auth] Validation failed: Missing password')
+    return { error: 'Password is required' }
   }
 
-  if (!data.session || !data.user) {
-    console.log('Login failed: No session or user returned')
-    return { error: 'Login failed. Please try again.' }
-  }
+  let data
+  let error
 
-  // Get the session tokens and user ID
-  const sessionToken = data.session.access_token
-  const refreshToken = data.session.refresh_token
-  const userId = data.user.id
+  try {
+    if (phone) {
+      console.log('[Auth] Starting phone login flow for:', phone)
+      
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('email, phone_number')
+        .eq('phone_number', phone)
+        .single()
 
-  // Store tokens and user ID in cookies
-  const cookieStore = await cookies() // Await the promise to get the cookies object
-  const oneYear = 365 * 24 * 60 * 60 // 1 year in seconds
+      if (profileError || !profileData?.email) {
+        console.error('[Auth] Phone lookup failed:', profileError?.message || 'No profile found')
+        return { error: 'No account found with this phone number' }
+      }
 
-  // Store Supabase session tokens (httpOnly for security)
-  cookieStore.set('sb-access-token', sessionToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    maxAge: oneYear,
-    path: '/',
-    sameSite: 'lax',
-  })
+      if (profileData.phone_number !== phone) {
+        console.error('[Auth] Phone number mismatch:', {
+          provided: phone,
+          stored: profileData.phone_number
+        })
+        return { error: 'Phone number not found' }
+      }
 
-  cookieStore.set('sb-refresh-token', refreshToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    maxAge: oneYear,
-    path: '/',
-    sameSite: 'lax',
-  })
+      console.log('[Auth] Attempting auth with associated email:', profileData.email)
+      ;({ data, error } = await supabase.auth.signInWithPassword({
+        email: profileData.email,
+        password,
+      }))
 
-  // Store user ID separately for easier access
-  cookieStore.set('user_id', userId, {
-    httpOnly: false, // Set to true if only server should access
-    secure: process.env.NODE_ENV === 'production',
-    maxAge: oneYear,
-    path: '/',
-    sameSite: 'lax',
-  })
+      if (error) {
+        console.error('[Auth] Phone login failed:', error.message)
+        return { error: 'Invalid phone number or password' }
+      }
+    } else if (email) {
+      console.log('[Auth] Starting email login flow for:', email)
+      ;({ data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      }))
 
-  // Return tokens to be stored in localStorage (client-side)
-  return {
-    user: data.user,
-    session: {
-      access_token: sessionToken,
-      refresh_token: refreshToken,
-      expires_at: data.session.expires_at
-    },
-    message: 'Login successful',
+      if (error) {
+        console.error('[Auth] Email login failed:', error.message)
+        return { error: 'Invalid email or password' }
+      }
+    }
+
+    console.log('[Auth] Login successful for user:', data?.user?.id)
+
+    // Session handling
+    const sessionToken = data?.session?.access_token
+    const refreshToken = data?.session?.refresh_token
+    const userId = data?.user?.id
+
+    if (!sessionToken || !refreshToken || !userId) {
+      console.error('[Auth] Session data is incomplete or missing')
+      return { error: 'Failed to retrieve session data. Please try again.' }
+    }
+
+    // Secure cookie setup
+    const cookieStore = await cookies()
+    const oneYear = 365 * 24 * 60 * 60
+
+    cookieStore.set('sb-access-token', sessionToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: oneYear,
+      path: '/',
+      sameSite: 'lax',
+    })
+
+    cookieStore.set('sb-refresh-token', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: oneYear,
+      path: '/',
+      sameSite: 'lax',
+    })
+
+    cookieStore.set('user_id', userId, {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: oneYear,
+      path: '/',
+      sameSite: 'lax',
+    })
+
+    return {
+      user: data?.user ?? null,
+      session: {
+        access_token: sessionToken,
+        refresh_token: refreshToken,
+        expires_at: data?.session?.expires_at
+      },
+      message: 'Login successful',
+    }
+
+  } catch (err) {
+    console.error('[Auth] Unexpected error during login:', err)
+    return { error: 'An unexpected error occurred. Please try again.' }
   }
 }
