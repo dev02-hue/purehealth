@@ -132,7 +132,7 @@ export default function LoginForm() {
     >
       <div className="text-center mb-6">
         <h2 className="text-2xl font-bold text-gray-800">Welcome Back</h2>
-        <p className="text-gray-500">Sign in to your account</p>
+        <p className="text-gray-500">Sign in to purehealth your account</p>
       </div>
 
       <div className="flex justify-center mb-4">
@@ -234,7 +234,7 @@ export default function LoginForm() {
         <button 
           type="button" 
           onClick={() => router.push('/signup')}
-          className="text-blue-600 hover:underline"
+          className="text-blue-600 cursor-pointer hover:underline"
         >
           Sign up
         </button>

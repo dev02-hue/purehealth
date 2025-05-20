@@ -111,7 +111,7 @@ export default function DepositPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-50 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-50 dark:from-gray-900 dark:to-gray-800 py-8 px-4">
       <AnimatePresence mode="wait">
         {paymentDetails ? (
           <motion.div
@@ -119,28 +119,28 @@ export default function DepositPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="max-w-md mx-auto bg-white rounded-xl shadow-lg overflow-hidden p-6"
+            className="max-w-md mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-gray-900/50 overflow-hidden p-6"
           >
             <motion.div
               initial={{ scale: 0.9 }}
               animate={{ scale: 1 }}
               className="text-center mb-6"
             >
-              <h2 className="text-2xl font-bold text-gray-800 mb-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text ">
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2 bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-500 dark:to-purple-500 bg-clip-text">
                 Payment Instructions
               </h2>
-              <p className="text-gray-600">Follow the instructions below to complete your deposit</p>
+              <p className="text-gray-600 dark:text-gray-300">Follow the instructions below to complete your deposit</p>
             </motion.div>
 
             <motion.div 
-              className="bg-gradient-to-r from-blue-50 to-purple-50 border-l-4 border-blue-500 p-4 mb-6 rounded-r-lg"
+              className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-700 dark:to-gray-700 border-l-4 border-blue-500 dark:border-blue-400 p-4 mb-6 rounded-r-lg"
               initial={{ x: -50 }}
               animate={{ x: 0 }}
             >
-              <p className="font-medium text-gray-800">
-                Send <span className="font-bold text-blue-600">{paymentDetails.amount}</span> to the account below
+              <p className="font-medium text-gray-800 dark:text-gray-100">
+                Send <span className="font-bold text-blue-600 dark:text-blue-400">{paymentDetails.amount}</span> to the account below
               </p>
-              <p className="text-sm text-red-500 mt-1">
+              <p className="text-sm text-red-500 dark:text-red-400 mt-1">
                 Important: Send exactly {paymentDetails.amount}. Incorrect amounts may result in loss of funds.
               </p>
             </motion.div>
@@ -152,22 +152,22 @@ export default function DepositPage() {
               animate="visible"
             >
               <motion.div 
-                className="bg-gradient-to-br from-gray-50 to-blue-50 p-4 rounded-lg border border-gray-100"
+                className="bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-700 dark:to-gray-700 p-4 rounded-lg border border-gray-100 dark:border-gray-600"
                 variants={itemVariants}
               >
-                <h3 className="font-semibold text-gray-700 mb-2">Bank Name</h3>
-                <p className="text-lg font-bold text-gray-900">{paymentDetails.bankName}</p>
+                <h3 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">Bank Name</h3>
+                <p className="text-lg font-bold text-gray-900 dark:text-gray-100">{paymentDetails.bankName}</p>
               </motion.div>
 
               <motion.div 
-                className="bg-gradient-to-br from-gray-50 to-blue-50 p-4 rounded-lg border border-gray-100"
+                className="bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-700 dark:to-gray-700 p-4 rounded-lg border border-gray-100 dark:border-gray-600"
                 variants={itemVariants}
               >
                 <div className="flex justify-between items-center mb-2">
-                  <h3 className="font-semibold text-gray-700">Account Number</h3>
+                  <h3 className="font-semibold text-gray-700 dark:text-gray-300">Account Number</h3>
                   <button 
                     onClick={() => copyToClipboard(paymentDetails.accountNumber, 'Account number copied!')}
-                    className="text-blue-600 hover:text-blue-800 text-sm flex items-center"
+                    className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm flex items-center"
                   >
                     <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
@@ -175,26 +175,26 @@ export default function DepositPage() {
                     Copy
                   </button>
                 </div>
-                <p className="text-lg font-mono text-gray-900">{paymentDetails.accountNumber}</p>
+                <p className="text-lg font-mono text-gray-900 dark:text-gray-100">{paymentDetails.accountNumber}</p>
               </motion.div>
 
               <motion.div 
-                className="bg-gradient-to-br from-gray-50 to-blue-50 p-4 rounded-lg border border-gray-100"
+                className="bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-700 dark:to-gray-700 p-4 rounded-lg border border-gray-100 dark:border-gray-600"
                 variants={itemVariants}
               >
-                <h3 className="font-semibold text-gray-700 mb-2">Account Name</h3>
-                <p className="text-lg text-gray-900">{paymentDetails.accountName}</p>
+                <h3 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">Account Name</h3>
+                <p className="text-lg text-gray-900 dark:text-gray-100">{paymentDetails.accountName}</p>
               </motion.div>
 
               <motion.div 
-                className="bg-gradient-to-br from-gray-50 to-blue-50 p-4 rounded-lg border border-gray-100"
+                className="bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-700 dark:to-gray-700 p-4 rounded-lg border border-gray-100 dark:border-gray-600"
                 variants={itemVariants}
               >
                 <div className="flex justify-between items-center mb-2">
-                  <h3 className="font-semibold text-gray-700">Narration</h3>
+                  <h3 className="font-semibold text-gray-700 dark:text-gray-300">Narration</h3>
                   <button 
                     onClick={() => copyToClipboard(paymentDetails.narration, 'Narration copied!')}
-                    className="text-blue-600 hover:text-blue-800 text-sm flex items-center"
+                    className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm flex items-center"
                   >
                     <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
@@ -202,11 +202,11 @@ export default function DepositPage() {
                     Copy
                   </button>
                 </div>
-                <p className="text-lg text-gray-900">{paymentDetails.narration}</p>
+                <p className="text-lg text-gray-900 dark:text-gray-100">{paymentDetails.narration}</p>
               </motion.div>
 
               <motion.div 
-                className="text-center text-sm text-gray-500 mt-4"
+                className="text-center text-sm text-gray-500 dark:text-gray-400 mt-4"
                 variants={itemVariants}
               >
                 Payment expires on: {paymentDetails.expiresAt.toLocaleString()}
@@ -221,7 +221,7 @@ export default function DepositPage() {
             >
               <button 
                 onClick={() => router.push('/')}
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 rounded-lg transition-all font-medium shadow-md hover:shadow-lg"
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-700 dark:to-purple-700 hover:from-blue-700 hover:to-purple-700 dark:hover:from-blue-600 dark:hover:to-purple-600 text-white px-6 py-3 rounded-lg transition-all font-medium shadow-md hover:shadow-lg dark:shadow-gray-900/50"
               >
                 I have made the payment
               </button>
@@ -234,25 +234,24 @@ export default function DepositPage() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             onSubmit={handleSubmit}
-            className="max-w-md mx-auto bg-white rounded-xl shadow-lg overflow-hidden p-6"
+            className="max-w-md mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-gray-900/50 overflow-hidden p-6"
             variants={containerVariants}
-             
           >
             <motion.div 
               className="text-center mb-8"
               variants={itemVariants}
             >
-              <h1 className="text-2xl font-bold text-gray-800 mb-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text">
+              <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2 bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-500 dark:to-purple-500 bg-clip-text ">
                 Deposit 
               </h1>
-              <p className="text-gray-600">Enter amount </p>
+              <p className="text-gray-600 dark:text-gray-300">Enter amount </p>
             </motion.div>
 
             <motion.div 
               className="mb-6"
               variants={itemVariants}
             >
-              <label htmlFor="amount" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="amount" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Amount (₦)
               </label>
               <div className="relative">
@@ -262,10 +261,10 @@ export default function DepositPage() {
                   value={amount}
                   onChange={handleAmountChange}
                   placeholder="e.g. 50,000"
-                  className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-lg font-medium"
+                  className="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 outline-none text-lg font-medium bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 />
                 <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                  <span className="text-gray-500 font-medium">₦</span>
+                  <span className="text-gray-500 dark:text-gray-400 font-medium">₦</span>
                 </div>
               </div>
             </motion.div>
@@ -275,7 +274,7 @@ export default function DepositPage() {
               className="mb-6"
               variants={itemVariants}
             >
-              <p className="text-sm font-medium text-gray-700 mb-2">Quick Select</p>
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Quick Select</p>
               <div className="grid grid-cols-3 gap-2">
                 {quickAmounts.map((quickAmount) => (
                   <motion.button
@@ -287,7 +286,7 @@ export default function DepositPage() {
                     className={`p-2 rounded-lg text-sm font-medium transition-all ${
                       amount === quickAmount.toLocaleString()
                         ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-md'
-                        : 'bg-gray-100 hover:bg-gray-200 text-gray-800'
+                        : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-100'
                     }`}
                   >
                     ₦{quickAmount.toLocaleString()}
@@ -300,7 +299,7 @@ export default function DepositPage() {
               className="mb-6"
               variants={itemVariants}
             >
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Phone Number
               </label>
               <input
@@ -309,7 +308,7 @@ export default function DepositPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                className="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 placeholder="Phone Number"
               />
             </motion.div>
@@ -322,8 +321,8 @@ export default function DepositPage() {
                   exit={{ opacity: 0, height: 0 }}
                   className="mb-4 overflow-hidden"
                 >
-                  <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg">
-                    <p className="text-red-700">{error}</p>
+                  <div className="bg-red-50 dark:bg-red-900/30 border-l-4 border-red-500 dark:border-red-400 p-4 rounded-r-lg">
+                    <p className="text-red-700 dark:text-red-300">{error}</p>
                   </div>
                 </motion.div>
               )}
@@ -337,8 +336,8 @@ export default function DepositPage() {
                 disabled={loading}
                 className={`w-full py-3 px-4 rounded-lg font-medium text-white transition-all shadow-md ${
                   loading 
-                    ? 'bg-gradient-to-r from-blue-400 to-purple-400 cursor-not-allowed' 
-                    : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 hover:shadow-lg'
+                    ? 'bg-gradient-to-r from-blue-400 to-purple-400 dark:from-blue-600 dark:to-purple-600 cursor-not-allowed' 
+                    : 'bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-700 dark:to-purple-700 hover:from-blue-700 hover:to-purple-700 dark:hover:from-blue-600 dark:hover:to-purple-600 hover:shadow-lg dark:hover:shadow-gray-900/50'
                 }`}
               >
                 {loading ? (

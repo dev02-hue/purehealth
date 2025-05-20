@@ -3,7 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./style/globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import NavWrapper from "./components/layout/NavWrapper";
- 
+ import { ThemeProvider } from "next-themes";
+   
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -16,7 +17,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Pure health",
-  description: "Global investment and trading platform offering real-time market access...",
+  description: "Global investment Pure health offering real-time market access...",
 };
 
 export default function RootLayout({
@@ -25,11 +26,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning className="dark">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AuthProvider >{children}</AuthProvider>
+        <AuthProvider>
+          <ThemeProvider attribute='class' defaultTheme="system" enableSystem>
+            
+            {children}
+          </ThemeProvider>
+        </AuthProvider>
         <NavWrapper /> 
         </body>
      </html>

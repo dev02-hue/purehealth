@@ -71,19 +71,19 @@ export default function InviteProfileClient() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="bg-white/10 backdrop-blur-md rounded-xl p-8 max-w-2xl w-full text-center"
+          className="bg-white/10 dark:bg-gray-800/90 backdrop-blur-md rounded-xl p-8 max-w-2xl w-full text-center border border-white/10 dark:border-gray-700"
         >
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-            className="w-12 h-12 border-4 border-white/30 border-t-white rounded-full mx-auto mb-6"
+            className="w-12 h-12 border-4 border-white/30 dark:border-gray-600 border-t-white dark:border-t-blue-400 rounded-full mx-auto mb-6"
           />
-          <h2 className="text-2xl font-bold text-white mb-2">Loading Your Referral Data</h2>
-          <p className="text-white/80">We&#39;re preparing your amazing rewards dashboard...</p>
+          <h2 className="text-2xl font-bold text-white dark:text-gray-100 mb-2">Loading Your Referral Data</h2>
+          <p className="text-white/80 dark:text-gray-300">We&#39;re preparing your amazing rewards dashboard...</p>
         </motion.div>
       </div>
     )
@@ -91,19 +91,19 @@ export default function InviteProfileClient() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="bg-white/10 backdrop-blur-md rounded-xl p-8 max-w-2xl w-full"
+          className="bg-white/10 dark:bg-gray-800/90 backdrop-blur-md rounded-xl p-8 max-w-2xl w-full border border-white/10 dark:border-gray-700"
         >
-          <h2 className="text-2xl font-bold text-white mb-4">Invite Friends</h2>
-          <div className="bg-red-400/20 border border-red-400/50 text-white px-4 py-3 rounded-lg">
+          <h2 className="text-2xl font-bold text-white dark:text-gray-100 mb-4">Invite Friends</h2>
+          <div className="bg-red-400/20 dark:bg-red-900/30 border border-red-400/50 dark:border-red-700 text-white px-4 py-3 rounded-lg">
             {error}
           </div>
           <button
             onClick={() => window.location.reload()}
-            className="mt-4 bg-white text-blue-600 hover:bg-blue-50 font-medium rounded-lg px-4 py-2 transition-all"
+            className="mt-4 bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-gray-600 font-medium rounded-lg px-4 py-2 transition-all"
           >
             Try Again
           </button>
@@ -113,7 +113,7 @@ export default function InviteProfileClient() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 dark:from-gray-900 dark:to-gray-800 py-12 px-4 sm:px-6 lg:px-8">
       <motion.div
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -121,29 +121,29 @@ export default function InviteProfileClient() {
         className="max-w-4xl mx-auto"
       >
         <div className="text-center mb-10">
-          <h1 className="text-4xl font-bold text-white mb-2">Invite Friends</h1>
-          <p className="text-white/80 text-lg">Invite friends and earn amazing rewards</p>
+          <h1 className="text-4xl font-bold text-white dark:text-gray-100 mb-2">Invite Friends</h1>
+          <p className="text-white/80 dark:text-gray-300 text-lg">Invite friends and earn amazing rewards</p>
         </div>
 
         {/* Referral Link Card */}
         <motion.div
           whileHover={{ scale: 1.01 }}
-          className="bg-white/10 backdrop-blur-md rounded-2xl p-6 mb-8 shadow-lg border border-white/10"
+          className="bg-white/10 dark:bg-gray-800/90 backdrop-blur-md rounded-2xl p-6 mb-8 shadow-lg border border-white/10 dark:border-gray-700"
         >
-          <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-            <FiShare2 className="text-purple-300" /> Your Unique Referral Link
+          <h2 className="text-xl font-semibold text-white dark:text-gray-100 mb-4 flex items-center gap-2">
+            <FiShare2 className="text-purple-300 dark:text-purple-400" /> Your Unique Referral Link
           </h2>
           
           <div className="flex flex-col sm:flex-row gap-3 mb-4">
-            <div className="flex-grow bg-white/5 rounded-lg p-3 overflow-x-auto">
-              <code className="text-blue-100 break-all">{fullLink}</code>
+            <div className="flex-grow bg-white/5 dark:bg-gray-700/50 rounded-lg p-3 overflow-x-auto">
+              <code className="text-blue-100 dark:text-blue-300 break-all">{fullLink}</code>
             </div>
             <button
               onClick={copyToClipboard}
               className={`flex-shrink-0 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-all ${
                 isCopied
                   ? 'bg-green-500 text-white'
-                  : 'bg-white text-blue-600 hover:bg-blue-50'
+                  : 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-gray-600'
               }`}
             >
               <FaCopy /> {isCopied ? 'Copied!' : 'Copy'}
@@ -151,22 +151,22 @@ export default function InviteProfileClient() {
           </div>
 
           <div className="mt-6">
-            <h3 className="text-white/80 mb-3">Share via:</h3>
+            <h3 className="text-white/80 dark:text-gray-300 mb-3">Share via:</h3>
             <div className="flex flex-wrap gap-3">
               {[
-                { platform: 'facebook', icon: <FaFacebook className="text-blue-400" /> },
-                { platform: 'twitter', icon: <FaTwitter className="text-sky-400" /> },
-                { platform: 'whatsapp', icon: <FaWhatsapp className="text-green-400" /> },
-                { platform: 'linkedin', icon: <FaLinkedin className="text-blue-500" /> },
-                { platform: 'telegram', icon: <FaTelegram className="text-blue-300" /> },
-                { platform: 'link', icon: <FaLink className="text-purple-300" /> },
+                { platform: 'facebook', icon: <FaFacebook className="text-blue-400 dark:text-blue-500" /> },
+                { platform: 'twitter', icon: <FaTwitter className="text-sky-400 dark:text-sky-500" /> },
+                { platform: 'whatsapp', icon: <FaWhatsapp className="text-green-400 dark:text-green-500" /> },
+                { platform: 'linkedin', icon: <FaLinkedin className="text-blue-500 dark:text-blue-600" /> },
+                { platform: 'telegram', icon: <FaTelegram className="text-blue-300 dark:text-blue-400" /> },
+                { platform: 'link', icon: <FaLink className="text-purple-300 dark:text-purple-400" /> },
               ].map(({ platform, icon }) => (
                 <motion.button
                   key={platform}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => shareOnSocial(platform)}
-                  className="w-12 h-12 flex items-center justify-center bg-white/10 rounded-full backdrop-blur-sm hover:bg-white/20 transition-all"
+                  className="w-12 h-12 flex items-center justify-center bg-white/10 dark:bg-gray-700 rounded-full backdrop-blur-sm hover:bg-white/20 dark:hover:bg-gray-600 transition-all"
                   title={`Share on ${platform.charAt(0).toUpperCase() + platform.slice(1)}`}
                 >
                   {icon}
@@ -183,29 +183,29 @@ export default function InviteProfileClient() {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-white/10 backdrop-blur-md rounded-2xl p-6 shadow-lg border border-white/10"
+            className="bg-white/10 dark:bg-gray-800/90 backdrop-blur-md rounded-2xl p-6 shadow-lg border border-white/10 dark:border-gray-700"
           >
-            <h2 className="text-xl font-semibold text-white mb-6">Your Referral Levels</h2>
+            <h2 className="text-xl font-semibold text-white dark:text-gray-100 mb-6">Your Referral Levels</h2>
             
             {levels.length === 0 ? (
-              <div className="text-center py-8 text-white/70">
+              <div className="text-center py-8 text-white/70 dark:text-gray-400">
                 <p>No referrals yet. Start sharing your link!</p>
               </div>
             ) : (
               <ul className="space-y-4">
                 {levels.map(({ level, count }) => (
                   <li key={level} className="flex items-center">
-                    <div className="w-10 h-10 flex items-center justify-center bg-white/10 rounded-full mr-4 font-bold text-white">
+                    <div className="w-10 h-10 flex items-center justify-center bg-white/10 dark:bg-gray-700 rounded-full mr-4 font-bold text-white dark:text-gray-100">
                       {level}
                     </div>
                     <div className="flex-grow">
-                      <div className="flex justify-between text-white mb-1">
+                      <div className="flex justify-between text-white dark:text-gray-100 mb-1">
                         <span>Level {level}</span>
                         <span className="font-bold">{count}</span>
                       </div>
-                      <div className="w-full bg-white/10 rounded-full h-2">
+                      <div className="w-full bg-white/10 dark:bg-gray-700 rounded-full h-2">
                         <div
-                          className="bg-gradient-to-r from-blue-400 to-purple-500 h-2 rounded-full"
+                          className="bg-gradient-to-r from-blue-400 to-purple-500 dark:from-blue-500 dark:to-purple-600 h-2 rounded-full"
                           style={{ width: `${Math.min(100, (count / 10) * 100)}%` }}
                         ></div>
                       </div>
@@ -221,22 +221,37 @@ export default function InviteProfileClient() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3 }}
-            className="bg-white/10 backdrop-blur-md rounded-2xl p-6 shadow-lg border border-white/10"
+            className="bg-white/10 dark:bg-gray-800/90 backdrop-blur-md rounded-2xl p-6 shadow-lg border border-white/10 dark:border-gray-700"
           >
-            <h2 className="text-xl font-semibold text-white mb-6">Referral Performance</h2>
+            <h2 className="text-xl font-semibold text-white dark:text-gray-100 mb-6">Referral Performance</h2>
             
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={levels}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                  <CartesianGrid 
+                    strokeDasharray="3 3" 
+                    stroke="rgba(255,255,255,0.1)" 
+                    strokeOpacity={0.5}
+                  />
                   <XAxis 
                     dataKey="level" 
                     tick={{ fill: 'rgba(255,255,255,0.8)' }} 
-                    label={{ value: 'Level', position: 'insideBottom', fill: 'rgba(255,255,255,0.8)' }}
+                    label={{ 
+                      value: 'Level', 
+                      position: 'insideBottom', 
+                      fill: 'rgba(255,255,255,0.8)',
+                      offset: -5
+                    }}
                   />
                   <YAxis 
                     tick={{ fill: 'rgba(255,255,255,0.8)' }} 
-                    label={{ value: 'Count', angle: -90, position: 'insideLeft', fill: 'rgba(255,255,255,0.8)' }}
+                    label={{ 
+                      value: 'Count', 
+                      angle: -90, 
+                      position: 'insideLeft', 
+                      fill: 'rgba(255,255,255,0.8)',
+                      style: { textAnchor: 'middle' }
+                    }}
                   />
                   <Tooltip 
                     contentStyle={{
@@ -245,6 +260,8 @@ export default function InviteProfileClient() {
                       borderRadius: '0.5rem',
                       color: 'white'
                     }}
+                    itemStyle={{ color: 'white' }}
+                    labelStyle={{ color: 'white' }}
                   />
                   <Bar 
                     dataKey="count" 
@@ -253,8 +270,8 @@ export default function InviteProfileClient() {
                   >
                     <defs>
                       <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#60a5fa" />
-                        <stop offset="100%" stopColor="#a855f7" />
+                        <stop offset="0%" stopColor="#60a5fa" stopOpacity={0.8} />
+                        <stop offset="100%" stopColor="#a855f7" stopOpacity={0.8} />
                       </linearGradient>
                     </defs>
                   </Bar>
@@ -269,9 +286,9 @@ export default function InviteProfileClient() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="bg-white/10 backdrop-blur-md rounded-2xl p-6 shadow-lg border border-white/10"
+          className="bg-white/10 dark:bg-gray-800/90 backdrop-blur-md rounded-2xl p-6 shadow-lg border border-white/10 dark:border-gray-700"
         >
-          <h2 className="text-xl font-semibold text-white mb-4">How It Works</h2>
+          <h2 className="text-xl font-semibold text-white dark:text-gray-100 mb-4">How It Works</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[
               {
@@ -290,10 +307,13 @@ export default function InviteProfileClient() {
                 emoji: "🎁"
               }
             ].map((item, index) => (
-              <div key={index} className="bg-white/5 p-4 rounded-lg border border-white/10">
+              <div 
+                key={index} 
+                className="bg-white/5 dark:bg-gray-700/50 p-4 rounded-lg border border-white/10 dark:border-gray-600 hover:border-white/20 dark:hover:border-gray-500 transition-colors"
+              >
                 <div className="text-3xl mb-2">{item.emoji}</div>
-                <h3 className="font-medium text-white mb-1">{item.title}</h3>
-                <p className="text-white/70 text-sm">{item.desc}</p>
+                <h3 className="font-medium text-white dark:text-gray-100 mb-1">{item.title}</h3>
+                <p className="text-white/70 dark:text-gray-300 text-sm">{item.desc}</p>
               </div>
             ))}
           </div>
