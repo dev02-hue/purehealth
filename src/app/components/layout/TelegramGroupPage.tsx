@@ -31,7 +31,7 @@ export default function TelegramGroupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -44,14 +44,14 @@ export default function TelegramGroupPage() {
             whileHover={{ scale: 1.05 }}
             className="inline-block mb-6"
           >
-            <div className="bg-blue-100 p-4 rounded-full inline-block">
-              <FaTelegram className="text-5xl text-blue-500" />
+            <div className="bg-blue-100 dark:bg-gray-800 p-4 rounded-full inline-block">
+              <FaTelegram className="text-5xl text-blue-500 dark:text-blue-400" />
             </div>
           </motion.div>
-          <h1 className="text-4xl font-bold text-gray-800 mb-4">
+          <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-100 mb-4">
             Join Our Telegram Community
           </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <p className="text-xl text-gray-600 dark:text-gray-900 max-w-2xl mx-auto">
             Connect with other users, get support, and stay updated with the latest news
           </p>
         </div>
@@ -59,20 +59,20 @@ export default function TelegramGroupPage() {
         {/* Main Card */}
         <motion.div
           whileHover={{ y: -5 }}
-          className="bg-white rounded-2xl shadow-xl overflow-hidden mb-12"
+          className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden mb-12"
         >
           <div className="p-8 sm:p-10">
             <div className="flex flex-col md:flex-row items-center">
               <div className="flex-shrink-0 mb-6 md:mb-0 md:mr-8">
-                <div className="bg-blue-100 p-6 rounded-xl">
-                  <FaTelegram className="text-6xl text-blue-500" />
+                <div className="bg-blue-100 dark:bg-gray-700 p-6 rounded-xl">
+                  <FaTelegram className="text-6xl text-blue-500 dark:text-blue-400" />
                 </div>
               </div>
               <div className="flex-grow text-center md:text-left">
-                <h2 className="text-2xl font-bold text-gray-800 mb-3">
+                <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-3">
                   Official Telegram Group
                 </h2>
-                <p className="text-gray-600 mb-6">
+                <p className="text-gray-600 dark:text-gray-300 mb-6">
                   Join our growing community of users to get help, share feedback, and
                   stay informed about all updates.
                 </p>
@@ -91,7 +91,7 @@ export default function TelegramGroupPage() {
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={copyToClipboard}
-                    className="flex items-center justify-center px-6 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+                    className="flex items-center justify-center px-6 py-3 bg-gray-100 dark:bg-gray-700 dark:text-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                   >
                     Copy Link <FiExternalLink className="ml-2" />
                   </motion.button>
@@ -110,15 +110,15 @@ export default function TelegramGroupPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 + 0.3 }}
               whileHover={{ y: -5 }}
-              className="bg-white p-6 rounded-xl shadow-md border border-gray-100"
+              className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md border border-gray-100 dark:border-gray-700"
             >
               <div className="flex items-center mb-4">
                 {feature.icon}
-                <h3 className="text-xl font-semibold text-gray-800 ml-3">
+                <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-100 ml-3">
                   {feature.title}
                 </h3>
               </div>
-              <p className="text-gray-600">{feature.description}</p>
+              <p className="text-gray-600 dark:text-gray-300">{feature.description}</p>
             </motion.div>
           ))}
         </div>
@@ -128,9 +128,9 @@ export default function TelegramGroupPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6 }}
-          className="bg-white rounded-2xl shadow-md p-8"
+          className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-8"
         >
-          <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6 text-center">
             Frequently Asked Questions
           </h2>
           <div className="space-y-4">
@@ -148,9 +148,9 @@ export default function TelegramGroupPage() {
                 answer: "Absolutely! Feel free to share the invite link with anyone who might benefit from our community."
               }
             ].map((item, index) => (
-              <div key={index} className="border-b border-gray-100 pb-4">
-                <h3 className="font-medium text-gray-800 mb-1">{item.question}</h3>
-                <p className="text-gray-600">{item.answer}</p>
+              <div key={index} className="border-b border-gray-100 dark:border-gray-700 pb-4">
+                <h3 className="font-medium text-gray-800 dark:text-gray-100 mb-1">{item.question}</h3>
+                <p className="text-gray-600 dark:text-gray-300">{item.answer}</p>
               </div>
             ))}
           </div>
@@ -163,7 +163,7 @@ export default function TelegramGroupPage() {
           transition={{ delay: 0.8 }}
           className="text-center mt-12"
         >
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4">
             Ready to join the conversation?
           </h2>
           <motion.a

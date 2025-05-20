@@ -29,11 +29,11 @@ const formatCurrency = (amount: number) => {
 
 export default function InvestmentPlans() {
   return (
-    <div className="py-12 mb-10 px-4 sm:px-6 lg:px-8 bg-gray-50">
+    <div className="py-12 mb-10 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
           <motion.h2 
-            className="text-3xl font-bold text-gray-900 sm:text-4xl"
+            className="text-3xl font-bold text-gray-900 dark:text-gray-100 sm:text-4xl"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
@@ -41,7 +41,7 @@ export default function InvestmentPlans() {
             Investment Plans
           </motion.h2>
           <motion.p
-            className="mt-3 max-w-2xl mx-auto text-xl text-gray-500 sm:mt-4"
+            className="mt-3 max-w-2xl mx-auto text-xl text-gray-500 dark:text-gray-300 sm:mt-4"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
@@ -58,69 +58,69 @@ export default function InvestmentPlans() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
               whileHover={{ y: -5, boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)' }}
-              className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 hover:border-blue-200 transition-all"
+              className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden border border-gray-100 dark:border-gray-700 hover:border-blue-200 dark:hover:border-blue-400 transition-all"
             >
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900">{plan.name}</h3>
-                  <div className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-100 text-blue-600">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{plan.name}</h3>
+                  <div className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400">
                     <FiTrendingUp className="w-5 h-5" />
                   </div>
                 </div>
 
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-500">Investment</span>
-                    <span className="font-medium text-gray-900">{formatCurrency(plan.price)}</span>
+                    <span className="text-gray-500 dark:text-gray-400">Investment</span>
+                    <span className="font-medium text-gray-900 dark:text-gray-100">{formatCurrency(plan.price)}</span>
                   </div>
 
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-500">Daily Income</span>
-                    <span className="font-medium text-green-600">+{formatCurrency(plan.dailyIncome)}</span>
+                    <span className="text-gray-500 dark:text-gray-400">Daily Income</span>
+                    <span className="font-medium text-green-600 dark:text-green-400">+{formatCurrency(plan.dailyIncome)}</span>
                   </div>
 
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-500">Total Income</span>
-                    <span className="font-medium text-blue-600">{formatCurrency(plan.totalIncome)}</span>
+                    <span className="text-gray-500 dark:text-gray-400">Total Income</span>
+                    <span className="font-medium text-blue-600 dark:text-blue-400">{formatCurrency(plan.totalIncome)}</span>
                   </div>
 
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-500">Duration</span>
-                    <span className="font-medium text-gray-900">{plan.duration}</span>
+                    <span className="text-gray-500 dark:text-gray-400">Duration</span>
+                    <span className="font-medium text-gray-900 dark:text-gray-100">{plan.duration}</span>
                   </div>
                 </div>
 
                 <Link
-                      href="/deposit" // Replace with your actual investment route
-                    className="mt-6 w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition"
-                  >
-               Invest Now
-              </Link>
+                  href="/deposit"
+                  className="mt-6 w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800 transition"
+                >
+                  Invest Now
+                </Link>
               </div>
             </motion.div>
           ))}
         </div>
 
         <motion.div 
-          className="mt-12 bg-white p-6 rounded-xl shadow-sm border border-gray-200"
+          className="mt-12 bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1.2 }}
         >
           <div className="text-center">
-            <h3 className="text-lg font-medium text-gray-900">Investment Terms</h3>
-            <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm text-gray-600">
-              <div className="p-3 bg-gray-50 rounded-lg">
-                <p className="font-medium">Minimum: ₦1,000</p>
-                <p className="text-gray-500">Withdrawal</p>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Investment Terms</h3>
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm text-gray-600 dark:text-gray-300">
+              <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <p className="font-medium dark:text-gray-100">Minimum: ₦1,000</p>
+                <p className="text-gray-500 dark:text-gray-400">Withdrawal</p>
               </div>
-              <div className="p-3 bg-gray-50 rounded-lg">
-                <p className="font-medium">Referral Bonus</p>
-                <p className="text-gray-500">30% (Level 1), 3% (Level 2+)</p>
+              <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <p className="font-medium dark:text-gray-100">Referral Bonus</p>
+                <p className="text-gray-500 dark:text-gray-400">30% (Level 1), 3% (Level 2+)</p>
               </div>
-              <div className="p-3 bg-gray-50 rounded-lg">
-                <p className="font-medium">Withdrawal Bonus</p>
-                <p className="text-gray-500">₦900</p>
+              <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <p className="font-medium dark:text-gray-100">Withdrawal Bonus</p>
+                <p className="text-gray-500 dark:text-gray-400">₦900</p>
               </div>
             </div>
           </div>

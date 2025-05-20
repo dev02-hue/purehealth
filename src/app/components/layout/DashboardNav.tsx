@@ -51,7 +51,6 @@ export default function DashboardNav() {
         } else {
           console.error('Failed to fetch profile:', err)
         }
-        // You might want to set some error state here
       }
     }
 
@@ -93,7 +92,7 @@ export default function DashboardNav() {
 
   return (
     <motion.nav 
-      className="bg-white border-b border-gray-200"
+      className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700"
       initial="hidden"
       animate="visible"
       variants={containerVariants}
@@ -102,7 +101,7 @@ export default function DashboardNav() {
         <div className="flex justify-between h-12 sm:h-14 items-center">
           {/* Logo/Brand */}
           <motion.div className="flex-shrink-0 flex items-center" variants={itemVariants}>
-            <h1 className={`${isVerySmallScreen ? 'text-sm' : 'text-md'} font-semibold text-gray-900 whitespace-nowrap`}>
+            <h1 className={`${isVerySmallScreen ? 'text-sm' : 'text-md'} font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap`}>
               PURE HEALTH
             </h1>
           </motion.div>
@@ -114,15 +113,15 @@ export default function DashboardNav() {
           >
             {/* Balance Card */}
             <motion.div 
-              className="bg-blue-50 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded border border-blue-100"
+              className="bg-blue-50 dark:bg-gray-800 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded border border-blue-100 dark:border-gray-700"
               variants={itemVariants}
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.98 }}
             >
               <div className="flex items-center space-x-1">
-                <div className="bg-blue-100 p-0.5 rounded">
+                <div className="bg-blue-100 dark:bg-gray-700 p-0.5 rounded">
                   <svg
-                    className={`${isVerySmallScreen ? 'w-2.5 h-2.5' : 'w-3 h-3'} text-blue-600`}
+                    className={`${isVerySmallScreen ? 'w-2.5 h-2.5' : 'w-3 h-3'} text-blue-600 dark:text-blue-400`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -136,10 +135,10 @@ export default function DashboardNav() {
                   </svg>
                 </div>
                 <div className="flex flex-col">
-                  <p className={`${isVerySmallScreen ? 'text-[8px]' : 'text-[10px]'} text-gray-500 font-medium leading-none`}>
+                  <p className={`${isVerySmallScreen ? 'text-[8px]' : 'text-[10px]'} text-gray-500 dark:text-gray-300 font-medium leading-none`}>
                     Balance
                   </p>
-                  <p className={`${isVerySmallScreen ? 'text-[10px]' : 'text-xs'} font-semibold text-gray-900 whitespace-nowrap leading-none`}>
+                  <p className={`${isVerySmallScreen ? 'text-[10px]' : 'text-xs'} font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap leading-none`}>
                     {formatCompactNumber(parseFloat(userData.balance))}
                   </p>
                 </div>
@@ -148,13 +147,13 @@ export default function DashboardNav() {
 
             {/* Profit Card */}
             <motion.div 
-              className={`${isProfitPositive ? 'bg-green-50 border-green-100' : 'bg-red-50 border-red-100'} px-1.5 py-0.5 sm:px-2 sm:py-1 rounded border`}
+              className={`${isProfitPositive ? 'bg-green-50 dark:bg-gray-800 border-green-100 dark:border-green-400/20' : 'bg-red-50 dark:bg-gray-800 border-red-100 dark:border-red-400/20'} px-1.5 py-0.5 sm:px-2 sm:py-1 rounded border`}
               variants={itemVariants}
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.98 }}
             >
               <div className="flex items-center space-x-1">
-                <div className={`${isProfitPositive ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'} p-0.5 rounded`}>
+                <div className={`${isProfitPositive ? 'bg-green-100 dark:bg-green-400/20 text-green-600 dark:text-green-400' : 'bg-red-100 dark:bg-red-400/20 text-red-600 dark:text-red-400'} p-0.5 rounded`}>
                   <svg
                     className={`${isVerySmallScreen ? 'w-2.5 h-2.5' : 'w-3 h-3'}`}
                     fill="none"
@@ -172,10 +171,10 @@ export default function DashboardNav() {
                   </svg>
                 </div>
                 <div className="flex flex-col">
-                  <p className={`${isVerySmallScreen ? 'text-[8px]' : 'text-[10px]'} text-gray-500 font-medium leading-none`}>
+                  <p className={`${isVerySmallScreen ? 'text-[8px]' : 'text-[10px]'} text-gray-500 dark:text-gray-300 font-medium leading-none`}>
                     P/L
                   </p>
-                  <p className={`${isVerySmallScreen ? 'text-[10px]' : 'text-xs'} font-semibold whitespace-nowrap leading-none ${isProfitPositive ? 'text-green-700' : 'text-red-700'}`}>
+                  <p className={`${isVerySmallScreen ? 'text-[10px]' : 'text-xs'} font-semibold whitespace-nowrap leading-none ${isProfitPositive ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'}`}>
                     {isProfitPositive ? '+' : ''}{formatCompactNumber(Math.abs(profitValue))}
                   </p>
                 </div>
@@ -190,17 +189,17 @@ export default function DashboardNav() {
             >
               {!isSmallScreen && (
                 <div className="text-right mr-1 hidden sm:block">
-                  <p className={`${isVerySmallScreen ? 'text-[10px]' : 'text-xs'} font-medium text-gray-900 whitespace-nowrap`}>
+                  <p className={`${isVerySmallScreen ? 'text-[10px]' : 'text-xs'} font-medium text-gray-900 dark:text-gray-100 whitespace-nowrap`}>
                     {userData.firstName} {userData.lastName.charAt(0)}.
                   </p>
-                  <p className={`${isVerySmallScreen ? 'text-[8px]' : 'text-[10px]'} text-gray-500`}>
+                  <p className={`${isVerySmallScreen ? 'text-[8px]' : 'text-[10px]'} text-gray-500 dark:text-gray-300`}>
                     Premium
                   </p>
                 </div>
               )}
               
               <div className="relative">
-                <div className={`bg-gray-800 rounded-full ${isVerySmallScreen ? 'h-5 w-5 text-xs' : 'h-6 w-6 text-sm'} flex items-center justify-center text-white font-medium`}>
+                <div className={`bg-gray-800 dark:bg-gray-700 rounded-full ${isVerySmallScreen ? 'h-5 w-5 text-xs' : 'h-6 w-6 text-sm'} flex items-center justify-center text-white font-medium`}>
                   {userData.firstName.charAt(0)}{userData.lastName.charAt(0)}
                 </div>
               </div>

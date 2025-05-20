@@ -104,7 +104,7 @@ export default function SignupForm() {
         <input
           name="email"
           type="email"
-          placeholder="Email"
+          placeholder="Email (optional)"
           value={form.email}
           onChange={handleChange}
           className="w-full pl-10 p-3 border text-black border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -116,7 +116,7 @@ export default function SignupForm() {
         <input
           name="phone"
           type="tel"
-          placeholder="Phone (optional)"
+          placeholder="Phone"
           value={form.phone}
           onChange={handleChange}
           className="w-full pl-10 p-3 border text-black border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -167,6 +167,17 @@ export default function SignupForm() {
           </>
         )}
       </button>
+
+      <div className="text-center text-sm text-gray-500 mt-4">
+         Click here to login?{' '}
+        <button 
+          type="button" 
+          onClick={() => router.push('/login')}
+          className="text-blue-600 ml-1 cursor-pointer hover:underline"
+        >
+          Login
+        </button>
+      </div>
     </motion.form>
   )
 }

@@ -74,9 +74,9 @@ export default function UserProfileDisplay() {
             transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
             className="mx-auto mb-4"
           >
-            <FiLoader className="text-3xl text-blue-500 animate-spin" />
+            <FiLoader className="text-3xl text-blue-500 dark:text-blue-400 animate-spin" />
           </motion.div>
-          <p className="text-gray-600">Loading your profile...</p>
+          <p className="text-gray-600 dark:text-gray-300">Loading your profile...</p>
         </div>
       </motion.div>
     )
@@ -87,11 +87,11 @@ export default function UserProfileDisplay() {
       <motion.div
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="max-w-md mx-auto p-6 bg-white rounded-xl shadow-lg border border-red-100"
+        className="max-w-md mx-auto p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-red-100 dark:border-red-900"
       >
         <div className="text-center">
           <FiAlertCircle className="text-4xl text-red-500 mx-auto mb-3" />
-          <h2 className="text-xl font-bold text-gray-800 mb-2">Error Loading Profile</h2>
+          <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">Error Loading Profile</h2>
           <p className="text-red-500 mb-4">{error}</p>
           <button
             onClick={() => window.location.reload()}
@@ -109,12 +109,12 @@ export default function UserProfileDisplay() {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="max-w-md mx-auto p-6 bg-white rounded-xl shadow-lg"
+        className="max-w-md mx-auto p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg"
       >
         <div className="text-center">
           <FiUser className="text-4xl text-gray-400 mx-auto mb-3" />
-          <h2 className="text-xl font-bold text-gray-800 mb-2">No Profile Found</h2>
-          <p className="text-gray-500">We couldn&#39;t find any profile data for your account.</p>
+          <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">No Profile Found</h2>
+          <p className="text-gray-500 dark:text-gray-300">We couldn&#39;t find any profile data for your account.</p>
         </div>
       </motion.div>
     )
@@ -139,41 +139,41 @@ export default function UserProfileDisplay() {
         </p>
       </div>
 
-      <div className="bg-white rounded-b-xl shadow-lg overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-b-xl shadow-lg overflow-hidden">
         <div className="p-6 space-y-5">
           <ProfileItem 
-            icon={<FiUser className="text-blue-500" />}
+            icon={<FiUser className="text-blue-500 dark:text-blue-400" />}
             label="Name"
             value={`${profile.first_name} ${profile.last_name}`}
           />
           
           <ProfileItem 
-            icon={<FiMail className="text-blue-500" />}
+            icon={<FiMail className="text-blue-500 dark:text-blue-400" />}
             label="Email"
             value={profile.email}
           />
           
           <ProfileItem 
-            icon={<FiPhone className="text-blue-500" />}
+            icon={<FiPhone className="text-blue-500 dark:text-blue-400" />}
             label="Phone"
             value={profile.phone_number || 'Not provided'}
           />
           
           <ProfileItem 
-            icon={<FiDollarSign className="text-blue-500" />}
+            icon={<FiDollarSign className="text-blue-500 dark:text-blue-400" />}
             label="Balance"
             value={`$${profile.balance?.toFixed(2) || '0.00'}`}
           />
           
           <div className="relative">
             <ProfileItem 
-              icon={<FiGift className="text-blue-500" />}
+              icon={<FiGift className="text-blue-500 dark:text-blue-400" />}
               label="Referral Code"
               value={profile.referral_code}
             />
             <button
               onClick={copyReferralCode}
-              className="absolute right-0 top-0 p-2 text-gray-400 hover:text-blue-500 transition-colors"
+              className="absolute right-0 top-0 p-2 text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
               title="Copy referral code"
             >
               <FaCopy />
@@ -181,21 +181,11 @@ export default function UserProfileDisplay() {
           </div>
           
           <ProfileItem 
-            icon={<FiCalendar className="text-blue-500" />}
+            icon={<FiCalendar className="text-blue-500 dark:text-blue-400" />}
             label="Member Since"
             value={formattedDate}
           />
         </div>
-
-        {/* <div className="px-6 py-4 bg-gray-50 border-t">
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className="w-full py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg font-medium shadow hover:shadow-md transition-all"
-          >
-            Edit Profile
-          </motion.button>
-        </div> */}
       </div>
     </motion.div>
   )
@@ -211,8 +201,8 @@ function ProfileItem({ icon, label, value }: { icon: React.ReactNode, label: str
         {icon}
       </div>
       <div className="flex-1">
-        <p className="text-sm text-gray-500">{label}</p>
-        <p className="font-medium text-gray-800">{value}</p>
+        <p className="text-sm text-gray-500 dark:text-gray-300">{label}</p>
+        <p className="font-medium text-gray-800 dark:text-gray-100">{value}</p>
       </div>
     </motion.div>
   )
