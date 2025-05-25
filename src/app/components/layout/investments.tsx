@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { getInvestments } from '@/lib/investment-actions'
 import { formatCurrency } from '@/lib/utils'
-import { format, differenceInDays,  } from 'date-fns'
+import { format, differenceInDays } from 'date-fns'
 import { motion } from 'framer-motion'
 import { FiTrendingUp, FiClock, FiDollarSign, FiCalendar, FiCheckCircle } from 'react-icons/fi'
 import { toast } from 'react-hot-toast'
@@ -43,7 +43,34 @@ export default function InvestmentsPage() {
   const [investments, setInvestments] = useState<Investment[]>([])
   const [loading, setLoading] = useState(true)
   const [processing, setProcessing] = useState(false)
+  const [countdown, setCountdown] = useState("24:00:00")
   const router = useRouter()
+
+  // Countdown timer effect
+  useEffect(() => {
+    const calculateCountdown = () => {
+      const now = new Date()
+      const endOfDay = new Date()
+      endOfDay.setHours(24, 0, 0, 0)
+
+      const diff = endOfDay.getTime() - now.getTime()
+
+      if (diff <= 0) {
+        setCountdown("00:00:00")
+        return
+      }
+
+      const hours = Math.floor(diff / (1000 * 60 * 60)).toString().padStart(2, '0')
+      const minutes = Math.floor((diff / (1000 * 60)) % 60).toString().padStart(2, '0')
+      const seconds = Math.floor((diff / 1000) % 60).toString().padStart(2, '0')
+
+      setCountdown(`${hours}:${minutes}:${seconds}`)
+    }
+
+    calculateCountdown()
+    const timer = setInterval(calculateCountdown, 1000)
+    return () => clearInterval(timer)
+  }, [])
 
   const loadInvestments = useCallback(async () => {
     try {
@@ -83,12 +110,9 @@ export default function InvestmentsPage() {
 
   useEffect(() => {
     loadInvestments()
-
-    // Set up interval to check for earnings every hour
     const interval = setInterval(() => {
       handleProcessEarnings()
     }, 60 * 60 * 1000)
-
     return () => clearInterval(interval)
   }, [loadInvestments, handleProcessEarnings])
 
@@ -104,7 +128,7 @@ export default function InvestmentsPage() {
 
   if (loading) {
     return (
-      <div className="p-6 min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-gray-900">
+      <div className="p-4 sm:p-6 min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-gray-900">
         <div className="max-w-6xl mx-auto">
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -115,25 +139,44 @@ export default function InvestmentsPage() {
   }
 
   return (
-    <div className="p-6 min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-gray-900 mb-20">
+    <div className="p-4 sm:p-6 min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-gray-900 mb-20">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
         className="max-w-6xl mx-auto"
       >
-        <div className="flex justify-between items-center mb-8">
+        {/* Responsive Countdown Timer */}
+        <motion.div 
+          className="mb-4 sm:mb-6 md:mb-8 p-3 sm:p-4 bg-gradient-to-r from-blue-600 to-blue-500 dark:from-blue-800 dark:to-blue-700 rounded-lg sm:rounded-xl shadow-lg"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <div className="flex flex-col items-center justify-center space-y-1 sm:space-y-2">
+            <p className="text-xs sm:text-sm text-blue-100 dark:text-blue-200">Next Daily Reset</p>
+            <div className="text-xl sm:text-2xl md:text-3xl font-mono font-bold text-white tracking-wider">
+              {countdown}
+            </div>
+            <p className="text-[0.65rem] xs:text-xs text-blue-100 dark:text-blue-200 opacity-90 text-center px-2">
+              All payouts will be processed at reset time
+            </p>
+          </div>
+        </motion.div>
+
+        {/* Responsive Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
           <motion.h1 
-            className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent dark:from-blue-400 dark:to-blue-300"
+            className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent dark:from-blue-400 dark:to-blue-300"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
           >
             Your Investments
           </motion.h1>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
             <motion.p
-              className="text-sm text-gray-500 dark:text-gray-400 bg-white/50 dark:bg-gray-800/50 px-3 py-1 rounded-full"
+              className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 bg-white/50 dark:bg-gray-800/50 px-3 py-1 rounded-full whitespace-nowrap"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3 }}
@@ -145,7 +188,7 @@ export default function InvestmentsPage() {
               whileTap={{ scale: 0.98 }}
               onClick={handleProcessEarnings}
               disabled={processing}
-              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50"
+              className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 whitespace-nowrap"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4 }}
@@ -157,24 +200,24 @@ export default function InvestmentsPage() {
         
         {investments.length === 0 ? (
           <motion.div
-            className="text-center py-16"
+            className="text-center py-12 sm:py-16"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8 }}
           >
-            <div className="mx-auto w-32 h-32 bg-gradient-to-br from-blue-100 to-blue-50 dark:from-gray-800 dark:to-gray-700 rounded-full flex items-center justify-center mb-6 shadow-lg">
-              <FiTrendingUp className="h-16 w-16 text-blue-400 dark:text-blue-300" />
+            <div className="mx-auto w-24 h-24 sm:w-32 sm:h-32 bg-gradient-to-br from-blue-100 to-blue-50 dark:from-gray-800 dark:to-gray-700 rounded-full flex items-center justify-center mb-4 sm:mb-6 shadow-lg">
+              <FiTrendingUp className="h-12 w-12 sm:h-16 sm:w-16 text-blue-400 dark:text-blue-300" />
             </div>
-            <h3 className="text-2xl font-medium text-gray-800 dark:text-gray-100 mb-2">
+            <h3 className="text-xl sm:text-2xl font-medium text-gray-800 dark:text-gray-100 mb-2">
               No Active Investments
             </h3>
-            <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto">
-              You haven&#39;t started any investments yet. Begin your journey to grow your wealth today.
+            <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto text-sm sm:text-base px-4">
+              You haven&apos;t started any investments yet. Begin your journey to grow your wealth today.
             </p>
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="mt-6 px-6 py-2 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-full shadow-lg hover:shadow-blue-200/50 dark:hover:shadow-blue-900/30 transition-all"
+              className="mt-4 sm:mt-6 px-4 sm:px-6 py-1.5 sm:py-2 text-sm sm:text-base bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-full shadow-lg hover:shadow-blue-200/50 dark:hover:shadow-blue-900/30 transition-all"
             >
               Explore Plans
             </motion.button>
@@ -184,7 +227,7 @@ export default function InvestmentsPage() {
             variants={container}
             initial="hidden"
             animate="show"
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
           >
             {investments.map((investment) => (
               <motion.div
@@ -197,18 +240,18 @@ export default function InvestmentsPage() {
                     : 'border-gray-200/50 dark:border-gray-700'
                 }`}
               >
-                <div className="p-6">
-                  <div className="flex justify-between items-start mb-4">
+                <div className="p-4 sm:p-6">
+                  <div className="flex justify-between items-start mb-3 sm:mb-4">
                     <div>
-                      <h2 className="font-bold text-xl text-gray-800 dark:text-gray-100">
+                      <h2 className="font-bold text-lg sm:text-xl text-gray-800 dark:text-gray-100">
                         {investment.plan_name}
                       </h2>
-                      <div className="flex items-center mt-1 text-sm text-blue-500 dark:text-blue-400">
-                        <FiClock className="mr-1" />
+                      <div className="flex items-center mt-1 text-xs sm:text-sm text-blue-500 dark:text-blue-400">
+                        <FiClock className="mr-1 w-3 h-3 sm:w-4 sm:h-4" />
                         <span>{investment.duration}</span>
                       </div>
                     </div>
-                    <span className={`px-3 py-1 text-xs font-medium rounded-full ${
+                    <span className={`px-2 sm:px-3 py-1 text-xs font-medium rounded-full ${
                       investment.status === 'completed'
                         ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300'
                         : investment.status === 'active'
@@ -219,43 +262,43 @@ export default function InvestmentsPage() {
                     </span>
                   </div>
                   
-                  <div className="space-y-4">
-                    <div className={`p-4 rounded-lg ${
+                  <div className="space-y-3 sm:space-y-4">
+                    <div className={`p-3 sm:p-4 rounded-lg ${
                       investment.status === 'completed'
                         ? 'bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/30'
                         : 'bg-gradient-to-r from-blue-50 to-blue-100 dark:from-gray-700 dark:to-gray-800'
                     }`}>
                       <div className="flex justify-between items-center">
                         <div className="flex items-center">
-                          <FiDollarSign className={`mr-2 ${
+                          <FiDollarSign className={`mr-2 w-3 h-3 sm:w-4 sm:h-4 ${
                             investment.status === 'completed'
                               ? 'text-purple-500 dark:text-purple-400'
                               : 'text-blue-500 dark:text-blue-400'
                           }`} />
-                          <span className="text-sm text-gray-500 dark:text-gray-400">Invested</span>
+                          <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Invested</span>
                         </div>
-                        <span className="font-medium text-gray-800 dark:text-gray-100">
+                        <span className="font-medium text-sm sm:text-base text-gray-800 dark:text-gray-100">
                           {formatCurrency(investment.amount_invested)}
                         </span>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg">
+                    <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                      <div className="bg-gray-50 dark:bg-gray-700/50 p-2 sm:p-3 rounded-lg">
                         <p className="text-xs text-gray-500 dark:text-gray-400">Daily Income</p>
-                        <p className="font-medium text-green-600 dark:text-green-400">
+                        <p className="font-medium text-sm sm:text-base text-green-600 dark:text-green-400">
                           +{formatCurrency(investment.daily_income)}
                         </p>
                       </div>
-                      <div className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg">
+                      <div className="bg-gray-50 dark:bg-gray-700/50 p-2 sm:p-3 rounded-lg">
                         <p className="text-xs text-gray-500 dark:text-gray-400">Earned</p>
-                        <p className="font-medium">
+                        <p className="font-medium text-sm sm:text-base">
                           {formatCurrency(investment.earnings_to_date)}
                         </p>
                       </div>
                     </div>
 
-                    <div className="relative pt-2">
+                    <div className="relative pt-1 sm:pt-2">
                       <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                         <div 
                           className={`h-full ${
@@ -272,23 +315,23 @@ export default function InvestmentsPage() {
                     </div>
                   </div>
                   
-                  <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <div className="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-gray-200 dark:border-gray-700">
                     {investment.status === 'completed' ? (
-                      <div className="flex items-center text-green-500 dark:text-green-400">
-                        <FiCheckCircle className="mr-2" />
+                      <div className="flex items-center text-xs sm:text-sm text-green-500 dark:text-green-400">
+                        <FiCheckCircle className="mr-2 w-3 h-3 sm:w-4 sm:h-4" />
                         <span>Completed on {format(new Date(investment.end_date), 'MMM d, yyyy')}</span>
                       </div>
                     ) : (
                       <>
-                        <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-2">
-                          <FiCalendar className="mr-2" />
+                        <div className="flex items-center text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-1 sm:mb-2">
+                          <FiCalendar className="mr-2 w-3 h-3 sm:w-4 sm:h-4" />
                           <span>Next Payout</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="font-medium text-gray-800 dark:text-gray-100">
+                          <span className="font-medium text-xs sm:text-sm text-gray-800 dark:text-gray-100">
                             {format(new Date(investment.next_payout_date), 'MMM d, yyyy HH:mm')}
                           </span>
-                          <span className="text-sm text-gray-500 dark:text-gray-400">
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
                             {getDaysRemaining(investment.end_date)} days left
                           </span>
                         </div>
