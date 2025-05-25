@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { MdEmail, MdHeadsetMic, MdAccessTime } from 'react-icons/md'
-import { FaRegLifeRing, FaPhoneAlt } from 'react-icons/fa'
+import { FaRegLifeRing } from 'react-icons/fa'
 import { HiOutlineChatAlt2 } from 'react-icons/hi'
 
 export default function CustomerCare() {
