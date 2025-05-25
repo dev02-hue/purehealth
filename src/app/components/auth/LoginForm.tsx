@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { signIn } from '@/app/api/auth/login'
 import { motion } from 'framer-motion'
-import { FiMail, FiPhone, FiLock, FiArrowRight, FiCheckCircle } from 'react-icons/fi'
+import { FiMail, FiPhone, FiLock, FiArrowRight, FiCheckCircle, FiEye, FiEyeOff } from 'react-icons/fi'
 
 export default function LoginForm() {
   const [form, setForm] = useState({
@@ -16,6 +16,7 @@ export default function LoginForm() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
   const router = useRouter()
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -179,14 +180,21 @@ export default function LoginForm() {
         <FiLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
         <input
           name="password"
-          type="password"
+          type={showPassword ? "text" : "password"}
           placeholder="Password"
           value={form.password}
           onChange={handleChange}
           required
           minLength={6}
-          className="w-full pl-10 p-3 border text-black border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full pl-10 pr-10 p-3 border text-black border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
+        <button
+          type="button"
+          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+          onClick={() => setShowPassword(!showPassword)}
+        >
+          {showPassword ? <FiEyeOff /> : <FiEye />}
+        </button>
       </div>
 
       <div className="flex justify-between items-center">

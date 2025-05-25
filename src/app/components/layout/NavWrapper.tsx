@@ -8,11 +8,12 @@ export default function NavWrapper() {
   const [activeTab, setActiveTab] = useState('home')
   const pathname = usePathname()
 
-  // Don't show Nav on login or signup pages
-  const hideNav = pathname === '/login' || pathname === '/signup'
+  console.log('Current pathname:', pathname) // Debugging
+
+  // Don't show Nav on login, signup, or admin pages
+  const hideNav = pathname === '/login' || pathname === '/signup' || pathname === '/admin'
 
   if (hideNav) return null
 
   return <Nav activeTab={activeTab} setActiveTab={setActiveTab} />
 }
-
