@@ -111,7 +111,7 @@ export default function DepositPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-50 dark:from-gray-900 dark:to-gray-800 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-50 dark:from-gray-900 dark:to-gray-800 py-8 px-4 mb-20">
       <AnimatePresence mode="wait">
         {paymentDetails ? (
           <motion.div
@@ -242,7 +242,7 @@ export default function DepositPage() {
               variants={itemVariants}
             >
               <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2 bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-500 dark:to-purple-500 bg-clip-text ">
-                Deposit 
+                Deposit to purehealth
               </h1>
               <p className="text-gray-600 dark:text-gray-300">Enter amount </p>
             </motion.div>

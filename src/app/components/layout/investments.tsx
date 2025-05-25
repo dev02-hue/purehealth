@@ -1,13 +1,14 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { getInvestments } from '@/lib/investment-actions'
 import { formatCurrency } from '@/lib/utils'
-import { format } from 'date-fns'
+import { format, differenceInDays,  } from 'date-fns'
 import { motion } from 'framer-motion'
-import { FiTrendingUp, FiClock, FiDollarSign, FiCalendar } from 'react-icons/fi'
- 
+import { FiTrendingUp, FiClock, FiDollarSign, FiCalendar, FiCheckCircle } from 'react-icons/fi'
+import { toast } from 'react-hot-toast'
+import { processDailyEarnings } from '@/lib/investment-plan'
 
 const container = {
   hidden: { opacity: 0 },
@@ -34,28 +35,72 @@ interface Investment {
   earnings_to_date: number;
   total_income: number;
   next_payout_date: string;
+  last_payout_date: string;
+  end_date: string;
 }
 
 export default function InvestmentsPage() {
   const [investments, setInvestments] = useState<Investment[]>([])
   const [loading, setLoading] = useState(true)
+  const [processing, setProcessing] = useState(false)
   const router = useRouter()
 
-  useEffect(() => {
-    const loadInvestments = async () => {
-      try {
-        const data = await getInvestments()
-        setInvestments(data)
-      } catch (error) {
-        console.log('Error loading investments:', error)
-        router.push('/login')
-      } finally {
-        setLoading(false)
-      }
+  const loadInvestments = useCallback(async () => {
+    try {
+      const data = await getInvestments()
+      setInvestments(data)
+    } catch (error) {
+      console.error('Error loading investments:', error)
+      router.push('/login')
+    } finally {
+      setLoading(false)
     }
-
-    loadInvestments()
   }, [router])
+
+  const handleProcessEarnings = useCallback(async () => {
+    setProcessing(true)
+    try {
+      const result = await processDailyEarnings()
+      if (result.success) {
+        if ('updatedInvestments' in result && (result.updatedInvestments.length > 0 || result.completedInvestments.length > 0)) {
+          await loadInvestments()
+          toast.success(
+            `Processed ${'updatedInvestments' in result ? result.updatedInvestments.length : 0} updates and ${'completedInvestments' in result ? result.completedInvestments.length : 0} completions`
+          )
+        } else {
+          toast.success('No earnings to process at this time')
+        }
+      } else {
+        toast.error('Error processing earnings')
+      }
+    } catch (error) {
+      console.error('Error processing earnings:', error)
+      toast.error('Failed to process earnings')
+    } finally {
+      setProcessing(false)
+    }
+  }, [loadInvestments])
+
+  useEffect(() => {
+    loadInvestments()
+
+    // Set up interval to check for earnings every hour
+    const interval = setInterval(() => {
+      handleProcessEarnings()
+    }, 60 * 60 * 1000)
+
+    return () => clearInterval(interval)
+  }, [loadInvestments, handleProcessEarnings])
+
+  const calculateProgress = (investment: Investment) => {
+    const progress = (investment.earnings_to_date / investment.total_income) * 100
+    return Math.min(100, progress)
+  }
+
+  const getDaysRemaining = (endDate: string) => {
+    const days = differenceInDays(new Date(endDate), new Date())
+    return days > 0 ? days : 0
+  }
 
   if (loading) {
     return (
@@ -70,7 +115,7 @@ export default function InvestmentsPage() {
   }
 
   return (
-    <div className="p-6 min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-gray-900">
+    <div className="p-6 min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-gray-900 mb-20">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -86,14 +131,28 @@ export default function InvestmentsPage() {
           >
             Your Investments
           </motion.h1>
-          <motion.p
-            className="text-sm text-gray-500 dark:text-gray-400 bg-white/50 dark:bg-gray-800/50 px-3 py-1 rounded-full"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-          >
-            {investments.length} active investment{investments.length !== 1 ? 's' : ''}
-          </motion.p>
+          <div className="flex items-center gap-4">
+            <motion.p
+              className="text-sm text-gray-500 dark:text-gray-400 bg-white/50 dark:bg-gray-800/50 px-3 py-1 rounded-full"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+            >
+              {investments.filter(i => i.status === 'active').length} active investment{investments.filter(i => i.status === 'active').length !== 1 ? 's' : ''}
+            </motion.p>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleProcessEarnings}
+              disabled={processing}
+              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4 }}
+            >
+              {processing ? 'Processing...' : 'Check Earnings'}
+            </motion.button>
+          </div>
         </div>
         
         {investments.length === 0 ? (
@@ -132,7 +191,11 @@ export default function InvestmentsPage() {
                 key={investment.id}
                 variants={item}
                 whileHover={{ y: -5, boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.05)' }}
-                className="bg-white/80 dark:bg-gray-800/90 backdrop-blur-sm rounded-xl shadow-md overflow-hidden border border-gray-200/50 dark:border-gray-700 transition-all"
+                className={`bg-white/80 dark:bg-gray-800/90 backdrop-blur-sm rounded-xl shadow-md overflow-hidden border transition-all ${
+                  investment.status === 'completed'
+                    ? 'border-purple-200/50 dark:border-purple-900/50'
+                    : 'border-gray-200/50 dark:border-gray-700'
+                }`}
               >
                 <div className="p-6">
                   <div className="flex justify-between items-start mb-4">
@@ -146,19 +209,29 @@ export default function InvestmentsPage() {
                       </div>
                     </div>
                     <span className={`px-3 py-1 text-xs font-medium rounded-full ${
-                      investment.status === 'active' 
-                        ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300'
-                        : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                      investment.status === 'completed'
+                        ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300'
+                        : investment.status === 'active'
+                          ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300'
+                          : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
                     }`}>
                       {investment.status}
                     </span>
                   </div>
                   
                   <div className="space-y-4">
-                    <div className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-gray-700 dark:to-gray-800 p-4 rounded-lg">
+                    <div className={`p-4 rounded-lg ${
+                      investment.status === 'completed'
+                        ? 'bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/30'
+                        : 'bg-gradient-to-r from-blue-50 to-blue-100 dark:from-gray-700 dark:to-gray-800'
+                    }`}>
                       <div className="flex justify-between items-center">
                         <div className="flex items-center">
-                          <FiDollarSign className="text-blue-500 dark:text-blue-400 mr-2" />
+                          <FiDollarSign className={`mr-2 ${
+                            investment.status === 'completed'
+                              ? 'text-purple-500 dark:text-purple-400'
+                              : 'text-blue-500 dark:text-blue-400'
+                          }`} />
                           <span className="text-sm text-gray-500 dark:text-gray-400">Invested</span>
                         </div>
                         <span className="font-medium text-gray-800 dark:text-gray-100">
@@ -185,33 +258,42 @@ export default function InvestmentsPage() {
                     <div className="relative pt-2">
                       <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                         <div 
-                          className="h-full bg-gradient-to-r from-blue-500 to-blue-400 dark:from-blue-400 dark:to-blue-300"
-                          style={{ width: `${Math.min(100, (investment.earnings_to_date / investment.total_income) * 100)}%` }}
+                          className={`h-full ${
+                            investment.status === 'completed'
+                              ? 'bg-gradient-to-r from-purple-500 to-purple-400 dark:from-purple-400 dark:to-purple-300'
+                              : 'bg-gradient-to-r from-blue-500 to-blue-400 dark:from-blue-400 dark:to-blue-300'
+                          }`}
+                          style={{ width: `${calculateProgress(investment)}%` }}
                         ></div>
                       </div>
                       <span className="text-xs text-gray-500 dark:text-gray-400 absolute right-0 top-0">
-                        {((investment.earnings_to_date / investment.total_income) * 100 || 0).toFixed(1)}%
+                        {calculateProgress(investment).toFixed(1)}%
                       </span>
                     </div>
                   </div>
                   
                   <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-2">
-                      <FiCalendar className="mr-2" />
-                      <span>Next Payout</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="font-medium text-gray-800 dark:text-gray-100">
-                        {format(new Date(investment.next_payout_date), 'MMM d, yyyy HH:mm')}
-                      </span>
-                      {/* <motion.button
-                        whileHover={{ scale: 1.03 }}
-                        whileTap={{ scale: 0.97 }}
-                        className="text-xs bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-300 px-3 py-1 rounded-full"
-                      >
-                        View Details
-                      </motion.button> */}
-                    </div>
+                    {investment.status === 'completed' ? (
+                      <div className="flex items-center text-green-500 dark:text-green-400">
+                        <FiCheckCircle className="mr-2" />
+                        <span>Completed on {format(new Date(investment.end_date), 'MMM d, yyyy')}</span>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-2">
+                          <FiCalendar className="mr-2" />
+                          <span>Next Payout</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="font-medium text-gray-800 dark:text-gray-100">
+                            {format(new Date(investment.next_payout_date), 'MMM d, yyyy HH:mm')}
+                          </span>
+                          <span className="text-sm text-gray-500 dark:text-gray-400">
+                            {getDaysRemaining(investment.end_date)} days left
+                          </span>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               </motion.div>
