@@ -19,8 +19,11 @@ export default function ThemeToggle() {
         layout
         initial={false}
         transition={{ type: "spring", stiffness: 700, damping: 30 }}
-        className={`absolute top-1 left-1 bottom-1 w-1/2 rounded-full bg-white dark:bg-gray-700`}
-        style={{ x: isLight ? 0 : 112 }} // toggle sliding effect, 112px = approx half button width - padding
+        className={`absolute top-1 left-1 bottom-1 w-[calc(50%-0.25rem)] rounded-full bg-white dark:bg-gray-700`}
+        style={{
+          x: isLight ? 0 : 'calc(100% - 0.25rem)',
+          width: 'calc(50% - 0.25rem)'
+        }}
       />
 
       {/* Light label */}
