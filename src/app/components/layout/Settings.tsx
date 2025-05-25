@@ -57,6 +57,13 @@ export default function SettingsPanel() {
       action: () => router.push('/active-investment')
     },
     {
+      id: 'EasyChangePasswordForm',
+      title: 'Change Password',
+      icon: <FaWallet className="text-green-500" />,
+      isExternal: true,
+      action: () => router.push('/change-password')
+    },
+    {
       id: 'theme',
       title: 'Appearance',
       icon: <ThemeToggle  />,

@@ -71,7 +71,7 @@ export default function InviteProfileClient() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4 ">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -286,7 +286,7 @@ export default function InviteProfileClient() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="bg-white/10 dark:bg-gray-800/90 backdrop-blur-md rounded-2xl p-6 shadow-lg border border-white/10 dark:border-gray-700"
+          className="bg-white/10 dark:bg-gray-800/90 backdrop-blur-md rounded-2xl p-6 shadow-lg border border-white/10 dark:border-gray-700 mb-20"
         >
           <h2 className="text-xl font-semibold text-white dark:text-gray-100 mb-4">How It Works</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
