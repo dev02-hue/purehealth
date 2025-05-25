@@ -23,7 +23,7 @@ export function Nav({ activeTab, setActiveTab }: NavProps) {
           }`}
         >
           <FiHome className="text-xl" />
-          <span className="text-xs mt-1">Plan</span>
+          <span className="text-xs mt-1">Home</span>
         </Link>
         
         <Link
@@ -39,9 +39,13 @@ export function Nav({ activeTab, setActiveTab }: NavProps) {
           <span className="text-xs mt-1">Invite</span>
         </Link>
         
-        <button className="flex flex-col items-center p-2 text-gray-500 dark:text-gray-300">
-          <FiPlusCircle className="text-2xl text-blue-600 dark:text-blue-400" />
-        </button>
+        <Link
+      href="/plans"
+      className="flex flex-col items-center p-2 text-gray-500 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition"
+    >
+      <FiPlusCircle className="text-2xl text-blue-600 dark:text-blue-400" />
+      <span className="text-xs mt-1">Plans</span>
+    </Link>
         
         <Link
           href="/profile"

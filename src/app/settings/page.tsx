@@ -1,12 +1,11 @@
 import React from 'react'
-import { SignOutButton } from '../components/auth/SignOutButton'
-import ThemeToggle from '../components/layout/ThemeToggle'
+import SettingsPanel from '../components/layout/Settings'
+ 
 
 const page = () => {
   return (
     <div>
-      <SignOutButton />
-      <ThemeToggle />
+      <SettingsPanel />
     </div>
   )
 }

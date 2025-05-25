@@ -1,8 +1,11 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import Link from 'next/link'
 import { FiTrendingUp } from 'react-icons/fi'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
+import { toast } from 'react-hot-toast'
+import { investInPlan } from '@/lib/investment-plan'
 
 const investmentPlans = [
   { name: 'Starter Plan', price: 3000, dailyIncome: 900, totalIncome: 27000, duration: '30 Days' },
@@ -28,6 +31,32 @@ const formatCurrency = (amount: number) => {
 }
 
 export default function InvestmentPlans() {
+  const router = useRouter()
+  const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>(
+    investmentPlans.reduce((acc, plan) => ({ ...acc, [plan.name]: false }), {})
+  )
+
+  const handleInvest = async (plan: typeof investmentPlans[0]) => {
+    setLoadingStates(prev => ({ ...prev, [plan.name]: true }))
+    
+    try {
+      const result = await investInPlan(plan)
+      if (!result?.success) {
+        throw new Error('Investment failed')
+      }
+      toast.success(`Successfully invested in ${plan.name}!`)
+      router.push('/dashboard/investments')
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        toast.error(error.message || 'Investment failed')
+      } else {
+        toast.error('An unknown error occurred')
+      }
+    } finally {
+      setLoadingStates(prev => ({ ...prev, [plan.name]: false }))
+    }
+  }
+
   return (
     <div className="py-12 mb-10 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto">
@@ -90,12 +119,13 @@ export default function InvestmentPlans() {
                   </div>
                 </div>
 
-                <Link
-                  href="/deposit"
-                  className="mt-6 w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800 transition"
+                <button
+                  onClick={() => handleInvest(plan)}
+                  disabled={loadingStates[plan.name]}
+                  className="mt-6 w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Invest Now
-                </Link>
+                  {loadingStates[plan.name] ? 'Processing...' : 'Invest Now'}
+                </button>
               </div>
             </motion.div>
           ))}
@@ -119,7 +149,7 @@ export default function InvestmentPlans() {
                 <p className="text-gray-500 dark:text-gray-400">30% (Level 1), 3% (Level 2+)</p>
               </div>
               <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                <p className="font-medium dark:text-gray-100">Withdrawal Bonus</p>
+                <p className="font-medium dark:text-gray-100">Welcome Bonus</p>
                 <p className="text-gray-500 dark:text-gray-400">₦900</p>
               </div>
             </div>
