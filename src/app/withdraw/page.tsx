@@ -1,5 +1,6 @@
 import React from 'react'
-import WithdrawalForm from '../components/WithdrawalForm'
+import WithdrawalForm from '../components/layout/WithdrawalForm'
+ 
 
 const page = () => {
   return (
