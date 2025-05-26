@@ -85,3 +85,49 @@ export async function getReferralData(): Promise<ReferralData> {
   console.log('[ReferralService] Final referral data:', result)
   return result
 }
+
+/**
+ * Rewards referrers of a given user based on level.
+ * Call this when a referred user performs a rewardable action (like payment).
+ * 
+ * @param refereeId - ID of the user who performed the action (the referred user)
+ * @param amount - Total transaction amount to calculate rewards from
+ */
+export async function rewardReferrers(refereeId: string, amount: number) {
+  console.log('[ReferralService] Rewarding referrers of user:', refereeId)
+
+  // Get all referrals for this user (may include multiple levels)
+  const { data: referrals, error } = await supabase
+    .from('referrals')
+    .select('referrer_id, level')
+    .eq('referee_id', refereeId)
+
+  if (error || !referrals || referrals.length === 0) {
+    console.warn('[ReferralService] No referrers found or error occurred:', error?.message)
+    return
+  }
+
+  for (const referral of referrals) {
+    const { referrer_id, level } = referral
+
+    let rewardPercentage = 0
+    if (level === 1) rewardPercentage = 30
+    else if (level >= 2) rewardPercentage = 3
+
+    const rewardAmount = (rewardPercentage / 100) * amount
+
+    console.log(`[ReferralService] Referrer ${referrer_id} (Level ${level}) gets ₦${rewardAmount}`)
+
+    // Update balance in the profiles table
+    const { error: updateError } = await supabase.rpc('increment_balance', {
+      user_id_input: referrer_id,
+      amount_input: rewardAmount,
+    })
+
+    if (updateError) {
+      console.error(`[ReferralService] Failed to update balance for ${referrer_id}:`, updateError.message)
+    } else {
+      console.log(`[ReferralService] Balance updated successfully for ${referrer_id}`)
+    }
+  }
+}

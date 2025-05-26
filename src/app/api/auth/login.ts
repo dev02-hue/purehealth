@@ -10,87 +10,63 @@ type SignInInput = {
 }
 
 export async function signIn({ email, phone, password }: SignInInput) {
-  // Structured logging with clear labels
-  console.log('[Auth] Login attempt:', { 
-    method: phone ? 'phone' : 'email',
-    identifier: phone || email,
-    hasPassword: !!password 
-  })
-
-  if (!email && !phone) {
-    console.error('[Auth] Validation failed: Missing email or phone')
-    return { error: 'Email or phone is required' }
-  }
-
-  if (!password) {
-    console.error('[Auth] Validation failed: Missing password')
-    return { error: 'Password is required' }
-  }
-
-  let data
-  let error
+  // Validate input
+  if (!email && !phone) return { error: 'Email or phone is required' }
+  if (!password) return { error: 'Password is required' }
 
   try {
+    let authEmail = email;
+    
+    // Handle phone login
     if (phone) {
-      console.log('[Auth] Starting phone login flow for:', phone)
+      console.log('Attempting phone login for:', phone)
       
-      const { data: profileData, error: profileError } = await supabase
+      // 1. Find the user's profile to get their UUID
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('email, phone_number')
+        .select('id, phone_number, auth_email')
         .eq('phone_number', phone)
         .single()
 
-      if (profileError || !profileData?.email) {
-        console.error('[Auth] Phone lookup failed:', profileError?.message || 'No profile found')
-        return { error: 'No account found with this phone number' }
-      }
-
-      if (profileData.phone_number !== phone) {
-        console.error('[Auth] Phone number mismatch:', {
-          provided: phone,
-          stored: profileData.phone_number
-        })
-        return { error: 'Phone number not found' }
-      }
-
-      console.log('[Auth] Attempting auth with associated email:', profileData.email)
-      ;({ data, error } = await supabase.auth.signInWithPassword({
-        email: profileData.email,
-        password,
-      }))
-
-      if (error) {
-        console.error('[Auth] Phone login failed:', error.message)
+      if (profileError || !profile) {
+        console.error('Phone lookup failed:', profileError?.message || 'No profile found')
         return { error: 'Invalid phone number or password' }
       }
-    } else if (email) {
-      console.log('[Auth] Starting email login flow for:', email)
-      ;({ data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      }))
 
-      if (error) {
-        console.error('[Auth] Email login failed:', error.message)
-        return { error: 'Invalid email or password' }
+      // 2. Reconstruct the EXACT temp email used during signup
+      // Matches your signup format: `${uuidv4().split('-')[0]}_${phone}@temp.domain`
+      authEmail = profile.auth_email
+      if (!authEmail) {
+        return { error: 'Phone-based login not supported for this user' }
       }
+      console.log('Reconstructed email for phone login:', authEmail)
     }
 
-    console.log('[Auth] Login successful for user:', data?.user?.id)
+    // 3. Attempt authentication
+    console.log('Attempting auth with email:', authEmail)
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: authEmail!,
+      password
+    })
 
-    // Session handling
-    const sessionToken = data?.session?.access_token
-    const refreshToken = data?.session?.refresh_token
-    const userId = data?.user?.id
+    if (error) {
+      console.error('Authentication failed:', error.message)
+      return { error: 'Invalid credentials' }
+    }
+
+    // 4. Handle session
+    const sessionToken = data.session?.access_token
+    const refreshToken = data.session?.refresh_token
+    const userId = data.user?.id
 
     if (!sessionToken || !refreshToken || !userId) {
-      console.error('[Auth] Session data is incomplete or missing')
-      return { error: 'Failed to retrieve session data. Please try again.' }
+      console.error('Incomplete session data')
+      return { error: 'Failed to create session' }
     }
 
-    // Secure cookie setup
-    const cookieStore = await cookies()
-    const oneYear = 365 * 24 * 60 * 60
+    // 5. Set cookies
+    const cookieStore =await cookies()
+    const oneYear = 31536000 // 1 year in seconds
 
     cookieStore.set('sb-access-token', sessionToken, {
       httpOnly: true,
@@ -116,18 +92,15 @@ export async function signIn({ email, phone, password }: SignInInput) {
       sameSite: 'lax',
     })
 
+    console.log('Login successful for user:', userId)
     return {
-      user: data?.user ?? null,
-      session: {
-        access_token: sessionToken,
-        refresh_token: refreshToken,
-        expires_at: data?.session?.expires_at
-      },
-      message: 'Login successful',
+      user: data.user,
+      session: data.session,
+      message: 'Login successful'
     }
 
   } catch (err) {
-    console.error('[Auth] Unexpected error during login:', err)
-    return { error: 'An unexpected error occurred. Please try again.' }
+    console.error('Unexpected login error:', err)
+    return { error: 'An unexpected error occurred' }
   }
 }
