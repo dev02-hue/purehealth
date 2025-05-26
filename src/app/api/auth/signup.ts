@@ -1,4 +1,3 @@
-// app/api/auth/signup.ts (or wherever you're placing it)
 'use server'
 
 import { supabase } from '@/lib/supabaseClient'
@@ -10,91 +9,92 @@ export async function signUp({
   password,
   firstName,
   lastName,
-  referredCode, // this comes from the referral link
+  referredCode,
 }: {
   email?: string
   phone?: string
   password: string
   firstName: string
   lastName: string
-  referredCode?: string // optional referral code
+  referredCode?: string
 }) {
   if (!email && !phone) return { error: 'Email or phone is required' }
+  if (password.length < 8) return { error: 'Password must be at least 8 characters' }
 
-  let data
-  let error
+  // Generate auth email (use actual email or create temporary one)
+  const authEmail = email || `${uuidv4().split('-')[0]}_${phone}@temp.domain`
 
-  // 1. Sign up user using Supabase auth
-  if (email) {
-    ({ data, error } = await supabase.auth.signUp({ email, password }))
-  } else if (phone) {
-    ({ data, error } = await supabase.auth.signUp({ phone, password }))
-  }
+
+  // 1. Sign up user using email auth (even for phone registrations)
+  const { data, error } = await supabase.auth.signUp({
+    email: authEmail,
+    password,
+    options: {
+      data: {
+        first_name: firstName,
+        last_name: lastName
+      }
+    }
+  })
 
   if (error || !data?.user) {
     return { error: error?.message || 'Signup failed' }
   }
 
   const userId = data.user.id
-
-  // 2. Generate a unique referral code
   const referralCode = uuidv4().split('-')[0] + userId.slice(0, 4)
 
-  // 3. Lookup referred_by user if a referral code was provided
-  let referredByUserId: string | null = null
+  // Referral logic
+  let referredByUserId = null
   let referralLevel = 0
-
+  
   if (referredCode) {
     const { data: referrerProfile } = await supabase
       .from('profiles')
-      .select('id')
+      .select('id, referral_level')
       .eq('referral_code', referredCode)
       .single()
 
     if (referrerProfile?.id) {
       referredByUserId = referrerProfile.id
-
-      // Get the level of the referrer (so we can assign the correct level)
-      const { data: parentReferral } = await supabase
-        .from('referrals')
-        .select('level')
-        .eq('referee_id', referredByUserId)
-        .single()
-
-      referralLevel = parentReferral ? parentReferral.level + 1 : 1
+      referralLevel = (referrerProfile.referral_level || 0) + 1
     }
   }
 
-  // 4. Insert user profile with referral info
-  const { error: profileError } = await supabase.from('profiles').insert([
-    {
-      id: userId,
-      first_name: firstName,
-      last_name: lastName,
-      email,
-      phone_number: phone,
-      balance: 900,
-      referral_code: referralCode,
-      referred_by: referredByUserId,
-      referral_level: referralLevel,
-    },
-  ])
+  // Create user profile
+  const { error: profileError } = await supabase.from('profiles').insert([{
+    id: userId,
+    first_name: firstName,
+    last_name: lastName,
+    email: email || null,
+    phone_number: phone || null,
+    balance: 900,
+    referral_code: referralCode,
+    referred_by: referredByUserId,
+    referral_level: referralLevel,
+    is_phone_user: !email,
+    auth_email: authEmail
+  }])
 
-  if (profileError) return { error: profileError.message }
+  if (profileError) {
+    
+    await supabase.auth.admin.deleteUser(userId)
+    return { error: 'Profile creation failed' }
+  }
 
-  // 5. Add entry in referrals table (if referred)
+  // Create referral relationship if applicable
   if (referredByUserId) {
-    await supabase.from('referrals').insert([
-      {
-        referrer_id: referredByUserId,
-        referee_id: userId,
-        level: referralLevel,
-      },
-    ])
+    await supabase.from('referrals').insert([{
+      referrer_id: referredByUserId,
+      referee_id: userId,
+      level: referralLevel,
+      created_at: new Date().toISOString()
+    }])
   }
 
   return {
     user: data.user,
-    message: 'Signup successful',
+    session: data.session,
+    message: 'Signup successful'
   }
 }

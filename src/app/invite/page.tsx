@@ -1,6 +1,6 @@
 'use client'
 
-import { getReferralData } from '@/lib/referral/referrals'
+import { getReferralData, rewardReferrers } from '@/lib/referral/referrals'
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
@@ -14,6 +14,7 @@ export default function InviteProfileClient() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isCopied, setIsCopied] = useState(false)
+  const [simulatedAmount, setSimulatedAmount] = useState(10000) // Default simulation amount
 
   useEffect(() => {
     const fetchReferralData = async () => {
@@ -67,6 +68,27 @@ export default function InviteProfileClient() {
     }
     
     window.open(url, '_blank', 'noopener,noreferrer')
+  }
+
+  // Function to simulate rewarding referrers (for testing)
+  const handleSimulateReward = async () => {
+    try {
+      // In a real scenario, you would get the refereeId from the current user or transaction
+      // For simulation purposes, we'll use a mock refereeId
+      const mockRefereeId = 'mock-referee-id-for-testing'
+      
+      toast.loading('Processing rewards...')
+      await rewardReferrers(mockRefereeId, simulatedAmount)
+      toast.success(`Successfully rewarded referrers for amount: ₦${simulatedAmount}`)
+      
+      // Refresh data to see updated counts
+      const data = await getReferralData()
+      setLevels(data.levels)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to process rewards')
+    } finally {
+      toast.dismiss()
+    }
   }
 
   if (isLoading) {
@@ -289,7 +311,7 @@ export default function InviteProfileClient() {
           className="bg-white/10 dark:bg-gray-800/90 backdrop-blur-md rounded-2xl p-6 shadow-lg border border-white/10 dark:border-gray-700 mb-20"
         >
           <h2 className="text-xl font-semibold text-white dark:text-gray-100 mb-4">How It Works</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             {[
               {
                 title: "Invite Friends",
@@ -316,6 +338,33 @@ export default function InviteProfileClient() {
                 <p className="text-white/70 dark:text-gray-300 text-sm">{item.desc}</p>
               </div>
             ))}
+          </div>
+
+          {/* Reward Simulation Section (for testing) */}
+          <div className="mt-6 pt-6 border-t border-white/10 dark:border-gray-700">
+            <h3 className="text-lg font-medium text-white dark:text-gray-100 mb-3">Reward Simulation (Testing)</h3>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-grow">
+                <label className="block text-sm font-medium text-white/80 dark:text-gray-300 mb-1">Amount (₦)</label>
+                <input
+                  type="number"
+                  value={simulatedAmount}
+                  onChange={(e) => setSimulatedAmount(Number(e.target.value))}
+                  className="w-full bg-white/10 dark:bg-gray-700/50 border border-white/20 dark:border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  min="100"
+                  step="100"
+                />
+              </div>
+              <button
+                onClick={handleSimulateReward}
+                className="mt-6 sm:mt-0 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg px-6 py-2 transition-colors"
+              >
+                Simulate Reward
+              </button>
+            </div>
+            <p className="text-xs text-white/60 dark:text-gray-400 mt-2">
+              Note: This is for testing purposes only. In production, rewards are automatically processed.
+            </p>
           </div>
         </motion.div>
       </motion.div>
