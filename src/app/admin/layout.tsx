@@ -2,6 +2,7 @@
 "use client"
 import Link from "next/link";
 import { ReactNode, useState } from "react";
+import { AiFillTrademarkCircle } from "react-icons/ai";
 import { FiUsers, FiUpload, FiDownload, FiFileText, FiSettings, FiMenu, FiX } from "react-icons/fi";
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
@@ -53,6 +54,14 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             onClick={() => setIsSidebarOpen(false)}
           >
             <FiFileText /> Reports
+          </Link>
+          <Link 
+            href="/admin/investment-management" 
+            className="flex items-center hover:bg-gray-700 px-4 py-2 rounded gap-2"
+            onClick={() => setIsSidebarOpen(false)}
+          >
+            <AiFillTrademarkCircle />Investment Plans Management
+
           </Link>
           <Link 
             href="/admin/settings" 

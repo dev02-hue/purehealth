@@ -1,7 +1,5 @@
 'use server'
 
-console.log('use server')
-
 import { supabase } from '@/lib/supabaseClient'
 import { cookies } from 'next/headers'
 import { sendDepositEmailToAdmin } from '@/lib/email'
@@ -21,6 +19,18 @@ export async function initiateDeposit(amount: number, userEmail: string) {
   if (amount < 1000) {
     console.log('Amount too low:', amount)
     return { error: 'Minimum deposit is ₦1,000' }
+  }
+
+  // Fetch active bank account details
+  const { data: bankAccount, error: bankError } = await supabase
+    .from('bank_accounts')
+    .select('bank_name, account_number, account_name')
+    .eq('is_active', true)
+    .single()
+
+  if (bankError || !bankAccount) {
+    console.error('Error fetching bank account:', bankError)
+    return { error: 'Unable to fetch payment details. Please try again later.' }
   }
 
   const reference = `DEP-${Date.now()}-${Math.floor(Math.random() * 1000)}`
@@ -58,12 +68,12 @@ export async function initiateDeposit(amount: number, userEmail: string) {
   return {
     success: true,
     paymentDetails: {
-      bankName: 'Moniepoint Microfinance Bank',
-      accountNumber: '6851747698',
-      accountName: 'Monnify Checkout',
+      bankName: bankAccount.bank_name,
+      accountNumber: bankAccount.account_number,
+      accountName: bankAccount.account_name,
       amount: `₦${amount.toLocaleString()}`,
       narration: reference,
-      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
     }
   }
 }

@@ -1,14 +1,14 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { FiTrendingUp } from 'react-icons/fi'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
 import { toast } from 'react-hot-toast'
+ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { getAllInvestmentPlans, InvestmentPlan } from '@/lib/investmentPlans'
 import { investInPlan } from '@/lib/investment-plan'
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-
-// Mock data for market trends (would be replaced with real API data in production)
+ 
 const generateMarketData = (volatility: number) => {
   return Array.from({ length: 30 }, (_, i) => ({
     day: i + 1,
@@ -16,133 +16,9 @@ const generateMarketData = (volatility: number) => {
   }))
 }
 
-const investmentPlans = [
-  { 
-    name: 'Starter Plan', 
-    price: 3000, 
-    dailyIncome: 900, 
-    totalIncome: 27000, 
-    duration: '30 Days',
-    volatility: 0.2,
-    risk: 'Low',
-    description: 'Ideal for beginners with steady returns'
-  },
-  { 
-    name: 'Basic Plan', 
-    price: 6000, 
-    dailyIncome: 1800, 
-    totalIncome: 54000, 
-    duration: '30 Days',
-    volatility: 0.3,
-    risk: 'Low',
-    description: 'Balanced growth with moderate returns'
-  },
-  { 
-    name: 'Silver Plan', 
-    price: 20000, 
-    dailyIncome: 6000, 
-    totalIncome: 180000, 
-    duration: '30 Days',
-    volatility: 0.4,
-    risk: 'Medium',
-    description: 'Higher returns with managed risk'
-  },
-  { 
-    name: 'Gold Plan', 
-    price: 50000, 
-    dailyIncome: 15000, 
-    totalIncome: 450000, 
-    duration: '30 Days',
-    volatility: 0.5,
-    risk: 'Medium',
-    description: 'Premium growth with diverse assets'
-  },
-  { 
-    name: 'Platinum Plan', 
-    price: 100000, 
-    dailyIncome: 30000, 
-    totalIncome: 900000, 
-    duration: '30 Days',
-    volatility: 0.6,
-    risk: 'High',
-    description: 'Aggressive growth for experienced investors'
-  },
-  { 
-    name: 'Diamond Plan', 
-    price: 150000, 
-    dailyIncome: 45000, 
-    totalIncome: 1350000, 
-    duration: '30 Days',
-    volatility: 0.7,
-    risk: 'High',
-    description: 'High-yield opportunities with premium support'
-  },
-  { 
-    name: 'Premium Plan', 
-    price: 200000, 
-    dailyIncome: 60000, 
-    totalIncome: 1800000, 
-    duration: '30 Days',
-    volatility: 0.75,
-    risk: 'High',
-    description: 'Premium-tier plan with increased risk and returns'
-  },
-  { 
-    name: 'Executive Plan', 
-    price: 250000, 
-    dailyIncome: 75000, 
-    totalIncome: 2250000, 
-    duration: '30 Days',
-    volatility: 0.8,
-    risk: 'High',
-    description: 'Executive-level plan for serious investors'
-  },
-  { 
-    name: 'VIP Plan', 
-    price: 350000, 
-    dailyIncome: 95000, 
-    totalIncome: 2850000, 
-    duration: '30 Days',
-    volatility: 0.85,
-    risk: 'High',
-    description: 'VIP benefits and higher returns with top-tier support'
-  },
-  { 
-    name: 'Elite Plan', 
-    price: 650000, 
-    dailyIncome: 180000, 
-    totalIncome: 5400000, 
-    duration: '30 Days',
-    volatility: 0.9,
-    risk: 'Very High',
-    description: 'Elite-level investment for large capital growth'
-  },
-  { 
-    name: 'Royal Plan', 
-    price: 1000000, 
-    dailyIncome: 300000, 
-    totalIncome: 9000000, 
-    duration: '30 Days',
-    volatility: 0.95,
-    risk: 'Very High',
-    description: 'Royal-grade plan with unmatched earning potential'
-  },
-  { 
-    name: 'Imperial Plan', 
-    price: 2000000, 
-    dailyIncome: 600000, 
-    totalIncome: 18000000, 
-    duration: '30 Days',
-    volatility: 1.0,
-    risk: 'Extreme',
-    description: 'Imperial-level investment with maximum risk and reward'
-  },
-];
-
-
 const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('en-NG', { 
-    style: 'currency', 
+  return new Intl.NumberFormat('en-NG', {
+    style: 'currency',
     currency: 'NGN',
     minimumFractionDigits: 0
   }).format(amount)
@@ -150,25 +26,49 @@ const formatCurrency = (amount: number) => {
 
 export default function InvestmentPlans() {
   const router = useRouter()
-  const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>(
-    investmentPlans.reduce((acc, plan) => ({ ...acc, [plan.name]: false }), {})
-  )
 
-  const handleInvest = async (plan: typeof investmentPlans[0]) => {
-    // Show confirmation dialog
+  const [investmentPlans, setInvestmentPlans] = useState<InvestmentPlan[]>([])
+  const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({})
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchPlans = async () => {
+      const result = await getAllInvestmentPlans()
+
+      if ('error' in result) {
+        toast.error(result.error)
+      } else {
+        setInvestmentPlans(result)
+        // Initialize loading states
+        setLoadingStates(
+          result.reduce((acc, plan) => ({ ...acc, [plan.name]: false }), {})
+        )
+      }
+      setLoading(false)
+    }
+
+    fetchPlans()
+  }, [])
+
+  const handleInvest = async (plan: InvestmentPlan) => {
     const confirmed = window.confirm(`Are you sure you want to invest in ${plan.name} for ${formatCurrency(plan.price)}?`)
-    
     if (!confirmed) return
-    
+
     setLoadingStates(prev => ({ ...prev, [plan.name]: true }))
-    
+
     try {
-      const result = await investInPlan(plan)
-      
+      const result = await investInPlan({
+        name: plan.name,
+        price: plan.price,
+        dailyIncome: plan.daily_income,
+        totalIncome: plan.total_income,
+        duration: plan.duration,
+      })
+
       if (!result?.success) {
         throw new Error('Investment failed')
       }
-      
+
       toast.success(`Successfully invested ${formatCurrency(plan.price)} in ${plan.name}!`)
       router.push('/active-investment')
     } catch (error: unknown) {
@@ -183,9 +83,9 @@ export default function InvestmentPlans() {
   }
 
   interface CustomTooltipProps {
-    active?: boolean;
-    payload?: { value: number }[];
-    label?: number;
+    active?: boolean
+    payload?: { value: number }[]
+    label?: number
   }
 
   const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
@@ -202,6 +102,9 @@ export default function InvestmentPlans() {
     return null
   }
 
+  if (loading) {
+    return <p className="text-center py-10">Loading investment plans...</p>
+  }
   return (
     <div className="py-12 mb-10 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto">
@@ -226,8 +129,8 @@ export default function InvestmentPlans() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {investmentPlans.map((plan, index) => {
-            const marketData = generateMarketData(plan.volatility)
-            const roiPercentage = ((plan.totalIncome - plan.price) / plan.price * 100).toFixed(1)
+            const marketData = generateMarketData(plan.volatility || 0.5)
+            const roiPercentage = ((plan.total_income - plan.price) / plan.price * 100).toFixed(1)
             
             return (
               <motion.div
@@ -283,12 +186,12 @@ export default function InvestmentPlans() {
 
                     <div className="flex justify-between items-center">
                       <span className="text-gray-500 dark:text-gray-400">Daily Income</span>
-                      <span className="font-medium text-green-600 dark:text-green-400">+{formatCurrency(plan.dailyIncome)}</span>
+                      <span className="font-medium text-green-600 dark:text-green-400">+{formatCurrency(plan.daily_income)}</span>
                     </div>
 
                     <div className="flex justify-between items-center">
                       <span className="text-gray-500 dark:text-gray-400">Total Return</span>
-                      <span className="font-medium text-blue-600 dark:text-blue-400">{formatCurrency(plan.totalIncome)}</span>
+                      <span className="font-medium text-blue-600 dark:text-blue-400">{formatCurrency(plan.total_income)}</span>
                     </div>
 
                     <div className="flex justify-between items-center">
