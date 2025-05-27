@@ -1,8 +1,11 @@
-import React from 'react'
+import BankAccountsManager from '@/app/components/BankAccountManager'
+  import React from 'react'
 
 const page = () => {
   return (
-    <div>page</div>
+    <div>
+      <BankAccountsManager />
+      </div>
   )
 }
 

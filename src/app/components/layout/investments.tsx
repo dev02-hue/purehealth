@@ -6,9 +6,10 @@ import { getInvestments } from '@/lib/investment-actions'
 import { formatCurrency } from '@/lib/utils'
 import { format, differenceInDays } from 'date-fns'
 import { motion } from 'framer-motion'
-import { FiTrendingUp, FiClock, FiDollarSign, FiCalendar, FiCheckCircle } from 'react-icons/fi'
+import { FiTrendingUp, FiClock, FiCalendar, FiCheckCircle } from 'react-icons/fi'
 import { toast } from 'react-hot-toast'
 import { processDailyEarnings } from '@/lib/investment-plan'
+import { TbCurrencyNaira } from 'react-icons/tb'
 
 const container = {
   hidden: { opacity: 0 },
@@ -270,7 +271,14 @@ export default function InvestmentsPage() {
                     }`}>
                       <div className="flex justify-between items-center">
                         <div className="flex items-center">
-                          <FiDollarSign className={`mr-2 w-3 h-3 sm:w-4 sm:h-4 ${
+                          <TbCurrencyNaira className={`mr-2 w-3 h-3 sm:w-4 smAppearance
+￼
+Sign Out
+Sign Out
+More options coming soon
+Home
+Invite
+:h-4 ${
                             investment.status === 'completed'
                               ? 'text-purple-500 dark:text-purple-400'
                               : 'text-blue-500 dark:text-blue-400'
