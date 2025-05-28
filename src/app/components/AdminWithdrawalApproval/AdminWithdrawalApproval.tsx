@@ -84,6 +84,7 @@ export default function AdminWithdrawalApproval() {
                 <th className="py-2 px-4 border dark:border-gray-700 text-gray-800 dark:text-gray-300">Date</th>
                 <th className="py-2 px-4 border dark:border-gray-700 text-gray-800 dark:text-gray-300">User ID</th>
                 <th className="py-2 px-4 border dark:border-gray-700 text-gray-800 dark:text-gray-300">Amount</th>
+                <th className="py-2 px-4 border dark:border-gray-700 text-gray-800 dark:text-gray-300">Fee</th>
                 <th className="py-2 px-4 border dark:border-gray-700 text-gray-800 dark:text-gray-300">Bank</th>
                 <th className="py-2 px-4 border dark:border-gray-700 text-gray-800 dark:text-gray-300">Account</th>
                 <th className="py-2 px-4 border dark:border-gray-700 text-gray-800 dark:text-gray-300">Action</th>
@@ -103,6 +104,9 @@ export default function AdminWithdrawalApproval() {
                   </td>
                   <td className="py-2 px-4 border dark:border-gray-700 text-gray-600 dark:text-gray-300">
                     ₦{withdrawal.amount.toLocaleString()}
+                  </td>
+                  <td className="py-2 px-4 border dark:border-gray-700 text-gray-600 dark:text-gray-300">
+                    {withdrawal.fee}
                   </td>
                   <td className="py-2 px-4 border dark:border-gray-700 text-gray-600 dark:text-gray-300">
                     {withdrawal.bank_name}

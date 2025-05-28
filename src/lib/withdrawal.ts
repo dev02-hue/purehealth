@@ -12,62 +12,37 @@ export async function initiateWithdrawal(
   accountNumber: string,
   accountName: string
 ): Promise<WithdrawalResponse> {
-  console.log('initiateWithdrawal called with:', { 
-    amount, 
-    bankName, 
-    accountNumber, 
-    accountName 
-  })
+  console.log('initiateWithdrawal called with:', { amount, bankName, accountNumber, accountName });
 
-  // Authentication check
-  const cookieStore = await cookies()
-  const userId = cookieStore.get('user_id')?.value
-  console.log('Retrieved user ID from cookie:', userId)
+  const cookieStore = await cookies();
+  const userId = cookieStore.get('user_id')?.value;
 
-  if (!userId) {
-    console.log('User not authenticated')
-    return { success: false, error: 'User not authenticated' }
-  }
+  if (!userId) return { success: false, error: 'User not authenticated' };
+  if (!bankName || !accountNumber || !accountName)
+    return { success: false, error: 'Please provide complete bank details' };
+  if (amount < 1000)
+    return { success: false, error: 'Minimum withdrawal is ₦1,000' };
 
-  // Validate withdrawal details
-  if (!bankName || !accountNumber || !accountName) {
-    console.log('Missing bank details')
-    return { success: false, error: 'Please provide complete bank details' }
-  }
+  // Calculate 10% withdrawal fee
+  const withdrawalFee = amount * 0.1;
+  const totalDeduction = amount + withdrawalFee;
 
-  if (amount < 1000) {
-    console.log('Amount too low:', amount)
-    return { success: false, error: 'Minimum withdrawal is ₦1,000' }
-  }
-
-  // Calculate withdrawal fee (10%)
-  const withdrawalFee = amount * 0.1
-  const totalDeduction = amount + withdrawalFee
-
-  // Get user balance
   const { data: userData, error: userError } = await supabase
     .from('profiles')
     .select('balance')
     .eq('id', userId)
-    .single()
+    .single();
 
-  if (userError || !userData) {
-    console.error('Failed to fetch user balance:', userError)
-    return { success: false, error: 'Failed to verify your balance' }
-  }
+  if (userError || !userData)
+    return { success: false, error: 'Failed to verify your balance' };
 
-  const userBalance = userData.balance || 0
+  const userBalance = userData.balance || 0;
+  if (userBalance < totalDeduction)
+    return { success: false, error: 'Insufficient balance (includes 10% withdrawal fee)' };
 
-  // Check sufficient balance
-  if (userBalance < totalDeduction) {
-    console.log('Insufficient balance:', { userBalance, totalDeduction })
-    return { success: false, error: 'Insufficient balance (includes 10% withdrawal fee)' }
-  }
+  const reference = `WDR-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
-  // Create withdrawal record
-  const reference = `WDR-${Date.now()}-${Math.floor(Math.random() * 1000)}`
-  console.log('Generated withdrawal reference:', reference)
-
+  // Create withdrawal record for user
   const { error: withdrawalError } = await supabase
     .from('withdrawals')
     .insert([{
@@ -80,18 +55,30 @@ export async function initiateWithdrawal(
       account_name: accountName,
       status: 'pending',
       reference
-    }])
-    .select()
-    .single()
+    }]);
 
   if (withdrawalError) {
-    console.error('Withdrawal initiation failed:', withdrawalError)
-    return { success: false, error: 'Failed to initiate withdrawal' }
+    console.error('Withdrawal initiation failed:', withdrawalError);
+    return { success: false, error: 'Failed to initiate withdrawal' };
   }
 
-  console.log('Withdrawal record inserted successfully')
+  // Record the fee for admin approval
+  const { error: adminFeeError } = await supabase
+    .from('admin_withdrawals') // Ensure this table exists in your database
+    .insert([{
+      user_id: userId,
+      fee: withdrawalFee,
+      reference,
+      status: 'pending',
+      description: `10% withdrawal fee from withdrawal reference ${reference}`
+    }]);
 
-  // Send notification to admin
+  if (adminFeeError) {
+    console.error('Failed to log admin fee:', adminFeeError);
+    // Note: you may choose whether to fail here or just log it and continue
+  }
+
+  // Notify admin
   await sendWithdrawalEmailToAdmin({
     userId,
     amount,
@@ -101,15 +88,13 @@ export async function initiateWithdrawal(
     accountNumber,
     accountName,
     reference
-  })
-
-  console.log('Admin email sent for withdrawal')
+  });
 
   return {
     success: true,
-    message: 'Withdrawal successful! Check your bank in 10-20 minutes.',
+    message: 'Withdrawal initiated successfully!',
     details: {
-      message: 'Withdrawal successful! Check your bank in 10-20 minutes.',
+      message: 'Withdrawal initiated successfully! It will be processed shortly.',
       amountWithdrawn: amount,
       fee: withdrawalFee,
       totalDeducted: totalDeduction,
@@ -117,8 +102,9 @@ export async function initiateWithdrawal(
       accountNumber,
       reference
     }
-  }
+  };
 }
+
 
 // lib/withdrawal.ts
 export async function approveWithdrawal(withdrawalId: number): Promise<{ success: boolean; error?: string }> {

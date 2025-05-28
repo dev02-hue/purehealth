@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
-import { approveTransaction } from '@/lib/approve/approve'
+import { approveTransaction, rejectTransaction } from '@/lib/approve/approve'
 
 type Transaction = {
   id: string
@@ -70,26 +70,18 @@ export default function DepositDashboard() {
     }
   }
 
-  const handleReject = async (transactionId: string) => {
-    try {
-      const response = await fetch('/api/admin/reject', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          transactionId,
-          adminNotes: rejectNote 
-        }),
-      })
+  
 
-      if (response.ok) {
-        setSelectedTx(null)
-        setRejectNote('')
-        fetchPendingDeposits()
-      }
+  async function handleReject(transactionId: number) {
+    try {
+      await rejectTransaction(transactionId, rejectNote);
+      alert('Transaction rejected successfully!');
     } catch (error) {
-      console.error('Error in handleReject:', error)
+      if (error instanceof Error) {
+        alert(`Approval failed: ${error.message}`);
+      } else {
+        alert('Approval failed: An unknown error occurred.');
+      }
     }
   }
 
@@ -171,7 +163,7 @@ export default function DepositDashboard() {
         </>
       )}
 
-      {/* Reject Modal */}
+      Reject Modal
       {selectedTx && (
         <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center p-4 z-50">
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full border border-gray-200 dark:border-gray-700">
@@ -191,7 +183,7 @@ export default function DepositDashboard() {
                 Cancel
               </button>
               <button
-                onClick={() => handleReject(selectedTx)}
+                onClick={() => handleReject(Number(selectedTx))}
                 className="bg-red-500 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700 text-white px-4 py-2 rounded"
                 disabled={!rejectNote.trim()}
               >
