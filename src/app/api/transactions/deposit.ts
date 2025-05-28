@@ -36,13 +36,14 @@ export async function initiateDeposit(amount: number, userEmail: string) {
   const reference = `DEP-${Date.now()}-${Math.floor(Math.random() * 1000)}`
   console.log('Generated reference:', reference)
 
-  const { error } = await supabase
+  // Insert transaction with 'initiated' status instead of 'pending'
+  const { data: transaction, error } = await supabase
     .from('transactions')
     .insert([{
       user_id: userId,
       type: 'deposit',
       amount,
-      status: 'pending',
+      status: 'initiated',
       reference,
       user_email: userEmail
     }])
@@ -56,14 +57,7 @@ export async function initiateDeposit(amount: number, userEmail: string) {
 
   console.log('Transaction record inserted successfully')
 
-  await sendDepositEmailToAdmin({
-    userEmail,
-    amount,
-    reference,
-    userId
-  })
-
-  console.log('Admin email sent for deposit')
+  // REMOVED the immediate admin notification
 
   return {
     success: true,
@@ -73,7 +67,40 @@ export async function initiateDeposit(amount: number, userEmail: string) {
       accountName: bankAccount.account_name,
       amount: `₦${amount.toLocaleString()}`,
       narration: reference,
-      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
+      transactionId: transaction.id // Added transaction ID for later confirmation
     }
   }
+}
+
+// NEW function to confirm payment and notify admin
+export async function confirmDeposit(transactionId: string) {
+  console.log('confirmDeposit called for transaction:', transactionId)
+
+  // Update transaction status to 'pending' and notify admin
+  const { data: transaction, error: updateError } = await supabase
+    .from('transactions')
+    .update({ status: 'pending' })
+    .eq('id', transactionId)
+    .select()
+    .single()
+
+  if (updateError || !transaction) {
+    console.error('Failed to confirm deposit:', updateError)
+    return { error: 'Failed to confirm deposit' }
+  }
+
+  console.log('Transaction status updated to pending')
+
+  // Now send the notification to admin
+  await sendDepositEmailToAdmin({
+    userEmail: transaction.user_email,
+    amount: transaction.amount,
+    reference: transaction.reference,
+    userId: transaction.user_id
+  })
+
+  console.log('Admin email sent for deposit confirmation')
+
+  return { success: true }
 }
