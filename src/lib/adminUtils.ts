@@ -124,76 +124,69 @@ export async function checkAdminAndFetchUsers(): Promise<AdminResponse> {
 
 
 export async function deleteUserById(userId: string): Promise<{ success?: boolean; error?: string }> {
-    try {
-      // 1. Get session from cookies (same as checkAdminAndFetchUsers)
-      const cookieStore =await cookies()
-      const accessToken = cookieStore.get('sb-access-token')?.value
-      const refreshToken = cookieStore.get('sb-refresh-token')?.value
-  
-      if (!accessToken || !refreshToken) {
-        return { error: 'Not authenticated. Please log in.' }
-      }
-  
-      // 2. Set session on Supabase client (same as checkAdminAndFetchUsers)
-      const { data: { session }, error: sessionError } = await supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken,
-      })
-  
-      if (sessionError || !session?.user) {
-        return { error: 'Session expired. Please log in again.' }
-      }
-  
-      // 3. Verify admin status using the same pattern as checkAdminAndFetchUsers
-      const { data: currentUser, error: profileError } = await supabase
-        .from('profiles')
-        .select('is_admin')
-        .eq('id', session.user.id)
-        .single()
-  
-      if (profileError || !currentUser?.is_admin) {
-        return { error: 'Unauthorized. Admin access required.' }
-      }
-  
-      // 4. IMPORTANT: Use the admin API with the current session's access token
-      // This is the key difference from before
-      const adminAuthClient = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-          global: {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-            },
-          },
-          auth: {
-            persistSession: false
-          }
-        }
-      )
-  
-      // 5. Delete user from Auth
-      const { error: authDeleteError } = await adminAuthClient.auth.admin.deleteUser(userId)
-      if (authDeleteError) {
-        console.error('Auth deletion error:', authDeleteError)
-        return { error: 'Failed to delete user from authentication system.' }
-      }
-  
-      // 6. Delete user profile (using regular client)
-      const { error: profileDeleteError } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', userId)
-  
-      if (profileDeleteError) {
-        console.error('Profile deletion error:', profileDeleteError)
-        return { error: 'User auth deleted but failed to remove profile.' }
-      }
-  
-      return { success: true }
-  
-    } catch (error) {
-      console.error('Delete user error:', error)
-      return { error: 'An unexpected error occurred.' }
+  try {
+    // 1. Get session
+    const cookieStore = await cookies()
+    const accessToken = cookieStore.get('sb-access-token')?.value
+    const refreshToken = cookieStore.get('sb-refresh-token')?.value
+
+    if (!accessToken || !refreshToken) {
+      return { error: 'Not authenticated. Please log in.' }
     }
+
+    const { data: { session }, error: sessionError } = await supabase.auth.setSession({
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    })
+
+    if (sessionError || !session?.user) {
+      return { error: 'Session expired. Please log in again.' }
+    }
+
+    // 2. Check if current user is admin
+    const { data: currentUser, error: profileError } = await supabase
+      .from('profiles')
+      .select('is_admin')
+      .eq('id', session.user.id)
+      .single()
+
+    if (profileError || !currentUser?.is_admin) {
+      return { error: 'Unauthorized. Admin access required.' }
+    }
+
+    // 3. Create admin Supabase client using service role
+    const adminClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!, // ✅ Use service role key!
+      {
+        auth: {
+          persistSession: false
+        }
+      }
+    )
+
+    // 4. Delete from Supabase Auth
+    const { error: authDeleteError } = await adminClient.auth.admin.deleteUser(userId)
+    if (authDeleteError) {
+      console.error('Auth deletion error:', authDeleteError)
+      return { error: 'Failed to delete user from authentication system.' }
+    }
+
+    // 5. Delete from profiles table
+    const { error: profileDeleteError } = await supabase
+      .from('profiles')
+      .delete()
+      .eq('id', userId)
+
+    if (profileDeleteError) {
+      console.error('Profile deletion error:', profileDeleteError)
+      return { error: 'User auth deleted but failed to remove profile.' }
+    }
+
+    return { success: true }
+
+  } catch (error) {
+    console.error('Delete user error:', error)
+    return { error: 'An unexpected error occurred.' }
   }
+}

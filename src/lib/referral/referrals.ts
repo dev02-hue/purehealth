@@ -13,121 +13,157 @@ export type ReferralData = {
 }
 
 export async function getReferralData(): Promise<ReferralData> {
-  console.log('[ReferralService] Starting to fetch referral data...')
-  
-  const cookieStore = await cookies()
+  const cookieStore =await cookies()
   const userId = cookieStore.get('user_id')?.value
-  console.log('[ReferralService] Retrieved user_id from cookies:', userId)
 
   if (!userId) {
-    console.error('[ReferralService] Error: User not authenticated')
     throw new Error('User not authenticated')
   }
 
-  // Get referral code from the user's profile
-  console.log('[ReferralService] Fetching profile data for user:', userId)
+  // Get referral code from user's profile
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('referral_code')
     .eq('id', userId)
     .single()
 
-  console.log('[ReferralService] Profile data response:', {
-    profile,
-    profileError,
-    hasProfile: !!profile
-  })
-
   if (profileError || !profile) {
-    console.error('[ReferralService] Error fetching profile:', profileError?.message || 'No profile data')
     throw new Error('Referral code not found')
   }
 
-  // Get referral levels from the referrals table
-  console.log('[ReferralService] Fetching referral data for referrer_id:', userId)
+  // Get referral counts by level
   const { data: referralData, error: referralError } = await supabase
     .from('referrals')
     .select('level')
     .eq('referrer_id', userId)
 
-  console.log('[ReferralService] Referral data response:', {
-    referralData,
-    referralError,
-    count: referralData?.length || 0
-  })
-
   if (referralError) {
-    console.error('[ReferralService] Error fetching referrals:', referralError.message)
     throw new Error('Could not fetch referral stats')
   }
 
-  // Count by level
-  console.log('[ReferralService] Calculating level counts...')
+  // Count referrals by level
   const levelsCount = referralData.reduce((acc: Record<number, number>, item) => {
     acc[item.level] = (acc[item.level] || 0) + 1
     return acc
   }, {})
-
-  console.log('[ReferralService] Raw level counts:', levelsCount)
 
   const levels = [1, 2, 3].map((level) => ({
     level,
     count: levelsCount[level] || 0,
   }))
 
-  console.log('[ReferralService] Processed levels:', levels)
-
-  const result = {
+  return {
     referralCode: profile.referral_code,
     levels,
   }
-
-  console.log('[ReferralService] Final referral data:', result)
-  return result
 }
 
 /**
- * Rewards referrers of a given user based on level.
- * Call this when a referred user performs a rewardable action (like payment).
- * 
- * @param refereeId - ID of the user who performed the action (the referred user)
- * @param amount - Total transaction amount to calculate rewards from
+ * Rewards referrers in a multi-level structure
+ * @param refereeId - ID of the user who performed the action
+ * @param amount - Transaction amount to calculate rewards from
  */
 export async function rewardReferrers(refereeId: string, amount: number) {
-  console.log('[ReferralService] Rewarding referrers of user:', refereeId)
-
-  // Get all referrals for this user (may include multiple levels)
-  const { data: referrals, error } = await supabase
+  const { data: referralChain, error } = await supabase
     .from('referrals')
     .select('referrer_id, level')
     .eq('referee_id', refereeId)
 
-  if (error || !referrals || referrals.length === 0) {
-    console.warn('[ReferralService] No referrers found or error occurred:', error?.message)
+  if (error || !referralChain || referralChain.length === 0) {
+    console.warn('No referrers found for user:', refereeId)
     return
   }
 
-  for (const referral of referrals) {
-    const { referrer_id, level } = referral
-
+  for (const { referrer_id, level } of referralChain) {
     let rewardPercentage = 0
+
     if (level === 1) rewardPercentage = 30
-    else if (level >= 2) rewardPercentage = 3
+    else if (level === 2) rewardPercentage = 3
+    else continue // skip level 3+
 
     const rewardAmount = (rewardPercentage / 100) * amount
 
-    console.log(`[ReferralService] Referrer ${referrer_id} (Level ${level}) gets ₦${rewardAmount}`)
-
-    // Update balance in the profiles table
+    // 1. Increment balance via function
     const { error: updateError } = await supabase.rpc('increment_balance', {
       user_id_input: referrer_id,
       amount_input: rewardAmount,
     })
 
     if (updateError) {
-      console.error(`[ReferralService] Failed to update balance for ${referrer_id}:`, updateError.message)
-    } else {
-      console.log(`[ReferralService] Balance updated successfully for ${referrer_id}`)
+      console.error(`Failed to increment balance for ${referrer_id}:`, updateError)
+      continue
+    }
+
+    // 2. Log reward transaction
+    const { error: insertError } = await supabase
+      .from('referral_rewards')
+      .insert({
+        referrer_id,
+        referee_id: refereeId,
+        level,
+        reward_amount: rewardAmount,
+        transaction_amount: amount,
+        reward_percentage: rewardPercentage,
+      })
+
+    if (insertError) {
+      console.error(`Failed to record reward for ${referrer_id}:`, insertError)
+    }
+
+    console.log(`Rewarded ${referrer_id} at level ${level}: ${rewardAmount}`)
+  }
+}
+
+
+/**
+ * Records a new referral when a user signs up with a referral code
+ * @param refereeId - ID of the new user
+ * @param referralCode - The referral code used
+ */
+export async function recordReferral(refereeId: string, referralCode: string) {
+  // 1. Get direct referrer
+  const { data: referrer, error: referrerError } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('referral_code', referralCode)
+    .single()
+
+  if (referrerError || !referrer) {
+    throw new Error('Invalid referral code')
+  }
+
+  // 2. Add level 1 referral (direct)
+  const { error: directError } = await supabase
+    .from('referrals')
+    .insert({
+      referrer_id: referrer.id,
+      referee_id: refereeId,
+      level: 1,
+    })
+
+  if (directError) {
+    throw new Error('Failed to record direct referral')
+  }
+
+  // 3. Find indirect referrer (who referred the direct referrer)
+  const { data: grandReferrerData, error: grandReferrerError } = await supabase
+    .from('referrals')
+    .select('referrer_id')
+    .eq('referee_id', referrer.id)
+    .single()
+
+  if (!grandReferrerError && grandReferrerData) {
+    // 4. Add level 2 referral (indirect)
+    const { error: indirectError } = await supabase
+      .from('referrals')
+      .insert({
+        referrer_id: grandReferrerData.referrer_id,
+        referee_id: refereeId,
+        level: 2,
+      })
+
+    if (indirectError) {
+      console.error('Failed to record indirect referral:', indirectError)
     }
   }
 }
