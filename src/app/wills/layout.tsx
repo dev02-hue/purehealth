@@ -28,35 +28,35 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         <h2 className="text-2xl font-bold mb-6 hidden md:block">Admin Panel</h2>
         <nav className="space-y-2">
           <Link 
-            href="/admin/users" 
+            href="/wills/users" 
             className="flex items-center hover:bg-gray-700 px-4 py-2 rounded gap-2"
             onClick={() => setIsSidebarOpen(false)}
           >
             <FiUsers /> All Users
           </Link>
           <Link 
-            href="/admin/deposits" 
+            href="/wills/deposits" 
             className="flex items-center hover:bg-gray-700 px-4 py-2 rounded gap-2"
             onClick={() => setIsSidebarOpen(false)}
           >
             <FiUpload /> All Deposits
           </Link>
           <Link 
-            href="/admin/withdrawals" 
+            href="/wills/withdrawals" 
             className="flex items-center hover:bg-gray-700 px-4 py-2 rounded gap-2"
             onClick={() => setIsSidebarOpen(false)}
           >
             <FiDownload /> All Withdrawals
           </Link>
           <Link 
-            href="/admin/reports" 
+            href="/wills/reports" 
             className="flex items-center hover:bg-gray-700 px-4 py-2 rounded gap-2"
             onClick={() => setIsSidebarOpen(false)}
           >
             <FiFileText /> Reports
           </Link>
           <Link 
-            href="/admin/investment-management" 
+            href="/wills/investment-management" 
             className="flex items-center hover:bg-gray-700 px-4 py-2 rounded gap-2"
             onClick={() => setIsSidebarOpen(false)}
           >
@@ -64,7 +64,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
           </Link>
           <Link 
-            href="/admin/settings" 
+            href="/wills/settings" 
             className="flex items-center hover:bg-gray-700 px-4 py-2 rounded gap-2"
             onClick={() => setIsSidebarOpen(false)}
           >
