@@ -4,7 +4,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { initiateDeposit, confirmDeposit } from '../api/transactions/deposit'
-
+import { rewardReferrers } from '@/lib/referral/referrals'
+ 
 export default function DepositPage() {
   const [amount, setAmount] = useState('')
   const [phoneNumber, setPhoneNumber] = useState('')
@@ -100,7 +101,7 @@ export default function DepositPage() {
       setError('Please copy the narration before confirming payment')
       return
     }
-
+  
     setConfirmLoading(true)
     setError('')
     
@@ -115,6 +116,29 @@ export default function DepositPage() {
       if (error) {
         setError(error)
       } else if (success) {
+        // Get the numeric amount from the payment details
+        const paymentAmount = parseFloat(paymentDetails.amount.replace(/[^0-9.]/g, ''))
+        
+        // Get the current user's ID from localStorage or cookies
+        const userIdWhoPaid = localStorage.getItem('user_id') || 
+                             document.cookie.split('; ')
+                               .find(row => row.startsWith('user_id='))
+                               ?.split('=')[1];
+        
+        if (!userIdWhoPaid) {
+          console.error('User ID not found');
+          // Still proceed with the payment confirmation
+          router.push('/');
+          return;
+        }
+  
+        // Call rewardReferrers after successful deposit confirmation
+        try {
+          await rewardReferrers(userIdWhoPaid, paymentAmount);
+        } catch (referralError) {
+          console.error('Referral reward error:', referralError)
+        }
+  
         router.push('/')
       }
     } catch {
@@ -123,7 +147,6 @@ export default function DepositPage() {
       setConfirmLoading(false)
     }
   }
-
   const copyToClipboard = (text: string, type: 'account' | 'narration') => {
     navigator.clipboard.writeText(text).then(() => {
       if (type === 'narration') {

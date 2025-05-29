@@ -7,7 +7,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { FaCopy, FaFacebook, FaTwitter, FaWhatsapp, FaLinkedin, FaTelegram, FaLink } from 'react-icons/fa'
 import { FiShare2 } from 'react-icons/fi'
 import { toast } from 'react-hot-toast'
-
+ 
 export default function InviteProfileClient() {
   const [referralCode, setReferralCode] = useState('')
   const [levels, setLevels] = useState<{ level: number; count: number }[]>([])
@@ -73,21 +73,29 @@ export default function InviteProfileClient() {
   // Function to simulate rewarding referrers (for testing)
   const handleSimulateReward = async () => {
     try {
-      // In a real scenario, you would get the refereeId from the current user or transaction
-      // For simulation purposes, we'll use a mock refereeId
-      const mockRefereeId = 'mock-referee-id-for-testing'
-      
       toast.loading('Processing rewards...')
-      await rewardReferrers(mockRefereeId, simulatedAmount)
-      toast.success(`Successfully rewarded referrers for amount: ₦${simulatedAmount}`)
+      
+      // Get the current user's ID from cookies
+      const userId = localStorage.getItem('user_id') || 
+      document.cookie.split('; ')
+        .find(row => row.startsWith('user_id='))
+        ?.split('=')[1];
+      
+      if (!userId) {
+        throw new Error('User not authenticated');
+      }
+      
+      // Pass both the user ID and amount to rewardReferrers
+      await rewardReferrers(userId, simulatedAmount);
+      toast.success(`Successfully rewarded referrers for amount: ₦${simulatedAmount}`);
       
       // Refresh data to see updated counts
-      const data = await getReferralData()
-      setLevels(data.levels)
+      const data = await getReferralData();
+      setLevels(data.levels);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to process rewards')
+      toast.error(error instanceof Error ? error.message : 'Failed to process rewards');
     } finally {
-      toast.dismiss()
+      toast.dismiss();
     }
   }
 

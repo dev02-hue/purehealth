@@ -11,7 +11,7 @@ export default function LoginForm() {
     email: '',
     phone: '',
     password: '',
-    loginMethod: 'email' as 'email' | 'phone'
+    loginMethod: 'phone' as 'email' | 'phone' // Changed default to 'phone'
   })
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
@@ -111,14 +111,14 @@ export default function LoginForm() {
   if (success) {
     return (
       <motion.div 
-        className="max-w-md mx-auto mt-16 p-8 bg-white rounded-xl shadow-lg text-center"
+        className="max-w-md mx-auto mt-16 p-8 bg-white dark:bg-gray-800 rounded-xl shadow-lg text-center"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
       >
         <FiCheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">Login Successful!</h2>
-        <p className="text-gray-600 mb-6">Welcome back!</p>
-        <p className="text-gray-500 text-sm">Redirecting to your dashboard...</p>
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">Login Successful!</h2>
+        <p className="text-gray-600 dark:text-gray-300 mb-6">Welcome back!</p>
+        <p className="text-gray-500 dark:text-gray-400 text-sm">Redirecting to your dashboard...</p>
       </motion.div>
     )
   }
@@ -126,45 +126,40 @@ export default function LoginForm() {
   return (
     <motion.form
       onSubmit={handleSubmit}
-      className="max-w-md mx-auto mt-16 space-y-4 p-8 bg-white rounded-xl shadow-lg"
+      className="max-w-md mx-auto mt-16 space-y-4 p-8 bg-white dark:bg-gray-800 rounded-xl shadow-lg"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
     >
       <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Welcome Back</h2>
-        <p className="text-gray-500">Sign in to purehealth your account</p>
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Welcome Back</h2>
+        <p className="text-gray-500 dark:text-gray-400">Sign into your purehealth account</p>
       </div>
 
       <div className="flex justify-center mb-4">
         <button
           type="button"
           onClick={toggleLoginMethod}
-          className="text-xl text-blue-600 hover:underline"
+          className="text-sm text-blue-600 dark:text-blue-400 hover:underline flex items-center"
         >
           {form.loginMethod === 'email' 
-            ? 'Use phone number instead' 
-            : 'Use email instead'}
+            ? (
+              <>
+                <FiPhone className="mr-1" /> click here to use phone number instead
+              </>
+            )
+            : (
+              <>
+                <FiMail className="mr-1" /> click here to use email instead
+              </>
+            )}
         </button>
       </div>
 
-      {form.loginMethod === 'email' ? (
+      {/* Changed order to show phone first by default */}
+      {form.loginMethod === 'phone' ? (
         <div className="relative">
-          <FiMail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-          <input
-            name="email"
-            type="email"
-            placeholder="Email address"
-            value={form.email}
-            onChange={handleChange}
-            required
-            className="w-full pl-10 p-3 border text-black border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-      ) : (
-        
-        <div className="relative">
-          <FiPhone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          <FiPhone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" />
           <input
             name="phone"
             type="tel"
@@ -172,13 +167,26 @@ export default function LoginForm() {
             value={form.phone}
             onChange={handleChange}
             required
-            className="w-full pl-10 p-3 border text-black border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-10 p-3 border text-black dark:text-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+          />
+        </div>
+      ) : (
+        <div className="relative">
+          <FiMail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" />
+          <input
+            name="email"
+            type="email"
+            placeholder="Email address"
+            value={form.email}
+            onChange={handleChange}
+            required
+            className="w-full pl-10 p-3 border text-black dark:text-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
           />
         </div>
       )}
 
       <div className="relative">
-        <FiLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+        <FiLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" />
         <input
           name="password"
           type={showPassword ? "text" : "password"}
@@ -187,11 +195,11 @@ export default function LoginForm() {
           onChange={handleChange}
           required
           minLength={6}
-          className="w-full pl-10 pr-10 p-3 border text-black border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full pl-10 pr-10 p-3 border text-black dark:text-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
         />
         <button
           type="button"
-          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400"
           onClick={() => setShowPassword(!showPassword)}
         >
           {showPassword ? <FiEyeOff /> : <FiEye />}
@@ -202,14 +210,14 @@ export default function LoginForm() {
         <button 
           type="button" 
           onClick={() => router.push('/forgot-password')}
-          className="text-sm text-blue-600 hover:underline"
+          className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
         >
           Forgot password?
         </button>
       </div>
 
       {error && (
-        <div className="text-red-600 text-sm p-2 bg-red-50 rounded text-center">
+        <div className="text-red-600 dark:text-red-400 text-sm p-2 bg-red-50 dark:bg-red-900/20 rounded text-center">
           {error}
         </div>
       )}
@@ -219,8 +227,8 @@ export default function LoginForm() {
         disabled={loading}
         className={`w-full py-3 px-4 rounded-lg transition flex items-center justify-center ${
           loading 
-            ? 'bg-blue-400 cursor-not-allowed' 
-            : 'bg-blue-600 hover:bg-blue-700 text-white'
+            ? 'bg-blue-400 dark:bg-blue-500 cursor-not-allowed' 
+            : 'bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-800 text-white'
         }`}
       >
         {loading ? (
@@ -238,12 +246,12 @@ export default function LoginForm() {
         )}
       </button>
 
-      <div className="text-center text-sm text-gray-500 mt-4">
+      <div className="text-center text-sm text-gray-500 dark:text-gray-400 mt-4">
         Don&apos;t have an account?{' '}
         <button 
           type="button" 
           onClick={() => router.push('/signup')}
-          className="text-blue-600 cursor-pointer hover:underline"
+          className="text-blue-600 dark:text-blue-400 cursor-pointer hover:underline"
         >
           Sign up
         </button>
