@@ -5,8 +5,9 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { signUp } from '@/app/api/auth/signup'
 import { motion } from 'framer-motion'
 import { FiUser, FiMail, FiPhone, FiLock, FiArrowRight, FiCheckCircle, FiGift, FiX } from 'react-icons/fi'
+import { Suspense } from 'react'
 
-export default function SignupForm() {
+function SignupFormContent() {
   const searchParams = useSearchParams()
   const defaultInviteCode = '3c65cef37fc2';
   
@@ -210,5 +211,13 @@ export default function SignupForm() {
         </button>
       </div>
     </motion.form>
+  )
+}
+
+export default function SignupForm() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <SignupFormContent />
+    </Suspense>
   )
 }
