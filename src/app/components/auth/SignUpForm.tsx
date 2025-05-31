@@ -1,12 +1,13 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { signUp } from '@/app/api/auth/signup'
 import { motion } from 'framer-motion'
 import { FiUser, FiMail, FiPhone, FiLock, FiArrowRight, FiCheckCircle, FiGift, FiX } from 'react-icons/fi'
 
 export default function SignupForm() {
+  const searchParams = useSearchParams()
   const defaultInviteCode = '3c65cef37fc2';
   
   const [form, setForm] = useState({
@@ -21,6 +22,14 @@ export default function SignupForm() {
   const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+
+  // Extract referral code from URL on component mount
+  useEffect(() => {
+    const refCode = searchParams.get('ref')
+    if (refCode) {
+      setForm(prev => ({ ...prev, referredCode: refCode }))
+    }
+  }, [searchParams])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value })
@@ -57,20 +66,19 @@ export default function SignupForm() {
   if (success) {
     return (
       <motion.div
-  className="max-w-md mx-auto mt-24 px-8 py-10 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-800 text-center transition-all duration-300"
-  initial={{ opacity: 0, y: 30 }}
-  animate={{ opacity: 1, y: 0 }}
-  transition={{ duration: 0.6, ease: 'easeOut' }}
->
-  <FiCheckCircle className="w-16 h-16 text-green-500 dark:text-emerald-500 mx-auto mb-6" />
-  <h2 className="text-3xl font-semibold text-gray-900 dark:text-white mb-3">
-    Registration Successful
-  </h2>
-  <p className="text-md text-gray-600 dark:text-gray-300">
-    Your account has been created successfully. You can now log in and start exploring.
-  </p>
-</motion.div>
-
+        className="max-w-md mx-auto mt-24 px-8 py-10 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-800 text-center transition-all duration-300"
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: 'easeOut' }}
+      >
+        <FiCheckCircle className="w-16 h-16 text-green-500 dark:text-emerald-500 mx-auto mb-6" />
+        <h2 className="text-3xl font-semibold text-gray-900 dark:text-white mb-3">
+          Registration Successful
+        </h2>
+        <p className="text-md text-gray-600 dark:text-gray-300">
+          Your account has been created successfully. You can now log in and start exploring.
+        </p>
+      </motion.div>
     )
   }
 
