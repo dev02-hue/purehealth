@@ -4,8 +4,9 @@ import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useMediaQuery } from 'react-responsive'
 import { getUserProfile } from '@/lib/profile/profile'
-import { FiDollarSign,  FiMenu, FiX, FiSun, FiMoon } from 'react-icons/fi'
+import {  FiMenu, FiX, FiSun, FiMoon } from 'react-icons/fi'
 import { RiVipCrownFill } from 'react-icons/ri'
+import { FaNairaSign } from 'react-icons/fa6'
 
 export default function DashboardNav() {
   const [userData, setUserData] = useState({
@@ -131,7 +132,7 @@ export default function DashboardNav() {
               >
                 <div className="flex items-center space-x-1 sm:space-x-2">
                   <div className={`${darkMode ? 'bg-[#6366F1]' : 'bg-[#3B82F6]'} p-1 rounded-full`}>
-                    <FiDollarSign className="text-white" size={isTinyScreen ? 12 : 14} />
+                    <FaNairaSign className="text-white" size={isTinyScreen ? 12 : 14} />
                   </div>
                   <div>
                     <p className={`${isTinyScreen ? 'text-[8px]' : 'text-xs'} ${darkMode ? 'text-[#A0AEC0]' : 'text-[#4A5568]'}`}>

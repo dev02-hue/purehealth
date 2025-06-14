@@ -15,8 +15,7 @@ import {
   FaCog
 } from 'react-icons/fa'
 import { useRouter } from 'next/navigation'
-import ThemeToggle from './ThemeToggle'
-import { SignOutButton } from '../auth/SignOutButton'
+ import { SignOutButton } from '../auth/SignOutButton'
 
 type SettingsTab = 'account' | 'transactions' | 'investments' | 'preferences'
 
@@ -81,12 +80,12 @@ export default function SettingsPanel() {
       }
     ],
     preferences: [
-      {
-        id: 'theme',
-        title: 'Appearance',
-        icon: <ThemeToggle />,
-        action: null
-      },
+      // {
+      //   id: 'theme',
+      //   title: 'Appearance',
+      //   icon: <ThemeToggle />,
+      //   action: null
+      // },
       {
         id: 'help',
         title: 'Help Center',

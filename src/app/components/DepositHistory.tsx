@@ -1,43 +1,81 @@
-// components/DepositHistory.tsx
 'use client'
 
 import { motion } from 'framer-motion'
-import { FaHistory, FaMoneyBillWave, FaClock, FaCheckCircle, FaTimesCircle } from 'react-icons/fa'
+import { 
+  FiDollarSign, 
+  FiClock, 
+  FiCheckCircle, 
+  FiXCircle,
+  FiCalendar,
+  FiTrendingUp,
+  FiRefreshCw
+} from 'react-icons/fi'
+import { format } from 'date-fns'
+
+// Color palette
+const COLORS = {
+  primary: '#3B82F6', // Sheraton blue
+  secondary: '#EC4899', // Sheraton pink
+  success: '#10B981',
+  warning: '#F59E0B',
+  error: '#EF4444',
+  background: '#FFFFFF',
+  cardBg: '#F5F7FA',
+  textDark: '#1A1A1A',
+  textLight: '#4A5568',
+  border: '#E5E7EB'
+}
 
 type Deposit = {
   id: string;
   created_at: string;
   amount: number;
-  status: string;
+  status: 'pending' | 'completed' | 'failed';
+  payment_method?: string;
+  reference?: string;
 };
 
 type Props = {
   deposits: Deposit[];
-  error: string | null;
+  error?: string;
+  loading?: boolean;
+  onRefresh?: () => void;
 };
 
-const statusConfig = {
-  pending: {
-    icon: <FaClock className="text-yellow-500 dark:text-yellow-400" />,
-    bg: 'bg-yellow-50 dark:bg-yellow-900/30',
-    text: 'text-yellow-700 dark:text-yellow-300',
-    border: 'border-yellow-200 dark:border-yellow-800'
-  },
-  completed: {
-    icon: <FaCheckCircle className="text-green-500 dark:text-green-400" />,
-    bg: 'bg-green-50 dark:bg-green-900/30',
-    text: 'text-green-700 dark:text-green-300',
-    border: 'border-green-200 dark:border-green-800'
-  },
-  failed: {
-    icon: <FaTimesCircle className="text-red-500 dark:text-red-400" />,
-    bg: 'bg-red-50 dark:bg-red-900/30',
-    text: 'text-red-700 dark:text-red-300',
-    border: 'border-red-200 dark:border-red-800'
-  }
-};
+const StatusBadge = ({ status }: { status: string }) => {
+  const statusConfig = {
+    pending: {
+      icon: <FiClock className="text-yellow-500" />,
+      bg: 'bg-yellow-50',
+      text: 'text-yellow-700',
+      border: 'border-yellow-200'
+    },
+    completed: {
+      icon: <FiCheckCircle className="text-green-500" />,
+      bg: 'bg-green-50',
+      text: 'text-green-700',
+      border: 'border-green-200'
+    },
+    failed: {
+      icon: <FiXCircle className="text-red-500" />,
+      bg: 'bg-red-50',
+      text: 'text-red-700',
+      border: 'border-red-200'
+    }
+  } as const; // Optional, helps narrow type
+  
+  const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
+  
 
-export default function DepositHistory({ deposits, error }: Props) {
+  return (
+    <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm ${config.bg} ${config.text} ${config.border} border`}>
+      {config.icon}
+      <span className="capitalize font-medium">{status}</span>
+    </div>
+  )
+}
+
+export default function DepositHistory({ deposits, error, loading, onRefresh }: Props) {
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -48,103 +86,175 @@ export default function DepositHistory({ deposits, error }: Props) {
 
   const itemVariants = {
     hidden: { y: 10, opacity: 0 },
-    visible: { y: 0, opacity: 1, transition: { type: "spring", stiffness: 120 } }
+    visible: { 
+      y: 0, 
+      opacity: 1, 
+      transition: { 
+        type: "spring", 
+        stiffness: 120,
+        damping: 10
+      } 
+    }
   };
 
   if (error) {
     return (
       <motion.div
-        className="p-4 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg flex items-center gap-2"
+        className="p-4 bg-red-50 text-red-700 rounded-lg flex items-center gap-3"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
       >
-        <FaTimesCircle />
-        {error}
+        <FiXCircle className="text-lg" />
+        <div>
+          <p className="font-medium">Transaction Error</p>
+          <p className="text-sm">{error}</p>
+        </div>
       </motion.div>
     );
   }
 
   return (
     <motion.div 
-      className="bg-white dark:bg-gray-800 rounded-xl shadow-sm dark:shadow-gray-900/50 p-6 border dark:border-gray-700" 
+      className="rounded-xl shadow-sm p-6"
+      style={{ backgroundColor: COLORS.background }}
       initial={{ opacity: 0, y: 10 }} 
       animate={{ opacity: 1, y: 0 }} 
       transition={{ duration: 0.3 }}
     >
-      <motion.h2 
-        className="text-2xl font-bold mb-6 text-blue-600 dark:text-blue-400 flex items-center gap-3" 
-        initial={{ x: -10, opacity: 0 }} 
-        animate={{ x: 0, opacity: 1 }} 
-        transition={{ delay: 0.1 }}
-      >
-        <FaHistory className="text-blue-500 dark:text-blue-400" />
-        Deposit History
-      </motion.h2>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <motion.h2 
+          className="text-2xl font-bold flex items-center gap-3"
+          style={{ color: COLORS.primary }}
+          initial={{ x: -10, opacity: 0 }} 
+          animate={{ x: 0, opacity: 1 }} 
+          transition={{ delay: 0.1 }}
+        >
+          <FiTrendingUp className="text-2xl" />
+          <span>Sheraton Deposit Records</span>
+        </motion.h2>
+        
+        {onRefresh && (
+          <motion.button
+            onClick={onRefresh}
+            disabled={loading}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm"
+            style={{ 
+              backgroundColor: COLORS.primary,
+              color: '#FFFFFF'
+            }}
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.98 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            <FiRefreshCw className={loading ? 'animate-spin' : ''} />
+            {loading ? 'Refreshing...' : 'Refresh Data'}
+          </motion.button>
+        )}
+      </div>
 
       {deposits.length === 0 ? (
         <motion.div 
-          className="py-8 text-center bg-gray-50 dark:bg-gray-700/30 rounded-lg" 
+          className="py-12 text-center rounded-lg"
+          style={{ backgroundColor: COLORS.cardBg }}
           initial={{ opacity: 0 }} 
           animate={{ opacity: 1 }}
         >
-          <p className="text-gray-500 dark:text-gray-400">No deposit history found</p>
+          <div className="mx-auto w-20 h-20 rounded-full flex items-center justify-center mb-4"
+            style={{ backgroundColor: COLORS.primary + '20' }}>
+            <FiDollarSign className="text-3xl" style={{ color: COLORS.primary }} />
+          </div>
+          <h3 className="text-lg font-medium mb-2" style={{ color: COLORS.textDark }}>
+            No Deposit History Found
+          </h3>
+          <p className="text-sm max-w-md mx-auto" style={{ color: COLORS.textLight }}>
+            Your deposit records will appear here once you fund your Sheraton investment account
+          </p>
         </motion.div>
       ) : (
         <motion.div 
-          className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700" 
+          className="overflow-hidden rounded-lg border"
+          style={{ borderColor: COLORS.border }}
           variants={containerVariants} 
           initial="hidden" 
           animate="visible"
         >
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-              <thead className="bg-gray-50 dark:bg-gray-700/30">
-                <motion.tr variants={itemVariants}>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-1">
-                    <FaMoneyBillWave className="text-blue-500 dark:text-blue-400" /> Amount
+            <table className="min-w-full divide-y" style={{ borderColor: COLORS.border }}>
+              <thead className="text-left">
+                <motion.tr 
+                  variants={itemVariants}
+                  style={{ backgroundColor: COLORS.cardBg }}
+                >
+                  <th className="px-6 py-4 text-xs font-medium tracking-wider" style={{ color: COLORS.textLight }}>
+                    TRANSACTION
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-4 text-xs font-medium tracking-wider flex items-center gap-2" style={{ color: COLORS.textLight }}>
+                    <FiCalendar />
+                    DATE/TIME
+                  </th>
+                  <th className="px-6 py-4 text-xs font-medium tracking-wider" style={{ color: COLORS.textLight }}>
+                    AMOUNT
+                  </th>
+                  <th className="px-6 py-4 text-xs font-medium tracking-wider" style={{ color: COLORS.textLight }}>
+                    STATUS
+                  </th>
                 </motion.tr>
               </thead>
-              <motion.tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700" variants={containerVariants}>
-                {deposits.map((deposit) => {
-                  const status = deposit.status.toLowerCase();
-                  const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
-
-                  return (
-                    <motion.tr 
-                      key={deposit.id} 
-                      className="hover:bg-blue-50 dark:hover:bg-gray-700/50 transition-colors" 
-                      variants={itemVariants} 
-                      whileHover={{ scale: 1.005 }}
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
-                        {new Date(deposit.created_at).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
-                        ₦{deposit.amount?.toLocaleString()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs ${config.bg} ${config.text} ${config.border} border`}>
-                          {config.icon}
-                          <span className="capitalize">{status}</span>
+              <motion.tbody 
+                className="divide-y"
+                style={{ borderColor: COLORS.border }}
+                variants={containerVariants}
+              >
+                {deposits.map((deposit) => (
+                  <motion.tr 
+                    key={deposit.id} 
+                    className="transition-colors hover:bg-blue-50/50"
+                    variants={itemVariants} 
+                    whileHover={{ scale: 1.005 }}
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium" style={{ color: COLORS.textDark }}>
+                          {deposit.payment_method || 'Bank Transfer'}
                         </span>
-                      </td>
-                    </motion.tr>
-                  );
-                })}
+                        {deposit.reference && (
+                          <span className="text-xs" style={{ color: COLORS.textLight }}>
+                            Ref: {deposit.reference}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm" style={{ color: COLORS.textDark }}>
+                      {format(new Date(deposit.created_at), 'MMM d, yyyy - h:mm a')}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium" style={{ color: COLORS.textDark }}>
+                      ₦{deposit.amount?.toLocaleString()}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <StatusBadge status={deposit.status} />
+                    </td>
+                  </motion.tr>
+                ))}
               </motion.tbody>
             </table>
           </div>
         </motion.div>
       )}
+
+      {/* Sheraton Branding */}
+      <motion.div 
+        className="mt-8 pt-6 border-t text-center"
+        style={{ borderColor: COLORS.border }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.5 }}
+      >
+        <p className="text-sm" style={{ color: COLORS.textLight }}>
+          Sheraton Investment Platform • Secure Transactions
+        </p>
+      </motion.div>
     </motion.div>
-  );
+  )
 }

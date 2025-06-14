@@ -52,6 +52,11 @@ export async function investInPlan(plan: {
   const endDate = new Date()
   endDate.setDate(endDate.getDate() + durationInDays)
 
+  const now = new Date();
+const nextPayoutDate = new Date(now);
+nextPayoutDate.setDate(nextPayoutDate.getDate() + 1);
+nextPayoutDate.setHours(0, 0, 0, 0); // Set to midnight
+
   const { data: investment, error: investmentError } = await supabase
     .from('investments')
     .insert([{
@@ -61,10 +66,10 @@ export async function investInPlan(plan: {
       daily_income: plan.dailyIncome,
       total_income: plan.totalIncome,
       duration_days: durationInDays,
-      start_date: new Date().toISOString(),
+      start_date: now.toISOString(),
       end_date: endDate.toISOString(),
-      last_payout_date: new Date().toISOString(),
-      next_payout_date: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // Next day
+      last_payout_date: now.toISOString(),
+      next_payout_date: nextPayoutDate.toISOString(),
       status: 'active',
       earnings_to_date: 0
     }])
