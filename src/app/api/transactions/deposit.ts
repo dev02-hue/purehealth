@@ -57,8 +57,7 @@ export async function initiateDeposit(amount: number, userEmail: string) {
 
   console.log('Transaction record inserted successfully')
 
-  // REMOVED the immediate admin notification
-
+ 
   return {
     success: true,
     paymentDetails: {

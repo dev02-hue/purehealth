@@ -1,229 +1,427 @@
 'use client'
 
 import { useState } from 'react'
-import Image from 'next/image'
-import Link from 'next/link'
+import { motion } from 'framer-motion'
+import { 
+  FiDollarSign, 
+  FiHome,
+  FiClock,
+  FiUsers,
+  FiMail,
+  FiPieChart,
+   FiCreditCard,
+  FiGift,
+  FiTrendingUp
+} from 'react-icons/fi'
+import { 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer,
+  Cell
+} from 'recharts'
+ import Link from 'next/link'
 
-export default function DashboardBody() {
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042']
+
+export default function SheratonDashboard() {
   const [investmentAmount, setInvestmentAmount] = useState('')
   const [calculatedReturn, setCalculatedReturn] = useState(0)
+  const [duration, setDuration] = useState(35)
 
   const calculateReturn = () => {
     const amount = parseFloat(investmentAmount)
     if (isNaN(amount)) return
     
-    // Calculate daily return (30% of investment)
-    const dailyReturn = amount * 0.3
-    setCalculatedReturn(dailyReturn)
+    // 25% return for Sheraton plan
+    const dailyReturn = amount * 0.25
+    setCalculatedReturn(dailyReturn * duration)
   }
 
+  // Chart data
+  const performanceData = [
+    { name: 'Week 1', returns: 750 },
+    { name: 'Week 2', returns: 1500 },
+    { name: 'Week 3', returns: 2250 },
+    { name: 'Week 4', returns: 3000 },
+    { name: 'Week 5', returns: 3750 },
+  ]
+
+  const investmentPlans = [
+    { amount: 3000, earn: 750 },
+    { amount: 5000, earn: 1250 },
+    { amount: 10000, earn: 2500 },
+    { amount: 20000, earn: 5000 },
+    { amount: 40000, earn: 10000 },
+    { amount: 80000, earn: 20000 },
+    { amount: 150000, earn: 37500 },
+    { amount: 300000, earn: 75000 },
+    { amount: 500000, earn: 125000 },
+  ]
+
   return (
-    <div className="bg-gray-50 dark:bg-gray-900 min-h-screen mb-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Quick Actions */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <Link href="/deposit" className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 transition-colors text-center">
-            <div className="text-blue-600 dark:text-blue-400 mb-1">
-              <svg className="w-6 h-6 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-100">Deposit</span>
-          </Link>
-          <Link href="/withdraw" className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 transition-colors text-center">
-            <div className="text-blue-600 dark:text-blue-400 mb-1">
-              <svg className="w-6 h-6 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-              </svg>
-            </div>
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-100">Withdraw</span>
-          </Link>
-          <Link href="/group" className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 transition-colors text-center">
-            <div className="text-blue-600 dark:text-blue-400 mb-1">
-              <svg className="w-6 h-6 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-            </div>
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-100">Group</span>
-          </Link>
-          <Link href="/contact" className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 transition-colors text-center">
-            <div className="text-blue-600 dark:text-blue-400 mb-1">
-              <svg className="w-6 h-6 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
-            </div>
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-100">Contact Us</span>
-          </Link>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 p-4 ">
+      {/* Luxury Background Elements */}
+      <div className="fixed inset-0 overflow-hidden opacity-10 pointer-events-none">
+        {[...Array(15)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute rounded-full bg-amber-400 dark:bg-amber-600"
+            initial={{ 
+              y: Math.random() * 100,
+              x: Math.random() * 100,
+              opacity: 0.2,
+              scale: Math.random() * 0.5 + 0.5
+            }}
+            animate={{
+              y: [null, Math.random() * 100],
+              x: [null, Math.random() * 100],
+              transition: {
+                duration: Math.random() * 10 + 10,
+                repeat: Infinity,
+                repeatType: 'reverse'
+              }
+            }}
+            style={{
+              width: `${Math.random() * 20 + 5}px`,
+              height: `${Math.random() * 20 + 5}px`,
+            }}
+          />
+        ))}
+      </div>
 
-        {/* Investment Plan Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-          {/* Investment Plan Details */}
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 lg:col-span-2">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6 flex items-center">
-              <svg className="w-6 h-6 text-blue-600 dark:text-blue-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-              PUREHEALTH Investment Plan
-            </h2>
-            
-            {/* Image Placeholder */}
-            <div className="mb-6 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700 h-60 w-full flex flex-col items-center justify-center">
-              <div className="relative h-60 w-full">
-                <Image
-                  src="/home.jpeg"
-                  alt="PUREHEALTH Project"
-                  fill
-                  className="object-cover"
-                />
+      <div className="max-w-7xl mx-auto relative  mt-10">
+        {/* Luxury Header */}
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center gap-3"
+          >
+            <div className="p-3 bg-amber-100 dark:bg-amber-900/50 rounded-xl">
+              <FiHome className="text-amber-600 dark:text-amber-400 text-2xl" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-amber-800 dark:text-amber-200">Sheraton Investments</h1>
+              <p className="text-sm text-amber-600 dark:text-amber-400">Luxury returns experience</p>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="flex gap-3"
+          >
+            <button className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 rounded-full shadow-sm hover:shadow-md transition-all">
+              <FiGift className="text-amber-600 dark:text-amber-400" />
+              <span className="text-sm font-medium">Get Bonus</span>
+            </button>
+          </motion.div>
+        </header>
+
+        {/* MAIN CONTENT */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* QUICK ACTIONS SIDEBAR */}
+          <motion.div 
+            className="space-y-4"
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+          >
+            {[
+              { icon: <FiDollarSign />, label: 'Deposit', href: '/deposit', color: 'bg-green-100 dark:bg-green-900/50 text-green-600 dark:text-green-400' },
+              { icon: <FiCreditCard />, label: 'Withdraw', href: '/withdraw', color: 'bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400' },
+              { icon: <FiUsers />, label: 'Check-in', href: '/checkin', color: 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400' },
+              { icon: <FiMail />, label: 'Concierge', href: '/contact', color: 'bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400' },
+            ].map((action, i) => (
+              <motion.div
+                key={i}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Link
+                  href={action.href}
+                  className={`flex items-center gap-3 p-4 rounded-xl ${action.color} shadow-sm hover:shadow-md transition-all`}
+                >
+                  <div className="text-xl">{action.icon}</div>
+                  <span className="font-medium">{action.label}</span>
+                </Link>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          {/* CENTER CONTENT */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Performance Chart */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white dark:bg-gray-800/80 backdrop-blur-sm p-6 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700"
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-semibold flex items-center gap-2">
+                  <FiTrendingUp className="text-amber-600 dark:text-amber-400" />
+                  <span>35-Day Growth Projection</span>
+                </h2>
+                <div className="text-sm text-gray-500 dark:text-gray-400">
+                  ₦10,000 Investment
+                </div>
               </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-3">Plan Details</h3>
-                <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
-                  <li className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-700">
-                    <span className="text-gray-500 dark:text-gray-400">Welcome Bonus:</span>
-                    <span className="font-medium dark:text-gray-100">₦900</span>
-                  </li>
-                  <li className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-700">
-                    <span className="text-gray-500 dark:text-gray-400">Plan Duration:</span>
-                    <span className="font-medium dark:text-gray-100">30 Days</span>
-                  </li>
-                  <li className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-700">
-                    <span className="text-gray-500 dark:text-gray-400">Payment Window:</span>
-                    <span className="font-medium dark:text-gray-100">10AM - 5pm Daily</span>
-                  </li>
-                  <li className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-700">
-                    <span className="text-gray-500 dark:text-gray-400">Withdrawal Fee:</span>
-                    <span className="font-medium dark:text-gray-100">10%</span>
-                  </li>
-                  <li className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-700">
-                    <span className="text-gray-500 dark:text-gray-400">Referral Bonus:</span>
-                    <span className="font-medium dark:text-gray-100">30% (Direct) + 3% (Indirect)</span>
-                  </li>
-                  <li className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-700">
-                    <span className="text-gray-500 dark:text-gray-400">Minimum Withdrawal:</span>
-                    <span className="font-medium dark:text-gray-100">₦1,000</span>
-                  </li>
-                  <li className="flex justify-between py-2">
-                    <span className="text-gray-500 dark:text-gray-400">Withdrawal Frequency:</span>
-                    <span className="font-medium dark:text-gray-100">Daily</span>
-                  </li>
-                </ul>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-3">Investment Tiers</h3>
-                <div className="overflow-auto max-h-80">
-                  <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
-                    <thead className="bg-gray-50 dark:bg-gray-700">
-                      <tr>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Investment</th>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Daily Return</th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                      {[
-                        { investment: '₦3,000', return: '₦900' },
-                        { investment: '₦6,000', return: '₦1,800' },
-                        { investment: '₦20,000', return: '₦6,000' },
-                        { investment: '₦50,000', return: '₦15,000' },
-                        { investment: '₦100,000', return: '₦30,000' },
-                        { investment: '₦150,000', return: '₦45,000' },
-                        { investment: '₦200,000', return: '₦60,000' },
-                        { investment: '₦250,000', return: '₦75,000' },
-                        { investment: '₦350,000', return: '₦95,000' },
-                        { investment: '₦650,000', return: '₦180,000' },
-                        { investment: '₦1,000,000', return: '₦300,000' },
-                        { investment: '₦2,000,000', return: '₦600,000' },
-                      ].map((tier, index) => (
-                        <tr key={index} className={index % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-700'}>
-                          <td className="px-4 py-2 whitespace-nowrap font-medium text-gray-900 dark:text-gray-100">{tier.investment}</td>
-                          <td className="px-4 py-2 whitespace-nowrap text-green-600 dark:text-green-400">{tier.return}</td>
-                        </tr>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={performanceData}>
+                    <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip 
+                      formatter={(value) => [`₦${value}`, "Returns"]}
+                      labelFormatter={(label) => `Week ${label.split(' ')[1]}`}
+                    />
+                    <Bar 
+                      dataKey="returns" 
+                      radius={[4, 4, 0, 0]}
+                      animationDuration={1500}
+                    >
+                      {performanceData.map((entry, index) => (
+                        <Cell 
+                          key={`cell-${index}`} 
+                          fill={COLORS[index % COLORS.length]} 
+                        />
                       ))}
-                    </tbody>
-                  </table>
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </motion.div>
+
+            {/* Investment Plans */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="grid grid-cols-1 md:grid-cols-2 gap-4"
+            >
+              {investmentPlans.slice(0, 4).map((plan, i) => (
+                <motion.div
+                  key={i}
+                  whileHover={{ y: -5 }}
+                  className={`p-5 rounded-xl shadow-sm border transition-all ${i % 2 === 0 ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-100 dark:border-amber-800/50' : 'bg-blue-50 dark:bg-blue-900/20 border-blue-100 dark:border-blue-800/50'}`}
+                >
+                  <div className="flex justify-between items-start mb-3">
+                    <h3 className="font-bold text-lg">₦{plan.amount.toLocaleString()}</h3>
+                    <div className="px-2 py-1 bg-white dark:bg-gray-800 rounded-md text-xs font-medium">
+                      35 days
+                    </div>
+                  </div>
+                  <div className="text-2xl font-bold text-green-600 dark:text-green-400 mb-2">
+                    ₦{plan.earn.toLocaleString()}
+                  </div>
+                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                    Total returns (25%)
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          </div>
+
+          {/* RIGHT SIDEBAR - PLAN DETAILS */}
+          <motion.div
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="space-y-6"
+          >
+            {/* Plan Highlights */}
+            <div className="bg-white dark:bg-gray-800/80 backdrop-blur-sm p-6 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700">
+              <h2 className="text-xl font-semibold flex items-center gap-2 mb-6">
+                <FiPieChart className="text-amber-600 dark:text-amber-400" />
+                <span>Plan Features</span>
+              </h2>
+              <ul className="space-y-4">
+                <li className="flex gap-3">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/50 text-green-600 dark:text-green-400 flex items-center justify-center">
+                    ✓
+                  </div>
+                  <div>
+                    <div className="font-medium">Welcome Bonus</div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">₦500 on first deposit</div>
+                  </div>
+                </li>
+                <li className="flex gap-3">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                    ✓
+                  </div>
+                  <div>
+                    <div className="font-medium">Referral Program</div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">30% direct + 4% indirect</div>
+                  </div>
+                </li>
+                <li className="flex gap-3">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400 flex items-center justify-center">
+                    ✓
+                  </div>
+                  <div>
+                    <div className="font-medium">Check-in Bonus</div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">₦100 daily check-in</div>
+                  </div>
+                </li>
+              </ul>
+            </div>
+
+            {/* Quick Stats */}
+            <div className="bg-white dark:bg-gray-800/80 backdrop-blur-sm p-6 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700">
+              <h2 className="text-xl font-semibold flex items-center gap-2 mb-4">
+                <FiClock className="text-amber-600 dark:text-amber-400" />
+                <span>Plan Duration</span>
+              </h2>
+              <div className="flex items-center justify-center py-4">
+                <div className="text-5xl font-bold text-amber-600 dark:text-amber-400">
+                  35
+                </div>
+                <div className="ml-2">
+                  <div className="text-sm uppercase text-gray-500 dark:text-gray-400">Days</div>
+                  <div className="text-green-600 dark:text-green-400 font-medium">Fixed Term</div>
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
+        </div>
 
-          {/* Investment Calculator */}
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6 flex items-center">
-              <svg className="w-6 h-6 text-blue-600 dark:text-blue-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-              </svg>
-              Investment Calculator
-            </h2>
+        {/* LUXURY INVESTMENT CALCULATOR */}
+        <motion.div
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="mt-12 bg-gradient-to-r from-amber-500 to-amber-600 rounded-2xl overflow-hidden shadow-2xl"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2">
+            <div className="p-8 md:p-12 flex flex-col justify-center">
+              <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">
+                Sheraton ROI Calculator
+              </h2>
+              <p className="text-amber-100 mb-6">
+                Calculate your 35-day returns with precision
+              </p>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-amber-100 text-sm mb-1">
+                    Investment Amount (₦)
+                  </label>
+                  <input
+                    type="number"
+                    value={investmentAmount}
+                    onChange={(e) => setInvestmentAmount(e.target.value)}
+                    className="w-full px-4 py-3 bg-white/20 text-white placeholder-amber-200 rounded-lg border border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                    placeholder="e.g. 10000"
+                  />
+                </div>
 
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="investment" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Investment Amount (₦)
-                </label>
-                <input
-                  type="number"
-                  id="investment"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="e.g. 10000"
-                  value={investmentAmount}
-                  onChange={(e) => setInvestmentAmount(e.target.value)}
-                />
+                <div>
+                  <label className="block text-amber-100 text-sm mb-1">
+                    Duration (Days)
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="range"
+                      min="1"
+                      max="35"
+                      value={duration}
+                      onChange={(e) => setDuration(parseInt(e.target.value))}
+                      className="w-full accent-amber-300"
+                    />
+                    <span className="text-white font-medium w-10 text-center">{duration}</span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={calculateReturn}
+                  className="w-full bg-white text-amber-600 py-3 px-6 rounded-lg font-bold hover:bg-opacity-90 transition mt-4 shadow-lg"
+                >
+                  Check your profit
+                </button>
               </div>
+            </div>
 
-              <button
-                onClick={calculateReturn}
-                className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                Calculate Returns
-              </button>
+            {/* Visualized Results */}
+            <div className="bg-white/10 p-8 md:p-12 flex flex-col justify-center items-center relative">
+              {calculatedReturn > 0 ? (
+                <>
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="text-center"
+                  >
+                    <div className="text-amber-100 mb-2">Your {duration}-day returns</div>
+                    <div className="text-5xl font-bold text-white mb-4">
+                      ₦{calculatedReturn.toLocaleString()}
+                    </div>
+                    <div className="text-amber-200">
+                    <div className="text-amber-200">
+  {((calculatedReturn / (parseFloat(investmentAmount) || 1)) * 100).toFixed(2)}% ROI
+</div>
 
-              {calculatedReturn > 0 && (
-                <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/30 rounded-md border border-blue-100 dark:border-blue-800">
-                  <h3 className="text-lg font-medium text-blue-800 dark:text-blue-400 mb-2">Projected Returns</h3>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-300">Daily Return:</span>
-                      <span className="font-medium text-green-600 dark:text-green-400">₦{calculatedReturn.toLocaleString()}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-300">Weekly (7 days):</span>
-                      <span className="font-medium text-green-600 dark:text-green-400">₦{(calculatedReturn * 7).toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-300">Monthly (30 days):</span>
-                      <span className="font-medium text-green-600 dark:text-green-400">₦{(calculatedReturn * 30).toLocaleString()}</span>
-                    </div>
+                  </motion.div>
+                  
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: '100%' }}
+                    className="mt-8 h-2 bg-amber-300 rounded-full overflow-hidden"
+                  >
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ 
+                        width: `${Math.min(100, (calculatedReturn / (parseFloat(investmentAmount) * 3)) * 100)}%` 
+                      }}
+                      className="h-full bg-white"
+                    />
+                  </motion.div>
+                </>
+              ) : (
+                <div className="text-center">
+                  <div className="text-amber-200 text-xl mb-2">Enter your investment</div>
+                  <div className="text-amber-100 text-sm">
+                    See how much you&apos;ll earn in 35 days
                   </div>
                 </div>
               )}
             </div>
-
-            {/* Mobile App Section */}
-            <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-3">Mobile App</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Download our mobile app for easier access to your investments:</p>
-              <div className="flex space-x-3">
-                <button className="flex items-center justify-center bg-black dark:bg-gray-700 text-white dark:text-gray-100 px-3 py-2 rounded-md text-sm">
-                  <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M17.1 12.6v-1.8c0-.1 0-.2.1-.2.1 0 .1.1.1.2v1.8c0 .1 0 .2-.1.2-.1 0-.1-.1-.1-.2zm0 0v-1.8c0-.1 0-.2.1-.2.1 0 .1.1.1.2v1.8c0 .1 0 .2-.1.2-.1 0-.1-.1-.1-.2zm-4.3-1.8c0-.1 0-.2.1-.2.1 0 .1.1.1.2v1.8c0 .1 0 .2-.1.2-.1 0-.1-.1-.1-.2v-1.8zm2.2 0c0-.1 0-.2.1-.2.1 0 .1.1.1.2v1.8c0 .1 0 .2-.1.2-.1 0-.1-.1-.1-.2v-1.8zm2.2 0c0-.1 0-.2.1-.2.1 0 .1.1.1.2v1.8c0 .1 0 .2-.1.2-.1 0-.1-.1-.1-.2v-1.8zM12.9 3c-5.5 0-10 4.5-10 10s4.5 10 10 10 10-4.5 10-10-4.5-10-10-10zm0 18c-4.4 0-8-3.6-8-8s3.6-8 8-8 8 3.6 8 8-3.6 8-8 8z" />
-                  </svg>
-                  App Store
-                </button>
-                <button className="flex items-center justify-center bg-black dark:bg-gray-700 text-white dark:text-gray-100 px-3 py-2 rounded-md text-sm">
-                  <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M3.9 12c0-1.7 1.4-3.1 3.1-3.1h4V7H7c-2.8 0-5 2.2-5 5s2.2 5 5 5h4v-1.9H7c-1.7 0-3.1-1.4-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.7 0 3.1 1.4 3.1 3.1s-1.4 3.1-3.1 3.1h-4V17h4c2.8 0 5-2.2 5-5s-2.2-5-5-5z" />
-                  </svg>
-                  Google Play
-                </button>
-              </div>
-            </div>
           </div>
-        </div>
+        </motion.div>
+
+        {/* FULL INVESTMENT PLANS TABLE */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="mt-8 bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden"
+        >
+          <table className="w-full">
+            <thead className="bg-amber-50 dark:bg-amber-900/20">
+              <tr>
+                <th className="p-4 text-left text-amber-800 dark:text-amber-200">Investment</th>
+                <th className="p-4 text-left text-amber-800 dark:text-amber-200">Earnings</th>
+                <th className="p-4 text-left text-amber-800 dark:text-amber-200">Duration</th>
+                <th className="p-4 text-left text-amber-800 dark:text-amber-200">ROI</th>
+              </tr>
+            </thead>
+            <tbody>
+              {investmentPlans.map((plan, i) => (
+                <tr 
+                  key={i} 
+                  className={`border-t border-gray-100 dark:border-gray-700 ${i % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-700/50'}`}
+                >
+                  <td className="p-4 font-medium">₦{plan.amount.toLocaleString()}</td>
+                  <td className="p-4 text-green-600 dark:text-green-400 font-bold">₦{plan.earn.toLocaleString()}</td>
+                  <td className="p-4">35 days</td>
+                  <td className="p-4">25%</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </motion.div>
       </div>
     </div>
   )

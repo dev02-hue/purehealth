@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { initiateWithdrawal } from '@/lib/withdrawal'
 import { WithdrawalDetails } from '@/types/withdrawal'
-import { FaBan, FaMoneyBillWave, FaUser, FaCreditCard, FaSpinner, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa'
+import { FaMoneyBillWave, FaCreditCard, FaSpinner, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa'
 
 export default function WithdrawalForm() {
   const [amount, setAmount] = useState('')
@@ -23,252 +23,325 @@ export default function WithdrawalForm() {
     setSuccess(false)
 
     try {
-      const numericAmount = parseFloat(amount)
+      const numericAmount = parseFloat(amount);
       if (isNaN(numericAmount)) {
-        throw new Error('Invalid amount')
+        throw new Error('Invalid amount');
       }
-
+    
       const result = await initiateWithdrawal(
         numericAmount,
         bankName,
         accountNumber,
         accountName
-      )
-
+      );
+    
       if (result.error) {
-        throw new Error(result.error)
+        throw new Error(result.error);
       }
-
-      setSuccess(true)
+    
+      setSuccess(true);
       if (result.details) {
-        setWithdrawalDetails(result.details)
+        setWithdrawalDetails(result.details);
       }
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to process withdrawal')
+      setError(err instanceof Error ? err.message : 'Failed to process withdrawal');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  } // This was the missing closing brace
 
-  const containerVariants = {
+  // Animation variants
+  const container = {
     hidden: { opacity: 0 },
-    visible: {
+    show: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1,
-        when: "beforeChildren"
+        staggerChildren: 0.1
       }
     }
   }
 
-  const itemVariants = {
+  const item = {
     hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
+    show: { 
+      y: 0, 
       opacity: 1,
       transition: {
         type: "spring",
-        stiffness: 100
+        stiffness: 200
       }
     }
   }
 
-  const successVariants = {
-    hidden: { scale: 0.9, opacity: 0 },
-    visible: {
+  const successCard = {
+    hidden: { scale: 0.95, opacity: 0 },
+    show: {
       scale: 1,
       opacity: 1,
       transition: {
         type: "spring",
-        stiffness: 100
+        stiffness: 150
       }
     }
   }
 
   return (
-    <motion.div 
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="max-w-md mx-auto p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-gray-900/50 border dark:border-gray-700"
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="max-w-md mx-auto p-6 rounded-2xl"
+      style={{
+        background: 'linear-gradient(145deg, #F5F7FA, #FFFFFF)',
+        boxShadow: '0 8px 32px rgba(59, 130, 246, 0.1)'
+      }}
     >
-      <motion.h2 
-        className="text-2xl font-bold mb-6 text-blue-600 dark:text-blue-400 flex items-center gap-2"
+      {/* Header with shiny effect */}
+      <motion.div 
+        className="flex items-center gap-3 mb-6"
         initial={{ x: -20, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         transition={{ delay: 0.1 }}
       >
-        <FaMoneyBillWave className="dark:text-blue-400" /> Withdraw Funds
-      </motion.h2>
-      
+        <div className="relative">
+          <FaMoneyBillWave className="text-3xl text-[#3B82F6]" />
+          <motion.div 
+            className="absolute inset-0 rounded-full"
+            style={{
+              background: 'radial-gradient(circle, rgba(255,215,0,0.4) 0%, transparent 70%)',
+              filter: 'blur(2px)'
+            }}
+            animate={{
+              opacity: [0.6, 0.3, 0.6]
+            }}
+            transition={{
+              duration: 3,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          />
+        </div>
+        <h2 className="text-2xl font-bold bg-gradient-to-r from-[#3B82F6] to-[#EC4899] bg-clip-text text-transparent">
+          Withdraw Funds
+        </h2>
+      </motion.div>
+
       <AnimatePresence>
         {error && (
           <motion.div 
-            className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg flex items-start gap-2"
+            className="mb-5 p-3 rounded-xl flex items-start gap-3"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
+            style={{
+              background: 'linear-gradient(90deg, rgba(239,68,68,0.1), rgba(239,68,68,0.05))',
+              border: '1px solid rgba(239,68,68,0.2)'
+            }}
           >
-            <FaExclamationTriangle className="mt-0.5" />
-            <span>{error}</span>
+            <FaExclamationTriangle className="mt-0.5 text-[#EF4444] flex-shrink-0" />
+            <span className="text-[#EF4444]">{error}</span>
           </motion.div>
         )}
       </AnimatePresence>
-      
+
       {success ? (
         <motion.div 
-          className="p-5 bg-green-50 dark:bg-green-900/30 rounded-xl border border-green-200 dark:border-green-800"
-          variants={successVariants}
+          className="p-5 rounded-xl"
+          variants={successCard}
           initial="hidden"
-          animate="visible"
+          animate="show"
+          style={{
+            background: 'linear-gradient(145deg, rgba(16,185,129,0.1), rgba(16,185,129,0.05))',
+            border: '1px solid rgba(16,185,129,0.2)'
+          }}
         >
           <motion.div 
-            className="flex items-center gap-2 text-green-600 dark:text-green-400 mb-3"
-            variants={itemVariants}
+            className="flex items-center gap-3 mb-4"
+            variants={item}
           >
-            <FaCheckCircle className="text-2xl" />
-            <h3 className="font-bold text-lg">Withdrawal Successful!</h3>
+            <div className="relative">
+              <FaCheckCircle className="text-2xl text-[#10B981]" />
+              <motion.div 
+                className="absolute inset-0 rounded-full"
+                style={{
+                  background: 'radial-gradient(circle, rgba(16,185,129,0.3) 0%, transparent 70%)'
+                }}
+                animate={{
+                  scale: [1, 1.2, 1],
+                  opacity: [0.6, 0.3, 0.6]
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              />
+            </div>
+            <h3 className="font-bold text-lg text-[#1A1A1A]">Withdrawal Successful!</h3>
           </motion.div>
           
-          <motion.p className="text-gray-700 dark:text-gray-300 mb-4" variants={itemVariants}>
+          <motion.p className="text-[#4A5568] mb-5" variants={item}>
             {withdrawalDetails?.message}
           </motion.p>
           
           <motion.div 
-            className="mt-4 p-4 bg-white dark:bg-gray-700/30 rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm"
-            variants={itemVariants}
+            className="p-4 rounded-lg"
+            variants={container}
+            initial="hidden"
+            animate="show"
+            style={{
+              background: 'linear-gradient(145deg, #FFFFFF, #F5F7FA)',
+              boxShadow: '0 4px 16px rgba(0,0,0,0.05)'
+            }}
           >
-            <h4 className="font-semibold text-blue-600 dark:text-blue-400 mb-3 flex items-center gap-2">
-              <FaCreditCard className="dark:text-blue-400" /> Transaction Details
+            <h4 className="font-semibold text-[#3B82F6] mb-4 flex items-center gap-2">
+              <FaCreditCard /> Transaction Details
             </h4>
             
-            <motion.div 
-              className="space-y-2 text-gray-700 dark:text-gray-300"
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-            >
-              <motion.p variants={itemVariants} className="flex justify-between">
-                <span className="font-medium">Amount:</span>
-                <span>₦{withdrawalDetails?.amountWithdrawn?.toLocaleString()}</span>
-              </motion.p>
-              <motion.p variants={itemVariants} className="flex justify-between">
-                <span className="font-medium">Fee:</span>
-                <span>₦{withdrawalDetails?.fee?.toLocaleString()}</span>
-              </motion.p>
-              <motion.p variants={itemVariants} className="flex justify-between">
-                <span className="font-medium">Total Deducted:</span>
-                <span>₦{withdrawalDetails?.totalDeducted?.toLocaleString()}</span>
-              </motion.p>
-              <motion.p variants={itemVariants} className="flex justify-between">
-                <span className="font-medium">Bank:</span>
-                <span>{withdrawalDetails?.bankName}</span>
-              </motion.p>
-              <motion.p variants={itemVariants} className="flex justify-between">
-                <span className="font-medium">Account:</span>
-                <span>{withdrawalDetails?.accountNumber}</span>
-              </motion.p>
-              <motion.p variants={itemVariants} className="text-sm mt-3 pt-3 border-t border-gray-100 dark:border-gray-600">
-                <span className="font-medium">Reference:</span> {withdrawalDetails?.reference}
-              </motion.p>
+            <motion.div className="space-y-3" variants={container}>
+              {[
+                { label: 'Amount:', value: `₦${withdrawalDetails?.amountWithdrawn?.toLocaleString()}` },
+                { label: 'Fee:', value: `₦${withdrawalDetails?.fee?.toLocaleString()}` },
+                { label: 'Total Deducted:', value: `₦${withdrawalDetails?.totalDeducted?.toLocaleString()}` },
+                { label: 'Bank:', value: withdrawalDetails?.bankName },
+                { label: 'Account:', value: withdrawalDetails?.accountNumber },
+                { label: 'Reference:', value: withdrawalDetails?.reference, fullWidth: true }
+              ].map((detail, index) => (
+                <motion.div 
+                  key={index} 
+                  className={`flex ${detail.fullWidth ? 'flex-col' : 'justify-between'} text-[#4A5568]`}
+                  variants={item}
+                >
+                  <span className="font-medium">{detail.label}</span>
+                  <span className={detail.fullWidth ? 'mt-1 text-sm' : ''}>{detail.value}</span>
+                </motion.div>
+              ))}
             </motion.div>
           </motion.div>
         </motion.div>
       ) : (
         <motion.form 
           onSubmit={handleSubmit}
-          variants={containerVariants}
+          variants={container}
           initial="hidden"
-          animate="visible"
+          animate="show"
         >
-          <motion.div className="mb-5" variants={itemVariants}>
-            <label className="block mb-2 font-medium text-gray-700 dark:text-gray-300">Amount (₦)</label>
+          <motion.div className="mb-5" variants={item}>
+            <label className="block mb-2 font-medium text-[#1A1A1A]">Amount (₦)</label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500">
-                ₦
-              </span>
               <input
                 type="number"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className="w-full pl-8 p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400"
+                className="w-full pl-4 pr-4 p-3 rounded-xl focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent"
+                style={{
+                  background: 'linear-gradient(145deg, #FFFFFF, #F5F7FA)',
+                  border: '1px solid rgba(0,0,0,0.1)',
+                  boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.05)'
+                }}
                 min="1000"
                 step="100"
                 required
                 placeholder="1000"
               />
+              <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-[#4A5568]">
+                NGN
+              </span>
             </div>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Minimum: ₦1,000</p>
+            <p className="text-sm text-[#4A5568] mt-2">Minimum: ₦1,000 • 10% fee applies</p>
           </motion.div>
           
-          <motion.div className="mb-5" variants={itemVariants}>
-            <label className="mb-2 font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
-              <FaBan className="dark:text-gray-400" /> Bank Name
-            </label>
-            <input
-              type="text"
-              value={bankName}
-              onChange={(e) => setBankName(e.target.value)}
-              className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400"
-              required
-              placeholder="e.g. Access Bank"
-            />
+          <motion.div className="grid grid-cols-2 gap-4 mb-5" variants={container}>
+            <motion.div variants={item}>
+              <label className="block mb-2 font-medium text-[#1A1A1A]">Bank Name</label>
+              <input
+                type="text"
+                value={bankName}
+                onChange={(e) => setBankName(e.target.value)}
+                className="w-full p-3 rounded-xl focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent"
+                style={{
+                  background: 'linear-gradient(145deg, #FFFFFF, #F5F7FA)',
+                  border: '1px solid rgba(0,0,0,0.1)',
+                  boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.05)'
+                }}
+                required
+                placeholder="e.g. Access Bank"
+              />
+            </motion.div>
+            
+            <motion.div variants={item}>
+              <label className="block mb-2 font-medium text-[#1A1A1A]">Account Number</label>
+              <input
+                type="text"
+                value={accountNumber}
+                onChange={(e) => setAccountNumber(e.target.value)}
+                className="w-full p-3 rounded-xl focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent"
+                style={{
+                  background: 'linear-gradient(145deg, #FFFFFF, #F5F7FA)',
+                  border: '1px solid rgba(0,0,0,0.1)',
+                  boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.05)'
+                }}
+                required
+                placeholder="10 digits"
+              />
+            </motion.div>
           </motion.div>
           
-          <motion.div className="mb-5" variants={itemVariants}>
-            <label className="mb-2 font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
-              <FaCreditCard className="dark:text-gray-400" /> Account Number
-            </label>
-            <input
-              type="text"
-              value={accountNumber}
-              onChange={(e) => setAccountNumber(e.target.value)}
-              className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400"
-              required
-              placeholder="10-digit account number"
-            />
-          </motion.div>
-          
-          <motion.div className="mb-6" variants={itemVariants}>
-            <label className="mb-2 font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
-              <FaUser className="dark:text-gray-400" /> Account Name
-            </label>
+          <motion.div className="mb-6" variants={item}>
+            <label className="block mb-2 font-medium text-[#1A1A1A]">Account Name</label>
             <input
               type="text"
               value={accountName}
               onChange={(e) => setAccountName(e.target.value)}
-              className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400"
+              className="w-full p-3 rounded-xl focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent"
+              style={{
+                background: 'linear-gradient(145deg, #FFFFFF, #F5F7FA)',
+                border: '1px solid rgba(0,0,0,0.1)',
+                boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.05)'
+              }}
               required
-              placeholder="Account holder's name"
+              placeholder="As it appears on bank statement"
             />
           </motion.div>
           
           <motion.button
             type="submit"
             disabled={loading}
-            className={`w-full p-3 rounded-lg text-white font-medium flex items-center justify-center gap-2 ${
-              loading ? 'bg-blue-400 dark:bg-blue-800' : 'bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-600'
-            }`}
+            className={`w-full p-3 rounded-xl font-medium flex items-center justify-center gap-2 relative overflow-hidden`}
             whileHover={!loading ? { scale: 1.02 } : {}}
             whileTap={!loading ? { scale: 0.98 } : {}}
-            variants={itemVariants}
+            variants={item}
+            style={{
+              background: loading 
+                ? 'linear-gradient(90deg, #3B82F6, #3B82F6)'
+                : 'linear-gradient(90deg, #3B82F6, #EC4899)'
+            }}
           >
-            {loading ? (
-              <>
-                <FaSpinner className="animate-spin" /> Processing...
-              </>
-            ) : (
-              <>
-                <FaMoneyBillWave /> Withdraw
-              </>
+            {loading && (
+              <motion.div 
+                className="absolute inset-0 bg-[#3B82F6]"
+                initial={{ width: '0%' }}
+                animate={{ width: '100%' }}
+                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                style={{
+                  opacity: 0.3
+                }}
+              />
             )}
+            <span className="relative z-10 text-white">
+              {loading ? (
+                <>
+                  <FaSpinner className="animate-spin inline mr-2" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <FaMoneyBillWave className="inline mr-2" />
+                  Withdraw Now
+                </>
+              )}
+            </span>
           </motion.button>
-          
-          <motion.p 
-            className="mt-3 text-sm text-gray-500 dark:text-gray-400 text-center"
-            variants={itemVariants}
-          >
-            Note: A 10% withdrawal fee will be applied
-          </motion.p>
         </motion.form>
       )}
     </motion.div>
