@@ -4,129 +4,98 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useEffect, useState } from 'react'
 import { getIncomeHistory } from '@/lib/income'
 import { 
-  FiDollarSign, 
- 
-  FiCheckCircle,
-  FiClock,
-  FiX,
-  FiTrendingUp,
-  FiRefreshCw,
-  FiPieChart
-} from 'react-icons/fi'
-import { format } from 'date-fns'
-
-// Color palette
-const COLORS = {
-  primary: '#3B82F6', // Sheraton blue
-  secondary: '#EC4899', // Sheraton pink
-  success: '#10B981',
-  warning: '#F59E0B',
-  error: '#EF4444',
-  background: '#FFFFFF',
-  cardBg: '#F5F7FA',
-  textDark: '#1A1A1A',
-  textLight: '#4A5568',
-  border: '#E5E7EB'
-}
+  FaChartLine, 
+  FaWallet, 
+  FaCalendarAlt, 
+  FaSpinner,
+  FaCheckCircle,
+  FaClock,
+  FaTimesCircle,
+  FaMoneyBillWave
+} from 'react-icons/fa'
 
 interface Investment {
-  id: string;
-  plan_name: string;
-  amount_invested: number;
-  daily_income: number;
-  total_income: number;
-  earnings_to_date: number;
-  start_date: string;
-  end_date: string;
-  status: 'active' | 'completed' | 'pending' | 'failed';
-  roi_percentage?: number;
+  plan_name: string
+  amount_invested: number
+  daily_income: number
+  total_income: number
+  earnings_to_date: number
+  start_date: string
+  end_date: string
+  status: string
+}
+
+const statusConfig = {
+  active: {
+    icon: <FaChartLine className="text-blue-500 dark:text-blue-400" />,
+    bg: 'bg-blue-50 dark:bg-blue-900/30',
+    text: 'text-blue-700 dark:text-blue-300',
+    border: 'border-blue-200 dark:border-blue-800'
+  },
+  completed: {
+    icon: <FaCheckCircle className="text-green-500 dark:text-green-400" />,
+    bg: 'bg-green-50 dark:bg-green-900/30',
+    text: 'text-green-700 dark:text-green-300',
+    border: 'border-green-200 dark:border-green-800'
+  },
+  pending: {
+    icon: <FaClock className="text-yellow-500 dark:text-yellow-400" />,
+    bg: 'bg-yellow-50 dark:bg-yellow-900/30',
+    text: 'text-yellow-700 dark:text-yellow-300',
+    border: 'border-yellow-200 dark:border-yellow-800'
+  },
+  failed: {
+    icon: <FaTimesCircle className="text-red-500 dark:text-red-400" />,
+    bg: 'bg-red-50 dark:bg-red-900/30',
+    text: 'text-red-700 dark:text-red-300',
+    border: 'border-red-200 dark:border-red-800'
+  }
 }
 
 export default function IncomeHistory() {
   const [incomes, setIncomes] = useState<Investment[]>([])
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
-  const [refreshing, setRefreshing] = useState(false)
-
-  const fetchIncome = async (isRefresh = false) => {
-    try {
-      if (isRefresh) setRefreshing(true)
-      const { incomes, error } = await getIncomeHistory()
-      if (error) {
-        setError(error)
-      } else {
-        setIncomes(incomes)
-      }
-    } catch {
-      setError('Failed to load income records')
-    } finally {
-      setLoading(false)
-      if (isRefresh) setRefreshing(false)
-    }
-  }
 
   useEffect(() => {
+    async function fetchIncome() {
+      try {
+        const { incomes, error } = await getIncomeHistory()
+        if (error) {
+          setError(error)
+        } else {
+          setIncomes(incomes)
+        }
+      } catch {
+        setError('Failed to load income history')
+      } finally {
+        setLoading(false)
+      }
+    }
+
     fetchIncome()
   }, [])
-
-  const handleRefresh = () => {
-    fetchIncome(true)
-  }
-
-  const StatusBadge = ({ status }: { status: string }) => {
-    const config = {
-      active: {
-        icon: <FiTrendingUp className="text-blue-500" />,
-        bg: 'bg-blue-50',
-        text: 'text-blue-700',
-        border: 'border-blue-200'
-      },
-      completed: {
-        icon: <FiCheckCircle className="text-green-500" />,
-        bg: 'bg-green-50',
-        text: 'text-green-700',
-        border: 'border-green-200'
-      },
-      pending: {
-        icon: <FiClock className="text-yellow-500" />,
-        bg: 'bg-yellow-50',
-        text: 'text-yellow-700',
-        border: 'border-yellow-200'
-      },
-      failed: {
-        icon: <FiX className="text-red-500" />,
-        bg: 'bg-red-50',
-        text: 'text-red-700',
-        border: 'border-red-200'
-      }
-    }[status] || config.active;
-
-    return (
-      <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm ${config.bg} ${config.text} ${config.border} border`}>
-        {config.icon}
-        <span className="capitalize font-medium">{status}</span>
-      </div>
-    )
-  }
 
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: { staggerChildren: 0.05, when: "beforeChildren" }
+      transition: {
+        staggerChildren: 0.05,
+        when: "beforeChildren"
+      }
     }
   }
 
   const itemVariants = {
     hidden: { y: 10, opacity: 0 },
-    visible: { 
-      y: 0, 
-      opacity: 1, 
-      transition: { 
-        type: "spring", 
-        stiffness: 120,
-        damping: 10
-      } 
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 120
+      }
     }
   }
 
@@ -137,189 +106,146 @@ export default function IncomeHistory() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
       >
-        <div className="flex items-center gap-3">
-          <FiRefreshCw className="animate-spin text-2xl" style={{ color: COLORS.primary }} />
-          <span className="text-lg" style={{ color: COLORS.textDark }}>Loading Sheraton income records...</span>
-        </div>
+        <FaSpinner className="animate-spin text-blue-500 dark:text-blue-400 text-2xl mr-3" />
+        <span className="text-gray-600 dark:text-gray-300">Loading income history...</span>
       </motion.div>
     )
   }
 
   return (
     <motion.div 
-      className="rounded-xl shadow-sm p-6"
-      style={{ backgroundColor: COLORS.background }}
+      className="bg-white dark:bg-gray-800 rounded-xl shadow-sm dark:shadow-gray-900/50 p-6 border dark:border-gray-700"
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <motion.h2 
-          className="text-2xl font-bold flex items-center gap-3"
-          style={{ color: COLORS.primary }}
-          initial={{ x: -10, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          transition={{ delay: 0.1 }}
-        >
-          <FiDollarSign className="text-2xl" />
-          <span>Sheraton Income Portfolio</span>
-        </motion.h2>
-        
-        <motion.button
-          onClick={handleRefresh}
-          disabled={refreshing}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm"
-          style={{ 
-            backgroundColor: COLORS.primary,
-            color: '#FFFFFF'
-          }}
-          whileHover={{ scale: 1.03 }}
-          whileTap={{ scale: 0.98 }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-        >
-          <FiRefreshCw className={refreshing ? 'animate-spin' : ''} />
-          {refreshing ? 'Refreshing...' : 'Refresh Data'}
-        </motion.button>
-      </div>
-
+      <motion.h2 
+        className="text-2xl font-bold mb-6 text-blue-600 dark:text-blue-400 flex items-center gap-3"
+        initial={{ x: -10, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        transition={{ delay: 0.1 }}
+      >
+        <FaWallet className="text-blue-500 dark:text-blue-400" />
+        Income History
+      </motion.h2>
+      
       <AnimatePresence>
         {error && (
           <motion.div 
-            className="mb-6 p-4 rounded-lg flex items-start gap-3"
-            style={{ backgroundColor: COLORS.error + '20', color: COLORS.error }}
+            className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg flex items-start gap-2"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
           >
-            <FiX className="mt-0.5" />
-            <div>
-              <p className="font-medium">Transaction Error</p>
-              <p className="text-sm">{error}</p>
-            </div>
+            <FaTimesCircle className="mt-0.5" />
+            <span>{error}</span>
           </motion.div>
         )}
       </AnimatePresence>
 
       {incomes.length === 0 ? (
         <motion.div 
-          className="py-12 text-center rounded-lg"
-          style={{ backgroundColor: COLORS.cardBg }}
+          className="py-8 text-center bg-gray-50 dark:bg-gray-700/30 rounded-lg"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
         >
-          <div className="mx-auto w-20 h-20 rounded-full flex items-center justify-center mb-4"
-            style={{ backgroundColor: COLORS.primary + '20' }}>
-            <FiPieChart className="text-3xl" style={{ color: COLORS.primary }} />
-          </div>
-          <h3 className="text-lg font-medium mb-2" style={{ color: COLORS.textDark }}>
-            No Income Records Found
-          </h3>
-          <p className="text-sm max-w-md mx-auto" style={{ color: COLORS.textLight }}>
-            Your investment earnings will appear here once they start accumulating
-          </p>
+          <p className="text-gray-500 dark:text-gray-400">No income history found</p>
         </motion.div>
       ) : (
         <motion.div 
-          className="overflow-hidden rounded-lg border"
-          style={{ borderColor: COLORS.border }}
+          className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
         >
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y" style={{ borderColor: COLORS.border }}>
-              <thead className="text-left">
-                <motion.tr 
-                  variants={itemVariants}
-                  style={{ backgroundColor: COLORS.cardBg }}
-                >
-                  <th className="px-6 py-4 text-xs font-medium tracking-wider" style={{ color: COLORS.textLight }}>
-                    INVESTMENT PLAN
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead className="bg-gray-50 dark:bg-gray-700/30">
+                <motion.tr variants={itemVariants}>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Plan
                   </th>
-                  <th className="px-6 py-4 text-xs font-medium tracking-wider" style={{ color: COLORS.textLight }}>
-                    INVESTED
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-1">
+                    <FaMoneyBillWave className="text-blue-500 dark:text-blue-400" /> Invested
                   </th>
-                  <th className="px-6 py-4 text-xs font-medium tracking-wider" style={{ color: COLORS.textLight }}>
-                    DAILY
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Daily
                   </th>
-                  <th className="px-6 py-4 text-xs font-medium tracking-wider" style={{ color: COLORS.textLight }}>
-                    TOTAL EARNED
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Total
                   </th>
-                  <th className="px-6 py-4 text-xs font-medium tracking-wider" style={{ color: COLORS.textLight }}>
-                    ROI
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Earned
                   </th>
-                  <th className="px-6 py-4 text-xs font-medium tracking-wider" style={{ color: COLORS.textLight }}>
-                    DURATION
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-1">
+                    <FaCalendarAlt className="text-blue-500 dark:text-blue-400" /> Start
                   </th>
-                  <th className="px-6 py-4 text-xs font-medium tracking-wider" style={{ color: COLORS.textLight }}>
-                    STATUS
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-1">
+                    <FaCalendarAlt className="text-blue-500 dark:text-blue-400" /> End
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Status
                   </th>
                 </motion.tr>
               </thead>
-              <motion.tbody 
-                className="divide-y"
-                style={{ borderColor: COLORS.border }}
-                variants={containerVariants}
-              >
-                {incomes.map((item) => (
-                  <motion.tr 
-                    key={item.id}
-                    className="transition-colors hover:bg-blue-50/50"
-                    variants={itemVariants}
-                    whileHover={{ scale: 1.005 }}
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium" style={{ color: COLORS.textDark }}>
+              <motion.tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700" variants={containerVariants}>
+                {incomes.map((item, index) => {
+                  const status = item.status.toLowerCase()
+                  const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending
+                  
+                  return (
+                    <motion.tr 
+                      key={index}
+                      className="hover:bg-blue-50 dark:hover:bg-gray-700/50 transition-colors"
+                      variants={itemVariants}
+                      whileHover={{ scale: 1.005 }}
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
                         {item.plan_name}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm" style={{ color: COLORS.textDark }}>
-                      ₦{item.amount_invested.toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm" style={{ color: COLORS.success }}>
-                      +₦{item.daily_income.toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium" style={{ color: COLORS.textDark }}>
-                      ₦{item.earnings_to_date.toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm" style={{ color: COLORS.success }}>
-                      {item.roi_percentage ? `${item.roi_percentage.toFixed(1)}%` : 'N/A'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex flex-col gap-1">
-                        <div className="text-xs" style={{ color: COLORS.textLight }}>
-                          {format(new Date(item.start_date), 'MMM d, yyyy')}
-                        </div>
-                        <div className="text-xs" style={{ color: COLORS.textLight }}>
-                          {format(new Date(item.end_date), 'MMM d, yyyy')}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <StatusBadge status={item.status} />
-                    </td>
-                  </motion.tr>
-                ))}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                        ₦{item.amount_invested.toLocaleString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                        ₦{item.daily_income.toLocaleString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                        ₦{item.total_income.toLocaleString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                        ₦{item.earnings_to_date.toLocaleString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                        {new Date(item.start_date).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric'
+                        })}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                        {new Date(item.end_date).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric'
+                        })}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <motion.span 
+                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs ${config.bg} ${config.text} ${config.border} border`}
+                          whileHover={{ scale: 1.03 }}
+                        >
+                          {config.icon}
+                          <span className="capitalize">{status}</span>
+                        </motion.span>
+                      </td>
+                    </motion.tr>
+                  )
+                })}
               </motion.tbody>
             </table>
           </div>
         </motion.div>
       )}
-
-      {/* Sheraton Branding */}
-      <motion.div 
-        className="mt-8 pt-6 border-t text-center"
-        style={{ borderColor: COLORS.border }}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.5 }}
-      >
-        <p className="text-sm" style={{ color: COLORS.textLight }}>
-          Sheraton Investment Platform • Secure Earnings Tracking
-        </p>
-      </motion.div>
     </motion.div>
   )
 }
