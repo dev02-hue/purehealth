@@ -9,5 +9,5 @@ export default async function DepositHistoryPage() {
   console.log("Fetched deposits:", deposits) // ✅ Debug log
   console.log("Error:", error) // ✅ Debug log
 
-  return <DepositHistory deposits={deposits} error={error} />
+  return <DepositHistory deposits={deposits}   />
 }

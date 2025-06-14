@@ -6,10 +6,46 @@ import { getInvestments } from '@/lib/investment-actions'
 import { formatCurrency } from '@/lib/utils'
 import { format, differenceInDays } from 'date-fns'
 import { motion } from 'framer-motion'
-import { FiTrendingUp, FiClock, FiCalendar, FiCheckCircle } from 'react-icons/fi'
+import { 
+  FiTrendingUp, 
+  FiClock, 
+  
+  FiCheckCircle,
+  FiDollarSign,
+  FiPieChart,
+  FiRefreshCw,
+  FiPlus
+} from 'react-icons/fi'
 import { toast } from 'react-hot-toast'
 import { processDailyEarnings } from '@/lib/investment-plan'
-import { TbCurrencyNaira } from 'react-icons/tb'
+import { AreaChart, Area, XAxis, YAxis,  Tooltip, ResponsiveContainer } from 'recharts'
+import Link from 'next/link'
+
+// Color palette
+const COLORS = {
+  primaryBg: '#FFFFFF',
+  secondaryBg: '#F5F7FA',
+  textDark: '#1A1A1A',
+  textLight: '#4A5568',
+  primaryAccent: '#3B82F6',
+  secondaryAccent: '#EC4899',
+  success: '#10B981',
+  warning: '#F59E0B',
+  error: '#EF4444',
+  shiny: '#FFD700'
+}
+
+// Generate mock performance data for charts
+const generatePerformanceData = () => {
+  const data = []
+  for (let i = 0; i < 7; i++) {
+    data.push({
+      day: `Day ${i+1}`,
+      value: Math.floor(Math.random() * 1000) + 500
+    })
+  }
+  return data
+}
 
 const container = {
   hidden: { opacity: 0 },
@@ -40,38 +76,48 @@ interface Investment {
   end_date: string;
 }
 
+function InvestmentCountdown({ nextPayoutDate }: { nextPayoutDate: string }) {
+  const [timeLeft, setTimeLeft] = useState({
+    hours: '00',
+    minutes: '00',
+    seconds: '00'
+  })
+
+  useEffect(() => {
+    const calculateTimeLeft = () => {
+      const now = new Date()
+      const payoutDate = new Date(nextPayoutDate)
+      const difference = payoutDate.getTime() - now.getTime()
+
+      if (difference <= 0) {
+        setTimeLeft({ hours: '00', minutes: '00', seconds: '00' })
+        return
+      }
+
+      setTimeLeft({
+        hours: Math.floor((difference / (1000 * 60 * 60)) % 24).toString().padStart(2, '0'),
+        minutes: Math.floor((difference / 1000 / 60) % 60).toString().padStart(2, '0'),
+        seconds: Math.floor((difference / 1000) % 60).toString().padStart(2, '0')
+      })
+    }
+
+    calculateTimeLeft()
+    const timer = setInterval(calculateTimeLeft, 1000)
+    return () => clearInterval(timer)
+  }, [nextPayoutDate])
+
+  return (
+    <div className="font-mono text-sm font-medium text-gray-700">
+      {timeLeft.hours}:{timeLeft.minutes}:{timeLeft.seconds}
+    </div>
+  )
+}
+
 export default function InvestmentsPage() {
   const [investments, setInvestments] = useState<Investment[]>([])
   const [loading, setLoading] = useState(true)
   const [processing, setProcessing] = useState(false)
-  const [countdown, setCountdown] = useState("24:00:00")
   const router = useRouter()
-
-  // Countdown timer effect
-  useEffect(() => {
-    const calculateCountdown = () => {
-      const now = new Date()
-      const endOfDay = new Date()
-      endOfDay.setHours(24, 0, 0, 0)
-
-      const diff = endOfDay.getTime() - now.getTime()
-
-      if (diff <= 0) {
-        setCountdown("00:00:00")
-        return
-      }
-
-      const hours = Math.floor(diff / (1000 * 60 * 60)).toString().padStart(2, '0')
-      const minutes = Math.floor((diff / (1000 * 60)) % 60).toString().padStart(2, '0')
-      const seconds = Math.floor((diff / 1000) % 60).toString().padStart(2, '0')
-
-      setCountdown(`${hours}:${minutes}:${seconds}`)
-    }
-
-    calculateCountdown()
-    const timer = setInterval(calculateCountdown, 1000)
-    return () => clearInterval(timer)
-  }, [])
 
   const loadInvestments = useCallback(async () => {
     try {
@@ -93,7 +139,7 @@ export default function InvestmentsPage() {
         if ('updatedInvestments' in result && (result.updatedInvestments.length > 0 || result.completedInvestments.length > 0)) {
           await loadInvestments()
           toast.success(
-            `Processed ${'updatedInvestments' in result ? result.updatedInvestments.length : 0} updates and ${'completedInvestments' in result ? result.completedInvestments.length : 0} completions`
+            `Processed ${result.updatedInvestments.length} updates and ${result.completedInvestments.length} completions`
           )
         } else {
           toast.success('No earnings to process at this time')
@@ -129,10 +175,11 @@ export default function InvestmentsPage() {
 
   if (loading) {
     return (
-      <div className="p-4 sm:p-6 min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-gray-900">
+      <div className="p-6 min-h-screen" style={{ backgroundColor: COLORS.primaryBg }}>
         <div className="max-w-6xl mx-auto">
           <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2" 
+              style={{ borderColor: COLORS.primaryAccent }}></div>
           </div>
         </div>
       </div>
@@ -140,87 +187,175 @@ export default function InvestmentsPage() {
   }
 
   return (
-    <div className="p-4 sm:p-6 min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-gray-900 mb-20">
+    <div className="p-6 min-h-screen" style={{ backgroundColor: COLORS.primaryBg }}>
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
         className="max-w-6xl mx-auto"
       >
-        {/* Responsive Countdown Timer */}
-        <motion.div 
-          className="mb-4 sm:mb-6 md:mb-8 p-3 sm:p-4 bg-gradient-to-r from-blue-600 to-blue-500 dark:from-blue-800 dark:to-blue-700 rounded-lg sm:rounded-xl shadow-lg"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <div className="flex flex-col items-center justify-center space-y-1 sm:space-y-2">
-            <p className="text-xs sm:text-sm text-blue-100 dark:text-blue-200">Next Daily Reset</p>
-            <div className="text-xl sm:text-2xl md:text-3xl font-mono font-bold text-white tracking-wider">
-              {countdown}
-            </div>
-            <p className="text-[0.65rem] xs:text-xs text-blue-100 dark:text-blue-200 opacity-90 text-center px-2">
-              All payouts will be processed at reset time
-            </p>
-          </div>
-        </motion.div>
-
-        {/* Responsive Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
-          <motion.h1 
-            className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent dark:from-blue-400 dark:to-blue-300"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-          >
-            Your Investments
-          </motion.h1>
-          <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+          <div>
+            <motion.h1 
+              className="text-3xl font-bold mb-2"
+              style={{ color: COLORS.textDark }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+            >
+              Investment Portfolio
+            </motion.h1>
             <motion.p
-              className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 bg-white/50 dark:bg-gray-800/50 px-3 py-1 rounded-full whitespace-nowrap"
+              className="text-lg"
+              style={{ color: COLORS.textLight }}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3 }}
             >
-              {investments.filter(i => i.status === 'active').length} active investment{investments.filter(i => i.status === 'active').length !== 1 ? 's' : ''}
+              Track and manage your active investments
             </motion.p>
+          </div>
+          
+          <div className="flex gap-3">
             <motion.button
-              whileHover={{ scale: 1.02 }}
+              whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.98 }}
               onClick={handleProcessEarnings}
               disabled={processing}
-              className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 whitespace-nowrap"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg shadow-sm"
+              style={{ 
+                backgroundColor: processing ? COLORS.textLight : COLORS.primaryAccent,
+                color: '#FFFFFF'
+              }}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4 }}
             >
-              {processing ? 'Processing...' : 'Check Earnings'}
+              <FiRefreshCw className={processing ? 'animate-spin' : ''} />
+              {processing ? 'Processing...' : 'Refresh Earnings'}
             </motion.button>
+            
+            <Link href="/plans" passHref>
+  <motion.div
+    whileHover={{ scale: 1.03 }}
+    whileTap={{ scale: 0.98 }}
+    className="flex items-center gap-2 px-4 py-2 rounded-lg shadow-sm cursor-pointer"
+    style={{ 
+      backgroundColor: COLORS.secondaryAccent,
+      color: '#FFFFFF'
+    }}
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    transition={{ delay: 0.5 }}
+  >
+    <FiPlus />
+    New Investment
+  </motion.div>
+</Link>
           </div>
         </div>
         
+        {/* Stats Overview */}
+        <motion.div 
+          className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6 }}
+        >
+          <div className="p-6 rounded-xl shadow-sm" style={{ backgroundColor: COLORS.secondaryBg }}>
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-full" style={{ backgroundColor: COLORS.primaryAccent + '20' }}>
+                <FiDollarSign style={{ color: COLORS.primaryAccent }} />
+              </div>
+              <div>
+                <p className="text-sm" style={{ color: COLORS.textLight }}>Total Invested</p>
+                <p className="text-xl font-bold" style={{ color: COLORS.textDark }}>
+                  {formatCurrency(investments.reduce((sum, inv) => sum + inv.amount_invested, 0))}
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="p-6 rounded-xl shadow-sm" style={{ backgroundColor: COLORS.secondaryBg }}>
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-full" style={{ backgroundColor: COLORS.success + '20' }}>
+                <FiTrendingUp style={{ color: COLORS.success }} />
+              </div>
+              <div>
+                <p className="text-sm" style={{ color: COLORS.textLight }}>Total Earnings</p>
+                <p className="text-xl font-bold" style={{ color: COLORS.textDark }}>
+                  {formatCurrency(investments.reduce((sum, inv) => sum + inv.earnings_to_date, 0))}
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="p-6 rounded-xl shadow-sm" style={{ backgroundColor: COLORS.secondaryBg }}>
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-full" style={{ backgroundColor: COLORS.warning + '20' }}>
+                <FiPieChart style={{ color: COLORS.warning }} />
+              </div>
+              <div>
+                <p className="text-sm" style={{ color: COLORS.textLight }}>Active Plans</p>
+                <p className="text-xl font-bold" style={{ color: COLORS.textDark }}>
+                  {investments.filter(i => i.status === 'active').length}
+                </p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Countdown Timer */}
+        {investments.length > 0 && (
+          <motion.div 
+            className="mb-8 p-6 rounded-xl shadow-sm"
+            style={{ backgroundColor: COLORS.primaryAccent }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.7 }}
+          >
+            <div className="flex flex-col items-center text-white">
+              <p className="text-sm mb-2">Next Daily Payout In</p>
+              <div className="text-3xl font-mono font-bold tracking-wider mb-2">
+                <InvestmentCountdown nextPayoutDate={investments[0].next_payout_date} />
+              </div>
+              <p className="text-xs opacity-90 text-center">
+                All payouts will be processed automatically at reset time
+              </p>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Investments Grid */}
         {investments.length === 0 ? (
           <motion.div
-            className="text-center py-12 sm:py-16"
+            className="text-center py-16 rounded-xl shadow-sm"
+            style={{ backgroundColor: COLORS.secondaryBg }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8 }}
           >
-            <div className="mx-auto w-24 h-24 sm:w-32 sm:h-32 bg-gradient-to-br from-blue-100 to-blue-50 dark:from-gray-800 dark:to-gray-700 rounded-full flex items-center justify-center mb-4 sm:mb-6 shadow-lg">
-              <FiTrendingUp className="h-12 w-12 sm:h-16 sm:w-16 text-blue-400 dark:text-blue-300" />
+            <div className="mx-auto w-32 h-32 rounded-full flex items-center justify-center mb-6 shadow-sm"
+              style={{ backgroundColor: COLORS.primaryAccent + '20' }}>
+              <FiTrendingUp className="h-16 w-16" style={{ color: COLORS.primaryAccent }} />
             </div>
-            <h3 className="text-xl sm:text-2xl font-medium text-gray-800 dark:text-gray-100 mb-2">
+            <h3 className="text-2xl font-medium mb-2" style={{ color: COLORS.textDark }}>
               No Active Investments
             </h3>
-            <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto text-sm sm:text-base px-4">
-              You haven&apos;t started any investments yet. Begin your journey to grow your wealth today.
+            <p className="max-w-md mx-auto text-lg mb-6" style={{ color: COLORS.textLight }}>
+              Start growing your wealth by creating your first investment
             </p>
             <motion.button
-              whileHover={{ scale: 1.02 }}
+              whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.98 }}
-              className="mt-4 sm:mt-6 px-4 sm:px-6 py-1.5 sm:py-2 text-sm sm:text-base bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-full shadow-lg hover:shadow-blue-200/50 dark:hover:shadow-blue-900/30 transition-all"
+              className="px-6 py-2 rounded-lg shadow-sm"
+              style={{ 
+                backgroundColor: COLORS.primaryAccent,
+                color: '#FFFFFF'
+              }}
             >
-              Explore Plans
+              Explore Investment Plans
             </motion.button>
           </motion.div>
         ) : (
@@ -228,120 +363,124 @@ export default function InvestmentsPage() {
             variants={container}
             initial="hidden"
             animate="show"
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
+            className="grid grid-cols-1 lg:grid-cols-2 gap-6"
           >
             {investments.map((investment) => (
               <motion.div
                 key={investment.id}
                 variants={item}
-                whileHover={{ y: -5, boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.05)' }}
-                className={`bg-white/80 dark:bg-gray-800/90 backdrop-blur-sm rounded-xl shadow-md overflow-hidden border transition-all ${
-                  investment.status === 'completed'
-                    ? 'border-purple-200/50 dark:border-purple-900/50'
-                    : 'border-gray-200/50 dark:border-gray-700'
-                }`}
+                whileHover={{ y: -5 }}
+                className="rounded-xl shadow-md overflow-hidden"
+                style={{ backgroundColor: COLORS.primaryBg }}
               >
-                <div className="p-4 sm:p-6">
-                  <div className="flex justify-between items-start mb-3 sm:mb-4">
+                <div className="p-6">
+                  <div className="flex justify-between items-start mb-4">
                     <div>
-                      <h2 className="font-bold text-lg sm:text-xl text-gray-800 dark:text-gray-100">
+                      <h2 className="font-bold text-xl mb-1" style={{ color: COLORS.textDark }}>
                         {investment.plan_name}
                       </h2>
-                      <div className="flex items-center mt-1 text-xs sm:text-sm text-blue-500 dark:text-blue-400">
-                        <FiClock className="mr-1 w-3 h-3 sm:w-4 sm:h-4" />
-                        <span>{investment.duration}</span>
-                      </div>
-                    </div>
-                    <span className={`px-2 sm:px-3 py-1 text-xs font-medium rounded-full ${
-                      investment.status === 'completed'
-                        ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300'
-                        : investment.status === 'active'
-                          ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300'
-                          : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
-                    }`}>
-                      {investment.status}
-                    </span>
-                  </div>
-                  
-                  <div className="space-y-3 sm:space-y-4">
-                    <div className={`p-3 sm:p-4 rounded-lg ${
-                      investment.status === 'completed'
-                        ? 'bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/30'
-                        : 'bg-gradient-to-r from-blue-50 to-blue-100 dark:from-gray-700 dark:to-gray-800'
-                    }`}>
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center">
-                          <TbCurrencyNaira className={`mr-2 w-3 h-3 sm:w-4 smAppearance
-￼
-Sign Out
-Sign Out
-More options coming soon
-Home
-Invite
-:h-4 ${
-                            investment.status === 'completed'
-                              ? 'text-purple-500 dark:text-purple-400'
-                              : 'text-blue-500 dark:text-blue-400'
-                          }`} />
-                          <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Invested</span>
-                        </div>
-                        <span className="font-medium text-sm sm:text-base text-gray-800 dark:text-gray-100">
-                          {formatCurrency(investment.amount_invested)}
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm px-3 py-1 rounded-full" 
+                          style={{ 
+                            backgroundColor: investment.status === 'completed' 
+                              ? COLORS.success + '20' 
+                              : COLORS.primaryAccent + '20',
+                            color: investment.status === 'completed' 
+                              ? COLORS.success 
+                              : COLORS.primaryAccent
+                          }}>
+                          {investment.status}
                         </span>
+                        <div className="flex items-center text-sm" style={{ color: COLORS.textLight }}>
+                          <FiClock className="mr-1" />
+                          <span>{investment.duration}</span>
+                        </div>
                       </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                      <div className="bg-gray-50 dark:bg-gray-700/50 p-2 sm:p-3 rounded-lg">
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Daily Income</p>
-                        <p className="font-medium text-sm sm:text-base text-green-600 dark:text-green-400">
-                          +{formatCurrency(investment.daily_income)}
-                        </p>
-                      </div>
-                      <div className="bg-gray-50 dark:bg-gray-700/50 p-2 sm:p-3 rounded-lg">
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Earned</p>
-                        <p className="font-medium text-sm sm:text-base">
-                          {formatCurrency(investment.earnings_to_date)}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="relative pt-1 sm:pt-2">
-                      <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                        <div 
-                          className={`h-full ${
-                            investment.status === 'completed'
-                              ? 'bg-gradient-to-r from-purple-500 to-purple-400 dark:from-purple-400 dark:to-purple-300'
-                              : 'bg-gradient-to-r from-blue-500 to-blue-400 dark:from-blue-400 dark:to-blue-300'
-                          }`}
-                          style={{ width: `${calculateProgress(investment)}%` }}
-                        ></div>
-                      </div>
-                      <span className="text-xs text-gray-500 dark:text-gray-400 absolute right-0 top-0">
-                        {calculateProgress(investment).toFixed(1)}%
-                      </span>
                     </div>
                   </div>
                   
-                  <div className="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-gray-200 dark:border-gray-700">
+                  {/* Performance Chart */}
+                  <div className="h-40 mb-6">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={generatePerformanceData()}>
+                        <defs>
+                          <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor={COLORS.primaryAccent} stopOpacity={0.8}/>
+                            <stop offset="95%" stopColor={COLORS.primaryAccent} stopOpacity={0}/>
+                          </linearGradient>
+                        </defs>
+                        <XAxis dataKey="day" tick={{ fontSize: 12 }} />
+                        <YAxis tick={{ fontSize: 12 }} />
+                        <Tooltip />
+                        <Area 
+                          type="monotone" 
+                          dataKey="value" 
+                          stroke={COLORS.primaryAccent}
+                          fillOpacity={1} 
+                          fill="url(#colorValue)" 
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                  
+                  <div className="grid grid-cols-3 gap-4 mb-6">
+                    <div>
+                      <p className="text-xs mb-1" style={{ color: COLORS.textLight }}>Invested</p>
+                      <p className="font-medium" style={{ color: COLORS.textDark }}>
+                        {formatCurrency(investment.amount_invested)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs mb-1" style={{ color: COLORS.textLight }}>Daily</p>
+                      <p className="font-medium" style={{ color: COLORS.success }}>
+                        +{formatCurrency(investment.daily_income)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs mb-1" style={{ color: COLORS.textLight }}>Earned</p>
+                      <p className="font-medium" style={{ color: COLORS.textDark }}>
+                        {formatCurrency(investment.earnings_to_date)}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {/* Progress bar */}
+                  <div className="mb-6">
+                    <div className="flex justify-between text-xs mb-1" style={{ color: COLORS.textLight }}>
+                      <span>Progress</span>
+                      <span>{calculateProgress(investment).toFixed(1)}%</span>
+                    </div>
+                    <div className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: COLORS.secondaryBg }}>
+                      <div 
+                        className="h-full rounded-full" 
+                        style={{ 
+                          backgroundColor: investment.status === 'completed' 
+                            ? COLORS.success 
+                            : COLORS.primaryAccent,
+                          width: `${calculateProgress(investment)}%`
+                        }}
+                      ></div>
+                    </div>
+                  </div>
+                  
+                  {/* Status section */}
+                  <div className="pt-4 border-t" style={{ borderColor: COLORS.secondaryBg }}>
                     {investment.status === 'completed' ? (
-                      <div className="flex items-center text-xs sm:text-sm text-green-500 dark:text-green-400">
-                        <FiCheckCircle className="mr-2 w-3 h-3 sm:w-4 sm:h-4" />
+                      <div className="flex items-center text-sm" style={{ color: COLORS.success }}>
+                        <FiCheckCircle className="mr-2" />
                         <span>Completed on {format(new Date(investment.end_date), 'MMM d, yyyy')}</span>
                       </div>
                     ) : (
                       <>
-                        <div className="flex items-center text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-1 sm:mb-2">
-                          <FiCalendar className="mr-2 w-3 h-3 sm:w-4 sm:h-4" />
-                          <span>Next Payout</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="font-medium text-xs sm:text-sm text-gray-800 dark:text-gray-100">
-                            {format(new Date(investment.next_payout_date), 'MMM d, yyyy HH:mm')}
+                        <p className="text-xs mb-2" style={{ color: COLORS.textLight }}>
+                          Next payout in <span className="font-medium" style={{ color: COLORS.primaryAccent }}>
+                            {getDaysRemaining(investment.end_date)} days
                           </span>
-                          <span className="text-xs text-gray-500 dark:text-gray-400">
-                            {getDaysRemaining(investment.end_date)} days left
-                          </span>
+                        </p>
+                        <div className="flex justify-between items-center">
+                          <div className="font-mono text-sm font-medium" style={{ color: COLORS.textDark }}>
+                            <InvestmentCountdown nextPayoutDate={investment.next_payout_date} />
+                          </div>
                         </div>
                       </>
                     )}

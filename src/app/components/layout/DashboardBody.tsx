@@ -1,7 +1,6 @@
 'use client'
 
-import { useState } from 'react'
-import { motion } from 'framer-motion'
+ import { motion } from 'framer-motion'
 import { 
   FiDollarSign, 
   FiHome,
@@ -9,9 +8,10 @@ import {
   FiUsers,
   FiMail,
   FiPieChart,
-   FiCreditCard,
+  FiCreditCard,
   FiGift,
-  FiTrendingUp
+  FiTrendingUp,
+  FiImage
 } from 'react-icons/fi'
 import { 
   BarChart, 
@@ -23,24 +23,12 @@ import {
   ResponsiveContainer,
   Cell
 } from 'recharts'
- import Link from 'next/link'
+import Link from 'next/link'
+import Image from 'next/image'
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042']
 
 export default function SheratonDashboard() {
-  const [investmentAmount, setInvestmentAmount] = useState('')
-  const [calculatedReturn, setCalculatedReturn] = useState(0)
-  const [duration, setDuration] = useState(35)
-
-  const calculateReturn = () => {
-    const amount = parseFloat(investmentAmount)
-    if (isNaN(amount)) return
-    
-    // 25% return for Sheraton plan
-    const dailyReturn = amount * 0.25
-    setCalculatedReturn(dailyReturn * duration)
-  }
-
   // Chart data
   const performanceData = [
     { name: 'Week 1', returns: 750 },
@@ -93,7 +81,7 @@ export default function SheratonDashboard() {
         ))}
       </div>
 
-      <div className="max-w-7xl mx-auto relative  mt-10">
+      <div className="max-w-7xl mx-auto relative mt-16">
         {/* Luxury Header */}
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <motion.div
@@ -288,139 +276,34 @@ export default function SheratonDashboard() {
           </motion.div>
         </div>
 
-        {/* LUXURY INVESTMENT CALCULATOR */}
+        {/* INVESTMENT PLANS IMAGE SECTION */}
         <motion.div
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="mt-12 bg-gradient-to-r from-amber-500 to-amber-600 rounded-2xl overflow-hidden shadow-2xl"
+          className="mt-12 bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden"
         >
-          <div className="grid grid-cols-1 md:grid-cols-2">
-            <div className="p-8 md:p-12 flex flex-col justify-center">
-              <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">
-                Sheraton ROI Calculator
-              </h2>
-              <p className="text-amber-100 mb-6">
-                Calculate your 35-day returns with precision
-              </p>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-amber-100 text-sm mb-1">
-                    Investment Amount (₦)
-                  </label>
-                  <input
-                    type="number"
-                    value={investmentAmount}
-                    onChange={(e) => setInvestmentAmount(e.target.value)}
-                    className="w-full px-4 py-3 bg-white/20 text-white placeholder-amber-200 rounded-lg border border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-400"
-                    placeholder="e.g. 10000"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-amber-100 text-sm mb-1">
-                    Duration (Days)
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="range"
-                      min="1"
-                      max="35"
-                      value={duration}
-                      onChange={(e) => setDuration(parseInt(e.target.value))}
-                      className="w-full accent-amber-300"
-                    />
-                    <span className="text-white font-medium w-10 text-center">{duration}</span>
-                  </div>
-                </div>
-
-                <button
-                  onClick={calculateReturn}
-                  className="w-full bg-white text-amber-600 py-3 px-6 rounded-lg font-bold hover:bg-opacity-90 transition mt-4 shadow-lg"
-                >
-                  Check your profit
-                </button>
-              </div>
-            </div>
-
-            {/* Visualized Results */}
-            <div className="bg-white/10 p-8 md:p-12 flex flex-col justify-center items-center relative">
-              {calculatedReturn > 0 ? (
-                <>
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="text-center"
-                  >
-                    <div className="text-amber-100 mb-2">Your {duration}-day returns</div>
-                    <div className="text-5xl font-bold text-white mb-4">
-                      ₦{calculatedReturn.toLocaleString()}
-                    </div>
-                    <div className="text-amber-200">
-                    <div className="text-amber-200">
-  {((calculatedReturn / (parseFloat(investmentAmount) || 1)) * 100).toFixed(2)}% ROI
+          <div className="p-6 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3">
+            <FiImage className="text-amber-600 dark:text-amber-400 text-xl" />
+            <h2 className="text-xl font-semibold">Investment Plans</h2>
+          </div>
+          
+          <div className="p-6">
+          <div className="w-full max-w-3xl mx-auto rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+  <Image
+    src="/WhatsApp Image 2025-06-11 at 9.46.40 AM.jpeg"
+    alt="Sheraton Investment Plans"
+    width={1200}          // Adjust as needed for your layout
+    height={600}          // Keep aspect ratio consistent
+    className="w-full h-auto object-cover"
+  />
 </div>
 
-                    </div>
-                  </motion.div>
-                  
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: '100%' }}
-                    className="mt-8 h-2 bg-amber-300 rounded-full overflow-hidden"
-                  >
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ 
-                        width: `${Math.min(100, (calculatedReturn / (parseFloat(investmentAmount) * 3)) * 100)}%` 
-                      }}
-                      className="h-full bg-white"
-                    />
-                  </motion.div>
-                </>
-              ) : (
-                <div className="text-center">
-                  <div className="text-amber-200 text-xl mb-2">Enter your investment</div>
-                  <div className="text-amber-100 text-sm">
-                    See how much you&apos;ll earn in 35 days
-                  </div>
-                </div>
-              )}
+            
+            <div className="mt-4 text-center text-gray-500 dark:text-gray-400">
+              <p>Our comprehensive investment plans designed for maximum returns</p>
             </div>
           </div>
-        </motion.div>
-
-        {/* FULL INVESTMENT PLANS TABLE */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-          className="mt-8 bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden"
-        >
-          <table className="w-full">
-            <thead className="bg-amber-50 dark:bg-amber-900/20">
-              <tr>
-                <th className="p-4 text-left text-amber-800 dark:text-amber-200">Investment</th>
-                <th className="p-4 text-left text-amber-800 dark:text-amber-200">Earnings</th>
-                <th className="p-4 text-left text-amber-800 dark:text-amber-200">Duration</th>
-                <th className="p-4 text-left text-amber-800 dark:text-amber-200">ROI</th>
-              </tr>
-            </thead>
-            <tbody>
-              {investmentPlans.map((plan, i) => (
-                <tr 
-                  key={i} 
-                  className={`border-t border-gray-100 dark:border-gray-700 ${i % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-700/50'}`}
-                >
-                  <td className="p-4 font-medium">₦{plan.amount.toLocaleString()}</td>
-                  <td className="p-4 text-green-600 dark:text-green-400 font-bold">₦{plan.earn.toLocaleString()}</td>
-                  <td className="p-4">35 days</td>
-                  <td className="p-4">25%</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
         </motion.div>
       </div>
     </div>

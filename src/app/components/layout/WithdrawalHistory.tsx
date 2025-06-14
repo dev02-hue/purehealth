@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { supabase } from '@/lib/supabaseClient'
-import { Withdrawal } from '@/types/withdrawal'
+ import { Withdrawal } from '@/types/withdrawal'
 import { FaHistory, FaSpinner, FaMoneyBillWave, FaPercentage, FaBan, FaCreditCard, FaCircle } from 'react-icons/fa'
 import { MdPendingActions, MdDone, MdError } from 'react-icons/md'
+import { getUserWithdrawals } from '@/lib/withdrawals'
 
 export default function WithdrawalHistory() {
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([])
@@ -14,16 +14,11 @@ export default function WithdrawalHistory() {
   useEffect(() => {
     const fetchWithdrawals = async () => {
       try {
-        const { data, error } = await supabase
-          .from('withdrawals')
-          .select('*')
-          .order('created_at', { ascending: false })
-
-        if (error) throw error
-
-        setWithdrawals(data || [])
-      } catch (error) {
-        console.error('Error fetching withdrawals:', error)
+        const data = await getUserWithdrawals()
+        setWithdrawals(data)
+      } catch (err) {
+        console.error('Error:', err)
+        // setError('Failed to load withdrawal history')
       } finally {
         setLoading(false)
       }
