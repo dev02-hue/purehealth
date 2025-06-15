@@ -1,8 +1,9 @@
 import React from 'react'
+import CheckIn from '../components/CheckIn'
 
 const page = () => {
   return (
-    <div>page</div>
+    <div><CheckIn /></div>
   )
 }
 

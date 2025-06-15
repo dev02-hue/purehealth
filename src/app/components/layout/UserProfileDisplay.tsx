@@ -97,7 +97,7 @@ export default function UserProfileDisplay() {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="flex items-center justify-center min-h-[300px]"
+        className="flex items-center justify-center min-h-[300px] "
       >
         <div className="text-center">
           <motion.div
@@ -180,7 +180,7 @@ export default function UserProfileDisplay() {
       </div>
 
       {/* Main Content */}
-      <div className="bg-white dark:bg-gray-800 rounded-b-xl shadow-lg overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-b-xl shadow-lg overflow-hidden mb-20">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-6 mb-10">
           {/* Personal Info Column */}
           <div className="lg:col-span-1 space-y-6">

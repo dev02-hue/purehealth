@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { FiTrendingUp, FiDollarSign, FiClock, FiBarChart2,  FiPieChart } from 'react-icons/fi'
+import { FiTrendingUp, FiDollarSign, FiClock, FiBarChart2, FiPieChart, FiX } from 'react-icons/fi'
 import { useRouter } from 'next/navigation'
 import { toast } from 'react-hot-toast'
 import { RadialBarChart, RadialBar, PolarAngleAxis, ResponsiveContainer, Tooltip, LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts'
@@ -26,13 +26,11 @@ const generateHistoricalData = (volatility: number) => {
 
 const generatePerformanceData = (volatility: number) => {
   const performanceScore = Math.round(100 - (volatility * 20))
-  // const riskScore = Math.round(volatility * 100)
   const stabilityScore = Math.round(100 - (volatility * 50))
   const liquidityScore = Math.round(80 - (volatility * 30))
   
   return [
     { name: 'Performance', value: performanceScore, fill: '#3B82F6', icon: <FiTrendingUp /> },
-    // { name: 'Risk', value: riskScore, fill: '#EF4444', icon: <FiShield /> },
     { name: 'Stability', value: stabilityScore, fill: '#10B981', icon: <FiBarChart2 /> },
     { name: 'Liquidity', value: liquidityScore, fill: '#8B5CF6', icon: <FiPieChart /> },
   ]
@@ -54,6 +52,91 @@ interface CryptoData {
   price_change_percentage_24h: number
 }
 
+interface InvestmentModalProps {
+  isOpen: boolean
+  onClose: () => void
+  onConfirm: () => void
+  plan: InvestmentPlan | null
+  isLoading: boolean
+}
+
+const InvestmentModal = ({ isOpen, onClose, onConfirm, plan, isLoading }: InvestmentModalProps) => {
+  if (!isOpen || !plan) return null
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full p-6"
+      >
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+            Confirm Investment
+          </h3>
+          <button 
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+          >
+            <FiX size={24} />
+          </button>
+        </div>
+        
+        <div className="mb-6">
+          <p className="text-gray-700 dark:text-gray-300 mb-4">
+            You are about to invest in <span className="font-semibold">{plan.name}</span> for {formatCurrency(plan.price)}.
+          </p>
+          
+          <div className="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+            <h4 className="font-medium text-blue-800 dark:text-blue-200 mb-2">Investment Details</h4>
+            <ul className="space-y-2 text-sm text-blue-700 dark:text-blue-300">
+              <li className="flex justify-between">
+                <span>Daily Income:</span>
+                <span className="font-medium">+{formatCurrency(plan.daily_income)}</span>
+              </li>
+              <li className="flex justify-between">
+                <span>Total Return:</span>
+                <span className="font-medium">{formatCurrency(plan.total_income)}</span>
+              </li>
+              <li className="flex justify-between">
+                <span>Duration:</span>
+                <span className="font-medium">{plan.duration}</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+        
+        <div className="flex justify-end space-x-3">
+          <button
+            onClick={onClose}
+            disabled={isLoading}
+            className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={isLoading}
+            className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+          >
+            {isLoading ? (
+              <>
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Processing...
+              </>
+            ) : (
+              'Confirm Investment'
+            )}
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  )
+}
+
 export default function InvestmentPlans() {
   const router = useRouter()
   const [investmentPlans, setInvestmentPlans] = useState<InvestmentPlan[]>([])
@@ -61,6 +144,8 @@ export default function InvestmentPlans() {
   const [loading, setLoading] = useState(true)
   const [cryptoData, setCryptoData] = useState<CryptoData[]>([])
   const [activeHover, setActiveHover] = useState<string | null>(null)
+  const [modalOpen, setModalOpen] = useState(false)
+  const [selectedPlan, setSelectedPlan] = useState<InvestmentPlan | null>(null)
 
   // Fetch investment plans
   useEffect(() => {
@@ -76,8 +161,10 @@ export default function InvestmentPlans() {
       }
       setLoading(false)
     }
+  
     fetchPlans()
   }, [])
+  
 
   // Fetch crypto data from CoinGecko
   useEffect(() => {
@@ -99,26 +186,31 @@ export default function InvestmentPlans() {
     return () => clearInterval(interval)
   }, [])
 
-  const handleInvest = async (plan: InvestmentPlan) => {
-    const confirmed = window.confirm(`Are you sure you want to invest in ${plan.name} for ${formatCurrency(plan.price)}?`)
-    if (!confirmed) return
+  const handleInvestClick = (plan: InvestmentPlan) => {
+    setSelectedPlan(plan)
+    setModalOpen(true)
+  }
 
-    setLoadingStates(prev => ({ ...prev, [plan.name]: true }))
+  const handleInvestConfirm = async () => {
+    if (!selectedPlan) return
+
+    setLoadingStates(prev => ({ ...prev, [selectedPlan.name]: true }))
 
     try {
       const result = await investInPlan({
-        name: plan.name,
-        price: plan.price,
-        dailyIncome: plan.daily_income,
-        totalIncome: plan.total_income,
-        duration: plan.duration,
+        name: selectedPlan.name,
+        price: selectedPlan.price,
+        dailyIncome: selectedPlan.daily_income,
+        totalIncome: selectedPlan.total_income,
+        duration: selectedPlan.duration,
       })
 
       if (!result?.success) {
         throw new Error('Investment failed')
       }
 
-      toast.success(`Successfully invested ${formatCurrency(plan.price)} in ${plan.name}!`)
+      toast.success(`Successfully invested ${formatCurrency(selectedPlan.price)} in ${selectedPlan.name}!`)
+      setModalOpen(false)
       router.push('/active-investment')
     } catch (error: unknown) {
       if (error instanceof Error) {
@@ -127,7 +219,7 @@ export default function InvestmentPlans() {
         toast.error('An unknown error occurred')
       }
     } finally {
-      setLoadingStates(prev => ({ ...prev, [plan.name]: false }))
+      setLoadingStates(prev => ({ ...prev, [selectedPlan.name]: false }))
     }
   }
 
@@ -378,7 +470,7 @@ export default function InvestmentPlans() {
                     </div>
 
                     <button
-                      onClick={() => handleInvest(plan)}
+                      onClick={() => handleInvestClick(plan)}
                       disabled={loadingStates[plan.name]}
                       className="mt-6 w-full flex items-center justify-center px-4 py-3 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -471,6 +563,15 @@ export default function InvestmentPlans() {
           </div>
         </motion.div>
       </div>
+
+      {/* Investment Confirmation Modal */}
+      <InvestmentModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onConfirm={handleInvestConfirm}
+        plan={selectedPlan}
+        isLoading={selectedPlan ? loadingStates[selectedPlan.name] : false}
+      />
     </div>
   )
 }

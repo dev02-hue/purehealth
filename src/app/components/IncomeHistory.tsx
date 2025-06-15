@@ -114,7 +114,7 @@ export default function IncomeHistory() {
 
   return (
     <motion.div 
-      className="bg-[#FFFFFF] rounded-xl shadow-sm p-6 border border-[#F5F7FA]"
+      className="bg-[#FFFFFF] rounded-xl shadow-sm p-6 border border-[#F5F7FA] mb-20"
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
