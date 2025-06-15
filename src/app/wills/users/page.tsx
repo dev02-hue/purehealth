@@ -28,7 +28,7 @@ export default async function AdminUsersPage() {
   return (
     <div className="p-4 sm:p-6">
       <h1 className="text-2xl font-bold mb-6">User Management</h1>
-      <AdminUsersTable users={result.users} />
-    </div>
+      <AdminUsersTable initialUsers={result.users} />
+      </div>
   )
 }

@@ -15,10 +15,17 @@ type AdminResponse =
 //     error?: string
 //   }
 
-export async function checkAdminAndFetchUsers(): Promise<AdminResponse> {
+type UpdateBalanceResponse = {
+  success?: boolean
+  updatedBalance?: number
+  error?: string
+}
+
+
+export async function checkAdminAndFetchUsers(searchTerm?: string): Promise<AdminResponse> {
   try {
     // 1. Get session from cookies
-    const cookieStore =await cookies()
+    const cookieStore = await cookies()
     const accessToken = cookieStore.get('sb-access-token')?.value
     const refreshToken = cookieStore.get('sb-refresh-token')?.value
 
@@ -69,11 +76,19 @@ export async function checkAdminAndFetchUsers(): Promise<AdminResponse> {
       }
     }
 
-    // 6. If admin, fetch all users (profiles first)
-    const { data: allProfiles, error: profilesError } = await supabase
+    // 6. If admin, fetch all users (profiles first) with optional search
+    let query = supabase
       .from('profiles')
       .select('*')
-      .order('created_at', { ascending: false })
+      .order('created_at', { ascending: true }) // Changed to ascending
+
+    // Add search condition if searchTerm is provided
+    if (searchTerm && searchTerm.trim() !== '') {
+      query = query
+        .or(`first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%`)
+    }
+
+    const { data: allProfiles, error: profilesError } = await query
 
     if (profilesError) {
       return { error: 'Failed to fetch user profiles.' }
@@ -82,7 +97,6 @@ export async function checkAdminAndFetchUsers(): Promise<AdminResponse> {
     // 7. Get auth data for all users in batches
     const allUsersWithAuth: UserWithAuth[] = []
     
-    // Batch process to avoid too many requests at once
     const batchSize = 10
     for (let i = 0; i < allProfiles.length; i += batchSize) {
       const batch = allProfiles.slice(i, i + batchSize)
@@ -117,8 +131,6 @@ export async function checkAdminAndFetchUsers(): Promise<AdminResponse> {
     return { error: 'An unexpected error occurred.' }
   }
 }
-
-
 // deleteuser
    
 
@@ -187,6 +199,72 @@ export async function deleteUserById(userId: string): Promise<{ success?: boolea
 
   } catch (error) {
     console.error('Delete user error:', error)
+    return { error: 'An unexpected error occurred.' }
+  }
+}
+
+
+
+export async function updateUserBalance(
+  userId: string,
+  newBalance: number
+): Promise<UpdateBalanceResponse> {
+  try {
+    // 1. Get session from cookies
+    const cookieStore = await cookies()
+    const accessToken = cookieStore.get('sb-access-token')?.value
+    const refreshToken = cookieStore.get('sb-refresh-token')?.value
+
+    if (!accessToken || !refreshToken) {
+      return { error: 'Not authenticated. Please log in.' }
+    }
+
+    // 2. Set session on Supabase client
+    const { data: { session }, error: sessionError } = await supabase.auth.setSession({
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    })
+
+    if (sessionError || !session?.user) {
+      return { error: 'Session expired. Please log in again.' }
+    }
+
+    // 3. Check if current user is admin
+    const { data: currentUser, error: profileError } = await supabase
+      .from('profiles')
+      .select('is_admin')
+      .eq('id', session.user.id)
+      .single()
+
+    if (profileError || !currentUser?.is_admin) {
+      return { error: 'Unauthorized. Admin access required.' }
+    }
+
+    // 4. Validate the new balance
+    if (typeof newBalance !== 'number' || newBalance < 0) {
+      return { error: 'Invalid balance amount.' }
+    }
+
+    // 5. Update the user's balance in the profiles table
+    const { data: updatedUser, error: updateError } = await supabase
+      .from('profiles')
+      .update({ balance: newBalance })
+      .eq('id', userId)
+      .select('balance')
+      .single()
+
+    if (updateError || !updatedUser) {
+      console.error('Balance update error:', updateError)
+      return { error: 'Failed to update user balance.' }
+    }
+
+    return { 
+      success: true,
+      updatedBalance: updatedUser.balance 
+    }
+
+  } catch (error) {
+    console.error('Update balance error:', error)
     return { error: 'An unexpected error occurred.' }
   }
 }
