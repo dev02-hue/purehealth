@@ -1,15 +1,16 @@
 'use server'
 
+import { recordReferral } from '@/lib/referral/referrals'
 import { supabase } from '@/lib/supabaseClient'
 import { v4 as uuidv4 } from 'uuid'
-
+ 
 export async function signUp({
   email,
   phone,
   password,
   firstName,
   lastName,
-  referredCode, // user enters this code if referred by someone
+  referredCode,
 }: {
   email?: string
   phone?: string
@@ -42,99 +43,41 @@ export async function signUp({
   }
 
   const userId = data.user.id
-  const referralCode = uuidv4().split('-')[0] + userId.slice(0, 4) // Generate referral code like: abcde1234
+  const referralCode = uuidv4().split('-')[0] + userId.slice(0, 4)
 
-  // 4. Initialize referral tracking variables
-  let referredByUserId: string | null = null
-  let referralLevel = 0
-
-  // 5. Process referral code if provided
+  // 4. Process referral code if provided
   if (referredCode) {
-    const { data: referrerProfile, error: referralError } = await supabase
-      .from('profiles')
-      .select('id, referral_level')
-      .eq('referral_code', referredCode)
-      .single()
-
-    if (!referralError && referrerProfile?.id) {
-      referredByUserId = referrerProfile.id
-
-      // Prevent self-referral
-      if (referredByUserId === userId) {
-        await supabase.auth.admin.deleteUser(userId)
-        return { error: 'Cannot refer yourself' }
-      }
-
-      referralLevel = (referrerProfile.referral_level || 0) + 1
+    try {
+      await recordReferral(userId, referredCode)
+    } catch (err) {
+      console.error('Referral recording failed:', err)
+      // Don't fail signup if referral fails, just continue
     }
   }
 
-  // 6. Insert profile data into 'profiles' table
+  // 5. Insert profile data
   const { error: profileError } = await supabase.from('profiles').insert([{
     id: userId,
     first_name: firstName,
     last_name: lastName,
     email: email || null,
     phone_number: phone || null,
-    balance: 900,
+    balance: 500,
     referral_code: referralCode,
-    referred_by: referredByUserId,
-    referral_level: referralLevel,
     is_phone_user: !email,
     auth_email: authEmail,
     created_at: new Date().toISOString()
   }])
 
   if (profileError) {
-    // Cleanup auth user if profile creation fails
     await supabase.auth.admin.deleteUser(userId)
     return { error: 'Failed to create profile: ' + profileError.message }
   }
 
-  // 7. Create a referral record in 'referrals' table if referred
-  // 7. Create referral records in 'referrals' table
-if (referredByUserId) {
-  // Add direct referral (level 1)
-  const { error: level1Error } = await supabase.from('referrals').insert([{
-    referrer_id: referredByUserId,
-    referee_id: userId,
-    level: 1,
-    created_at: new Date().toISOString()
-  }])
-
-  if (level1Error) {
-    console.error('Level 1 referral creation failed:', level1Error)
-  }
-
-  // Now check if the direct referrer was also referred (for level 2)
-  const { data: indirectReferrer, error: indirectError } = await supabase
-    .from('referrals')
-    .select('referrer_id')
-    .eq('referee_id', referredByUserId)
-    .single()
-
-  if (!indirectError && indirectReferrer?.referrer_id) {
-    // Add level 2 referral
-    const { error: level2Error } = await supabase.from('referrals').insert([{
-      referrer_id: indirectReferrer.referrer_id,
-      referee_id: userId,
-      level: 2,
-      created_at: new Date().toISOString()
-    }])
-
-    if (level2Error) {
-      console.error('Level 2 referral creation failed:', level2Error)
-    }
-  }
-}
-
-
-  // 8. Return response
   return {
     user: data.user,
     session: data.session,
-    referralCode,       // the new user's own referral code
-    referredBy: referredByUserId,  // ID of referrer (if any)
+    referralCode,
     message: 'Signup successful'
   }
 }

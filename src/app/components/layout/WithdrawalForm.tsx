@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { initiateWithdrawal } from '@/lib/withdrawal'
 import { WithdrawalDetails } from '@/types/withdrawal'
-import { FaMoneyBillWave, FaCreditCard, FaSpinner, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa'
+import { FaMoneyBillWave, FaCreditCard, FaSpinner, FaCheckCircle, FaExclamationTriangle, FaInfoCircle, FaClock } from 'react-icons/fa'
 
 export default function WithdrawalForm() {
   const [amount, setAmount] = useState('')
@@ -15,9 +15,32 @@ export default function WithdrawalForm() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [withdrawalDetails, setWithdrawalDetails] = useState<WithdrawalDetails | null>(null)
+  const [currentTime, setCurrentTime] = useState(new Date())
+  const [isWithinWithdrawalHours, setIsWithinWithdrawalHours] = useState(true)
+
+  // Update current time every minute
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date())
+    }, 60000)
+    return () => clearInterval(timer)
+  }, [])
+
+  // Check if current time is within withdrawal hours (9AM-5PM)
+  useEffect(() => {
+    const hours = currentTime.getHours()
+    setIsWithinWithdrawalHours(hours >= 9 && hours < 17)
+  }, [currentTime])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Check if within withdrawal hours
+    if (!isWithinWithdrawalHours) {
+      setError('Withdrawals are only processed between 9AM and 5PM')
+      return
+    }
+
     setLoading(true)
     setError('')
     setSuccess(false)
@@ -48,7 +71,24 @@ export default function WithdrawalForm() {
     } finally {
       setLoading(false);
     }
-  } // This was the missing closing brace
+  }
+
+  // Calculate net amount and fee for preview
+  const calculateWithdrawalDetails = () => {
+    const numericAmount = parseFloat(amount) || 0;
+    if (numericAmount < 1000) return null;
+
+    const fee = numericAmount * 0.1;
+    const netAmount = numericAmount - fee;
+    
+    return {
+      fee,
+      netAmount,
+      totalDeduction: numericAmount
+    };
+  };
+
+  const previewDetails = calculateWithdrawalDetails();
 
   // Animation variants
   const container = {
@@ -90,7 +130,7 @@ export default function WithdrawalForm() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="max-w-md mx-auto p-6 rounded-2xl"
+      className="max-w-md mx-auto p-6 rounded-2xl mb-20"
       style={{
         background: 'linear-gradient(145deg, #F5F7FA, #FFFFFF)',
         boxShadow: '0 8px 32px rgba(59, 130, 246, 0.1)'
@@ -124,6 +164,45 @@ export default function WithdrawalForm() {
         <h2 className="text-2xl font-bold bg-gradient-to-r from-[#3B82F6] to-[#EC4899] bg-clip-text text-transparent">
           Withdraw Funds
         </h2>
+      </motion.div>
+
+      {/* Withdrawal Information */}
+      <motion.div 
+        className="mb-6 p-4 rounded-xl"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.3 }}
+        style={{
+          background: 'linear-gradient(145deg, rgba(59,130,246,0.1), rgba(236,72,153,0.05))',
+          border: '1px solid rgba(59,130,246,0.2)'
+        }}
+      >
+        <div className="flex items-start gap-3 mb-2">
+          <FaInfoCircle className="text-[#3B82F6] mt-0.5 flex-shrink-0" />
+          <div>
+            <h3 className="font-semibold text-[#1A1A1A] mb-1">Withdrawal Information</h3>
+            <ul className="text-sm text-[#4A5568] space-y-1">
+              <li className="flex items-start gap-2">
+                <span>•</span>
+                <span>10% withdrawal fee (deducted from withdrawal amount)</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span>•</span>
+                <span>Processing time: 0-10 minutes during business hours</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span>•</span>
+                <span>Withdrawal hours: 9AM - 5PM (Monday - Friday)</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+        {!isWithinWithdrawalHours && (
+          <div className="flex items-center gap-2 mt-2 text-sm text-[#EF4444]">
+            <FaClock />
+            <span>Withdrawals are currently closed. Please try again between 9AM and 5PM.</span>
+          </div>
+        )}
       </motion.div>
 
       <AnimatePresence>
@@ -200,9 +279,9 @@ export default function WithdrawalForm() {
             
             <motion.div className="space-y-3" variants={container}>
               {[
-                { label: 'Amount:', value: `₦${withdrawalDetails?.amountWithdrawn?.toLocaleString()}` },
-                { label: 'Fee:', value: `₦${withdrawalDetails?.fee?.toLocaleString()}` },
-                { label: 'Total Deducted:', value: `₦${withdrawalDetails?.totalDeducted?.toLocaleString()}` },
+                { label: 'Amount Requested:', value: `₦${withdrawalDetails?.totalDeducted?.toLocaleString()}` },
+                { label: 'Fee (10%):', value: `₦${withdrawalDetails?.fee?.toLocaleString()}` },
+                { label: 'Amount You Receive:', value: `₦${withdrawalDetails?.amountWithdrawn?.toLocaleString()}` },
                 { label: 'Bank:', value: withdrawalDetails?.bankName },
                 { label: 'Account:', value: withdrawalDetails?.accountNumber },
                 { label: 'Reference:', value: withdrawalDetails?.reference, fullWidth: true }
@@ -248,7 +327,25 @@ export default function WithdrawalForm() {
                 NGN
               </span>
             </div>
-            <p className="text-sm text-[#4A5568] mt-2">Minimum: ₦1,000 • 10% fee applies</p>
+            <p className="text-sm text-[#4A5568] mt-2">Minimum: ₦1,000</p>
+            
+            {/* Preview of withdrawal details */}
+            {previewDetails && (
+              <div className="mt-3 p-3 rounded-lg bg-[#F5F7FA] text-sm">
+                <div className="flex justify-between mb-1">
+                  <span className="text-[#4A5568]">Amount requested:</span>
+                  <span className="font-medium">₦{parseFloat(amount).toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between mb-1">
+                  <span className="text-[#4A5568]">Fee (10%):</span>
+                  <span className="font-medium">-₦{previewDetails.fee.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between pt-2 border-t border-[#E2E8F0]">
+                  <span className="text-[#4A5568]">You&apos;ll receive:</span>
+                  <span className="font-medium text-[#3B82F6]">₦{previewDetails.netAmount.toLocaleString()}</span>
+                </div>
+              </div>
+            )}
           </motion.div>
           
           <motion.div className="grid grid-cols-2 gap-4 mb-5" variants={container}>
@@ -306,15 +403,18 @@ export default function WithdrawalForm() {
           
           <motion.button
             type="submit"
-            disabled={loading}
+            disabled={loading || !isWithinWithdrawalHours}
             className={`w-full p-3 rounded-xl font-medium flex items-center justify-center gap-2 relative overflow-hidden`}
-            whileHover={!loading ? { scale: 1.02 } : {}}
-            whileTap={!loading ? { scale: 0.98 } : {}}
+            whileHover={(!loading && isWithinWithdrawalHours) ? { scale: 1.02 } : {}}
+            whileTap={(!loading && isWithinWithdrawalHours) ? { scale: 0.98 } : {}}
             variants={item}
             style={{
               background: loading 
                 ? 'linear-gradient(90deg, #3B82F6, #3B82F6)'
-                : 'linear-gradient(90deg, #3B82F6, #EC4899)'
+                : !isWithinWithdrawalHours
+                ? 'linear-gradient(90deg, #9CA3AF, #6B7280)'
+                : 'linear-gradient(90deg, #3B82F6, #EC4899)',
+              cursor: (!loading && isWithinWithdrawalHours) ? 'pointer' : 'not-allowed'
             }}
           >
             {loading && (
@@ -333,6 +433,11 @@ export default function WithdrawalForm() {
                 <>
                   <FaSpinner className="animate-spin inline mr-2" />
                   Processing...
+                </>
+              ) : !isWithinWithdrawalHours ? (
+                <>
+                  <FaClock className="inline mr-2" />
+                  Withdrawals Closed
                 </>
               ) : (
                 <>

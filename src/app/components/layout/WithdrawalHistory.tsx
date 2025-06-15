@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
- import { Withdrawal } from '@/types/withdrawal'
-import { FaHistory, FaSpinner, FaMoneyBillWave, FaPercentage, FaBan, FaCreditCard, FaCircle } from 'react-icons/fa'
+import { Withdrawal } from '@/types/withdrawal'
+import { FaHistory, FaSpinner, FaMoneyBillWave, FaPercentage, FaBan, FaCreditCard } from 'react-icons/fa'
 import { MdPendingActions, MdDone, MdError } from 'react-icons/md'
 import { getUserWithdrawals } from '@/lib/withdrawals'
 
@@ -14,11 +14,10 @@ export default function WithdrawalHistory() {
   useEffect(() => {
     const fetchWithdrawals = async () => {
       try {
-        const data = await getUserWithdrawals()
+        const data = await getUserWithdrawals(['pending', 'approved'])
         setWithdrawals(data)
       } catch (err) {
         console.error('Error:', err)
-        // setError('Failed to load withdrawal history')
       } finally {
         setLoading(false)
       }
@@ -53,21 +52,21 @@ export default function WithdrawalHistory() {
   const StatusBadge = ({ status }: { status: string }) => {
     const statusConfig = {
       paid: {
-        icon: <MdDone className="text-green-500" />,
-        bg: 'bg-green-50',
-        text: 'text-green-700',
+        icon: <MdDone className="text-green-600" />,
+        bg: 'bg-green-100/80',
+        text: 'text-green-800',
         border: 'border-green-200'
       },
       pending: {
-        icon: <MdPendingActions className="text-yellow-500" />,
-        bg: 'bg-yellow-50',
-        text: 'text-yellow-700',
-        border: 'border-yellow-200'
+        icon: <MdPendingActions className="text-amber-600" />,
+        bg: 'bg-amber-100/80',
+        text: 'text-amber-800',
+        border: 'border-amber-200'
       },
       failed: {
-        icon: <MdError className="text-red-500" />,
-        bg: 'bg-red-50',
-        text: 'text-red-700',
+        icon: <MdError className="text-red-600" />,
+        bg: 'bg-red-100/80',
+        text: 'text-red-800',
         border: 'border-red-200'
       }
     }
@@ -76,7 +75,7 @@ export default function WithdrawalHistory() {
 
     return (
       <motion.span 
-        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm ${config.bg} ${config.text} ${config.border} border`}
+        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${config.bg} ${config.text} ${config.border} border`}
         whileHover={{ scale: 1.03 }}
       >
         {config.icon}
@@ -92,79 +91,97 @@ export default function WithdrawalHistory() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
       >
-        <FaSpinner className="animate-spin text-blue-500 text-2xl mr-3" />
-        <span className="text-gray-600">Loading history...</span>
+        <FaSpinner className="animate-spin text-amber-600 text-2xl mr-3" />
+        <span className="text-amber-800">Loading withdrawal history...</span>
       </motion.div>
     )
   }
 
   return (
     <motion.div 
-      className="mt-8 bg-white rounded-xl shadow-sm p-6"
+      className="mt-8 bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border border-amber-100 dark:border-amber-900/30"
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
       <motion.h2 
-        className="text-2xl font-bold mb-6 text-blue-600 flex items-center gap-3"
+        className="text-2xl font-bold mb-6 text-amber-700 dark:text-amber-300 flex items-center gap-3"
         initial={{ x: -10, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         transition={{ delay: 0.1 }}
       >
-        <FaHistory className="text-blue-500" />
-        Withdrawal History
+        <FaHistory className="text-amber-600 dark:text-amber-400" />
+        Sheraton Withdrawal History
       </motion.h2>
       
       <AnimatePresence>
         {withdrawals.length === 0 ? (
           <motion.div 
-            className="py-8 text-center bg-gray-50 rounded-lg"
+            className="py-12 text-center bg-amber-50/50 dark:bg-amber-900/10 rounded-lg border border-amber-100 dark:border-amber-900/20"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            <p className="text-gray-500">No withdrawal history found</p>
+            <p className="text-amber-700 dark:text-amber-300">No withdrawal history found</p>
+            <p className="text-sm text-amber-600/80 dark:text-amber-400/80 mt-1">
+              Your completed withdrawals will appear here
+            </p>
           </motion.div>
         ) : (
           <motion.div 
-            className="overflow-hidden rounded-lg border border-gray-200"
+            className="overflow-hidden rounded-xl border border-amber-100 dark:border-amber-900/30"
             variants={containerVariants}
             initial="hidden"
             animate="visible"
           >
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+              <table className="min-w-full divide-y divide-amber-100 dark:divide-amber-900/20">
+                <thead className="bg-amber-50 dark:bg-amber-900/10">
                   <motion.tr variants={itemVariants}>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider flex items-center gap-1">
-                      <FaCircle className="text-blue-500 text-xs" /> Date
+                    <th className="px-6 py-3 text-left text-xs font-medium text-amber-800 dark:text-amber-300 uppercase tracking-wider">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-amber-600" />
+                        Date
+                      </div>
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider flex items-center gap-1">
-                      <FaMoneyBillWave className="text-blue-500" /> Amount
+                    <th className="px-6 py-3 text-left text-xs font-medium text-amber-800 dark:text-amber-300 uppercase tracking-wider">
+                      <div className="flex items-center gap-2">
+                        <FaMoneyBillWave className="text-amber-600" />
+                        Amount
+                      </div>
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider flex items-center gap-1">
-                      <FaPercentage className="text-blue-500" /> Fee
+                    <th className="px-6 py-3 text-left text-xs font-medium text-amber-800 dark:text-amber-300 uppercase tracking-wider">
+                      <div className="flex items-center gap-2">
+                        <FaPercentage className="text-amber-600" />
+                        Fee
+                      </div>
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider flex items-center gap-1">
-                      <FaBan className="text-blue-500" /> Bank
+                    <th className="px-6 py-3 text-left text-xs font-medium text-amber-800 dark:text-amber-300 uppercase tracking-wider">
+                      <div className="flex items-center gap-2">
+                        <FaBan className="text-amber-600" />
+                        Bank
+                      </div>
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider flex items-center gap-1">
-                      <FaCreditCard className="text-blue-500" /> Account
+                    <th className="px-6 py-3 text-left text-xs font-medium text-amber-800 dark:text-amber-300 uppercase tracking-wider">
+                      <div className="flex items-center gap-2">
+                        <FaCreditCard className="text-amber-600" />
+                        Account
+                      </div>
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-amber-800 dark:text-amber-300 uppercase tracking-wider">
                       Status
                     </th>
                   </motion.tr>
                 </thead>
-                <motion.tbody className="bg-white divide-y divide-gray-200" variants={containerVariants}>
+                <motion.tbody className="bg-white dark:bg-gray-800 divide-y divide-amber-100 dark:divide-amber-900/20" variants={containerVariants}>
                   {withdrawals.map((withdrawal) => (
                     <motion.tr 
                       key={withdrawal.id} 
-                      className="hover:bg-blue-50 transition-colors"
+                      className="hover:bg-amber-50/50 dark:hover:bg-amber-900/10 transition-colors"
                       variants={itemVariants}
                       whileHover={{ scale: 1.005 }}
                     >
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-amber-900 dark:text-amber-200">
                         {new Date(withdrawal.created_at).toLocaleDateString('en-US', {
                           year: 'numeric',
                           month: 'short',
@@ -173,16 +190,16 @@ export default function WithdrawalHistory() {
                           minute: '2-digit'
                         })}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-amber-900 dark:text-amber-100">
                         ₦{withdrawal.amount?.toLocaleString()}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-amber-700 dark:text-amber-300">
                         ₦{withdrawal.fee?.toLocaleString()}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-amber-800 dark:text-amber-200">
                         {withdrawal.bank_name}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-amber-800 dark:text-amber-200">
                         {withdrawal.account_number}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
