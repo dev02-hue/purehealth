@@ -8,6 +8,7 @@ import { toast } from 'react-hot-toast'
 import { RadialBarChart, RadialBar, PolarAngleAxis, ResponsiveContainer, Tooltip, LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts'
 import { getAllInvestmentPlans, InvestmentPlan } from '@/lib/investmentPlans'
 import { investInPlan } from '@/lib/investment-plan'
+import { FaNairaSign } from 'react-icons/fa6'
 
 // Generate mock historical data for each plan
 const generateHistoricalData = (volatility: number) => {
@@ -350,7 +351,7 @@ export default function InvestmentPlans() {
                     <div className="space-y-3">
                       <div className="flex justify-between items-center p-2 rounded-lg bg-gray-50 dark:bg-gray-700/50">
                         <span className="text-sm text-gray-500 dark:text-gray-400 flex items-center">
-                          <FiDollarSign className="mr-1" /> Investment
+                          <FaNairaSign className="mr-1" /> Investment
                         </span>
                         <span className="font-medium text-gray-900 dark:text-gray-100">
                           {formatCurrency(plan.price)}

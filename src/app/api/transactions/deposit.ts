@@ -4,8 +4,8 @@ import { supabase } from '@/lib/supabaseClient'
 import { cookies } from 'next/headers'
 import { sendDepositEmailToAdmin } from '@/lib/email'
 
-export async function initiateDeposit(amount: number, userEmail: string) {
-  console.log('initiateDeposit called with:', { amount, userEmail })
+export async function initiateDeposit(amount: number, userEmail: string, senderBankDetails: string) {
+  console.log('initiateDeposit called with:', { amount, userEmail, senderBankDetails })
 
   const cookieStore = await cookies()
   const userId = cookieStore.get('user_id')?.value
@@ -21,6 +21,11 @@ export async function initiateDeposit(amount: number, userEmail: string) {
     return { error: 'Minimum deposit is ₦1,000' }
   }
 
+  if (!senderBankDetails || senderBankDetails.trim().length < 5) {
+    console.log('Invalid sender bank details')
+    return { error: 'Please provide valid bank details where you are sending from' }
+  }
+
   // Fetch active bank account details
   const { data: bankAccount, error: bankError } = await supabase
     .from('bank_accounts')
@@ -33,10 +38,10 @@ export async function initiateDeposit(amount: number, userEmail: string) {
     return { error: 'Unable to fetch payment details. Please try again later.' }
   }
 
-  const reference = `DEP-${Date.now()}-${Math.floor(Math.random() * 1000)}`
+  const reference = `Sheraton-${Date.now()}-${Math.floor(Math.random() * 1000)}`
   console.log('Generated reference:', reference)
 
-  // Insert transaction with 'initiated' status instead of 'pending'
+  // Insert transaction with 'initiated' status and sender's bank details
   const { data: transaction, error } = await supabase
     .from('transactions')
     .insert([{
@@ -45,7 +50,8 @@ export async function initiateDeposit(amount: number, userEmail: string) {
       amount,
       status: 'initiated',
       reference,
-      user_email: userEmail
+      user_email: userEmail,
+      account_details: senderBankDetails // Store the sender's bank details
     }])
     .select()
     .single()
@@ -57,7 +63,6 @@ export async function initiateDeposit(amount: number, userEmail: string) {
 
   console.log('Transaction record inserted successfully')
 
- 
   return {
     success: true,
     paymentDetails: {
@@ -67,36 +72,46 @@ export async function initiateDeposit(amount: number, userEmail: string) {
       amount: `₦${amount.toLocaleString()}`,
       narration: reference,
       expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
-      transactionId: transaction.id // Added transaction ID for later confirmation
+      transactionId: transaction.id
     }
   }
 }
 
-// NEW function to confirm payment and notify admin
 export async function confirmDeposit(transactionId: string) {
   console.log('confirmDeposit called for transaction:', transactionId)
 
-  // Update transaction status to 'pending' and notify admin
-  const { data: transaction, error: updateError } = await supabase
+  // First get the transaction details including the account_details
+  const { data: transaction, error: fetchError } = await supabase
+    .from('transactions')
+    .select('*')
+    .eq('id', transactionId)
+    .single()
+
+  if (fetchError || !transaction) {
+    console.error('Failed to fetch transaction:', fetchError)
+    return { error: 'Failed to confirm deposit - transaction not found' }
+  }
+
+  // Update transaction status to 'pending'
+  const { error: updateError } = await supabase
     .from('transactions')
     .update({ status: 'pending' })
     .eq('id', transactionId)
-    .select()
-    .single()
 
-  if (updateError || !transaction) {
+  if (updateError) {
     console.error('Failed to confirm deposit:', updateError)
     return { error: 'Failed to confirm deposit' }
   }
 
   console.log('Transaction status updated to pending')
 
-  // Now send the notification to admin
+  // Send email to admin with all details including sender's bank info
   await sendDepositEmailToAdmin({
     userEmail: transaction.user_email,
     amount: transaction.amount,
     reference: transaction.reference,
-    userId: transaction.user_id
+    userId: transaction.user_id,
+    senderBankDetails: transaction.account_details // Include sender's bank details
   })
 
   console.log('Admin email sent for deposit confirmation')

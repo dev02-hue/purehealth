@@ -19,7 +19,7 @@ export default function InviteProfileClient() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isCopied, setIsCopied] = useState(false)
-  // const [simulatedAmount, setSimulatedAmount] = useState(10000)
+  const [exampleAmount] = useState(10000) // Example transaction amount for calculations
 
   useEffect(() => {
     const fetchReferralData = async () => {
@@ -27,13 +27,10 @@ export default function InviteProfileClient() {
         setIsLoading(true)
         const data = await getReferralData()
         setReferralCode(data.referralCode)
-        // Mock data for visualization - replace with actual API data
+        // Only show levels 1 and 2 since those are the only ones with rewards
         setLevels([
-          { level: 1, count: data.levels[0]?.count || 12 },
-          { level: 2, count: data.levels[1]?.count || 8 },
-          { level: 3, count: data.levels[2]?.count || 5 },
-          { level: 4, count: data.levels[3]?.count || 3 },
-          { level: 5, count: data.levels[4]?.count || 1 }
+          { level: 1, count: data.levels[0]?.count || 0 },
+          { level: 2, count: data.levels[1]?.count || 0 }
         ])
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load referral data')
@@ -49,6 +46,7 @@ export default function InviteProfileClient() {
   const fullLink = referralCode ? `${baseUrl}/signup?ref=${referralCode}` : ''
 
   const copyToClipboard = () => {
+    if (!fullLink) return
     navigator.clipboard.writeText(fullLink)
     setIsCopied(true)
     toast.success('Link copied to clipboard!', {
@@ -61,8 +59,9 @@ export default function InviteProfileClient() {
   }
 
   const shareOnSocial = (platform: string) => {
+    if (!fullLink) return
     let url = ''
-    const text = `Join Sheraton Investments with my referral link: ${fullLink}`
+    const text = `Join with my referral link and earn rewards: ${fullLink}`
     
     switch (platform) {
       case 'facebook': url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(fullLink)}`; break
@@ -76,20 +75,16 @@ export default function InviteProfileClient() {
     window.open(url, '_blank', 'noopener,noreferrer')
   }
 
-
-  // Data for charts
+  // Data for charts - only showing levels 1 and 2
   const pieData = [
-    { name: 'Direct', value: levels[0]?.count || 0 },
-    { name: 'Level 2', value: levels[1]?.count || 0 },
-    { name: 'Level 3', value: levels[2]?.count || 0 },
-    { name: 'Level 4', value: levels[3]?.count || 0 },
-    { name: 'Level 5', value: levels[4]?.count || 0 }
+    { name: 'Direct (30%)', value: levels[0]?.count || 0 },
+    { name: 'Level 2 (3%)', value: levels[1]?.count || 0 }
   ]
 
   const radarData = levels.map(level => ({
     subject: `Level ${level.level}`,
-    referrals: level.count * 2, // Scale for better radar visualization
-    fullMark: 20
+    referrals: level.count,
+    fullMark: Math.max(10, levels.reduce((max, l) => Math.max(max, l.count), 0))
   }))
 
   if (isLoading) {
@@ -106,7 +101,7 @@ export default function InviteProfileClient() {
             className="w-12 h-12 border-4 border-amber-300/30 border-t-amber-200 rounded-full mx-auto mb-6"
           />
           <h2 className="text-2xl font-bold text-white mb-2">Loading Your Referral Dashboard</h2>
-          <p className="text-amber-100">Preparing your premium rewards overview...</p>
+          <p className="text-amber-100">Preparing your rewards overview...</p>
         </motion.div>
       </div>
     )
@@ -144,11 +139,9 @@ export default function InviteProfileClient() {
         className="max-w-6xl mx-auto"
       >
         <div className="text-center mb-10">
-          <h1 className="text-4xl font-bold text-white mb-2">Sheraton Referral Program</h1>
-          <p className="text-amber-100 text-lg">Earn premium rewards by inviting friends</p>
+          <h1 className="text-4xl font-bold text-white mb-2">Referral Program</h1>
+          <p className="text-amber-100 text-lg">Earn 30% on direct referrals and 3% on level 2</p>
         </div>
-
-       
 
         {/* Three-Chart Dashboard */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
@@ -184,6 +177,10 @@ export default function InviteProfileClient() {
                       borderRadius: '0.5rem',
                       color: 'white'
                     }}
+                    formatter={(value, name, props) => [
+                      `${value} referral${value === 1 ? '' : 's'}`,
+                      `Level ${props.payload.level}`
+                    ]}
                   />
                   <Bar 
                     dataKey="count" 
@@ -238,6 +235,10 @@ export default function InviteProfileClient() {
                       borderRadius: '0.5rem',
                       color: 'white'
                     }}
+                    formatter={(value, name) => [
+                      `${value} referral${value === 1 ? '' : 's'}`,
+                      name
+                    ]}
                   />
                 </PieChart>
               </ResponsiveContainer>
@@ -276,6 +277,7 @@ export default function InviteProfileClient() {
                       borderRadius: '0.5rem',
                       color: 'white'
                     }}
+                    formatter={(value) => [`${value} referral${value === 1 ? '' : 's'}`, 'Count']}
                   />
                 </RadarChart>
               </ResponsiveContainer>
@@ -283,8 +285,8 @@ export default function InviteProfileClient() {
           </motion.div>
         </div>
 
-         {/* Referral Link Card */}
-         <motion.div
+        {/* Referral Link Card */}
+        <motion.div
           whileHover={{ scale: 1.01 }}
           className="bg-amber-500/20 backdrop-blur-md rounded-2xl p-6 mb-8 shadow-lg border border-amber-300/30"
         >
@@ -297,10 +299,11 @@ export default function InviteProfileClient() {
             </div>
             <button
               onClick={copyToClipboard}
+              disabled={!fullLink}
               className={`flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-all ${
                 isCopied
                   ? 'bg-green-500 text-white'
-                  : 'bg-white text-amber-700 hover:bg-amber-50'
+                  : 'bg-white text-amber-700 hover:bg-amber-50 disabled:opacity-50 disabled:cursor-not-allowed'
               }`}
             >
               <FaCopy /> {isCopied ? 'Copied!' : 'Copy Link'}
@@ -308,7 +311,7 @@ export default function InviteProfileClient() {
           </div>
           
           <div className="bg-amber-400/10 rounded-lg p-3 mb-6 overflow-x-auto">
-            <code className="text-amber-100 break-all">{fullLink}</code>
+            <code className="text-amber-100 break-all">{fullLink || 'Loading referral code...'}</code>
           </div>
 
           <div>
@@ -327,7 +330,8 @@ export default function InviteProfileClient() {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => shareOnSocial(platform)}
-                  className="w-12 h-12 flex items-center justify-center bg-amber-400/20 rounded-full hover:bg-amber-400/30 transition-all"
+                  disabled={!fullLink}
+                  className="w-12 h-12 flex items-center justify-center bg-amber-400/20 rounded-full hover:bg-amber-400/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   title={`Share on ${platform.charAt(0).toUpperCase() + platform.slice(1)}`}
                 >
                   {icon}
@@ -346,27 +350,21 @@ export default function InviteProfileClient() {
         >
           <h2 className="text-xl font-semibold text-white mb-6">Your Referral Rewards</h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             {[
               {
                 title: "Direct Referrals",
-                value: `₦${(levels[0]?.count * 7500).toLocaleString()}`,
+                value: `₦${(levels[0]?.count * exampleAmount * 0.30).toLocaleString()}`,
                 description: "30% of their investment",
-                icon: <FiUsers className="text-3xl text-amber-300" />
+                icon: <FiUsers className="text-3xl text-amber-300" />,
+                example: `Example: ₦${exampleAmount.toLocaleString()} → ₦${(exampleAmount * 0.30).toLocaleString()}`
               },
               {
                 title: "Level 2 Network",
-                value: `₦${(levels[1]?.count * 2000).toLocaleString()}`,
-                description: "4% of their investment",
-                icon: <FiTrendingUp className="text-3xl text-amber-300" />
-              },
-              {
-                title: "Total Potential",
-                value: `₦${levels
-                  .reduce((sum, level) => sum + (level.count * (level.level === 1 ? 7500 : 2000)), 0)
-                  .toLocaleString()}`,
-                description: "From your entire network",
-                icon: <FiAward className="text-3xl text-amber-300" />
+                value: `₦${(levels[1]?.count * exampleAmount * 0.03).toLocaleString()}`,
+                description: "3% of their investment",
+                icon: <FiTrendingUp className="text-3xl text-amber-300" />,
+                example: `Example: ₦${exampleAmount.toLocaleString()} → ₦${(exampleAmount * 0.03).toLocaleString()}`
               }
             ].map((item, index) => (
               <motion.div
@@ -379,62 +377,88 @@ export default function InviteProfileClient() {
                   <h3 className="text-lg font-medium text-white">{item.title}</h3>
                 </div>
                 <p className="text-2xl font-bold text-amber-200 mb-2">{item.value}</p>
-                <p className="text-amber-100">{item.description}</p>
+                <p className="text-amber-100 mb-1">{item.description}</p>
+                <p className="text-xs text-amber-200/70">{item.example}</p>
               </motion.div>
             ))}
           </div>
 
-          <motion.div
-  initial={{ opacity: 0, x: -20 }}
-  animate={{ opacity: 1, x: 0 }}
-  transition={{ delay: 0.2 }}
-  className="bg-amber-500/20 backdrop-blur-md rounded-2xl p-6 shadow-lg border border-amber-300/30"
->
-  <div className="flex items-center gap-2 mb-6">
-    <FiUsers className="text-amber-200 text-xl" />
-    <h2 className="text-xl font-semibold text-white">Your Referral Network</h2>
-  </div>
-  
-  {levels.length === 0 ? (
-    <div className="text-center py-8 text-amber-100/70">
-      <p>No referrals yet. Start sharing your link!</p>
-      <button className="mt-4 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition-colors">
-        Get Started
-      </button>
-    </div>
-  ) : (
-    <ul className="space-y-4">
-      {levels.map(({ level, count }) => (
-        <motion.li 
-          key={level}
-          whileHover={{ scale: 1.02 }}
-          className="flex items-center bg-amber-400/10 p-3 rounded-lg border border-amber-300/20"
-        >
-          <div className="w-10 h-10 flex items-center justify-center bg-amber-600 rounded-full mr-4 font-bold text-white">
-            {level}
+          <div className="bg-amber-500/10 rounded-xl p-5 border border-amber-400/20">
+            <h3 className="text-lg font-medium text-white mb-3">How It Works</h3>
+            <ul className="space-y-3 text-amber-100">
+              <li className="flex items-start gap-2">
+                <span className="text-amber-300">•</span>
+                <span>Earn <strong>30%</strong> of investments from people you directly refer</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-amber-300">•</span>
+                <span>Earn <strong>3%</strong> of investments from their referrals (your level 2)</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-amber-300">•</span>
+                <span>Rewards are calculated automatically and added to your balance</span>
+              </li>
+            </ul>
           </div>
-          <div className="flex-grow">
-            <div className="flex justify-between text-white mb-2">
-              <span className="text-amber-100">Level {level}</span>
-              <span className="font-bold text-amber-200">{count} {count === 1 ? 'Referral' : 'Referrals'}</span>
-            </div>
-            <div className="w-full bg-amber-400/20 rounded-full h-2">
-              <div
-                className="bg-gradient-to-r from-amber-400 to-amber-600 h-2 rounded-full"
-                style={{ width: `${Math.min(100, (count / 10) * 100)}%` }}
-              />
-            </div>
-            <div className="mt-1 text-xs text-amber-200/80">
-              Potential Earnings: ₦{(count * (level === 1 ? 7500 : 2000)).toLocaleString()}
-            </div>
-          </div>
-        </motion.li>
-      ))}
-    </ul>
-  )}
-</motion.div>
+        </motion.div>
 
+        {/* Referral Network List */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.6 }}
+          className="bg-amber-500/20 backdrop-blur-md rounded-2xl p-6 shadow-lg border border-amber-300/30 mt-8"
+        >
+          <div className="flex items-center gap-2 mb-6">
+            <FiUsers className="text-amber-200 text-xl" />
+            <h2 className="text-xl font-semibold text-white">Your Referral Network</h2>
+          </div>
           
+          {levels.length === 0 ? (
+            <div className="text-center py-8 text-amber-100/70">
+              <p>No referrals yet. Start sharing your link!</p>
+              <button 
+                onClick={copyToClipboard}
+                disabled={!fullLink}
+                className="mt-4 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Copy Referral Link
+              </button>
+            </div>
+          ) : (
+            <ul className="space-y-4">
+              {levels.map(({ level, count }) => (
+                <motion.li 
+                  key={level}
+                  whileHover={{ scale: 1.02 }}
+                  className="flex items-center bg-amber-400/10 p-4 rounded-lg border border-amber-300/20"
+                >
+                  <div className="w-10 h-10 flex items-center justify-center bg-amber-600 rounded-full mr-4 font-bold text-white">
+                    {level}
+                  </div>
+                  <div className="flex-grow">
+                    <div className="flex justify-between text-white mb-2">
+                      <span className="text-amber-100">
+                        {level === 1 ? 'Direct Referrals' : 'Level 2 Referrals'}
+                      </span>
+                      <span className="font-bold text-amber-200">
+                        {count} {count === 1 ? 'Referral' : 'Referrals'}
+                      </span>
+                    </div>
+                    <div className="w-full bg-amber-400/20 rounded-full h-2">
+                      <div
+                        className="bg-gradient-to-r from-amber-400 to-amber-600 h-2 rounded-full"
+                        style={{ width: `${Math.min(100, (count / 10) * 100)}%` }}
+                      />
+                    </div>
+                    <div className="mt-1 text-xs text-amber-200/80">
+                      Potential Earnings: ₦{(count * exampleAmount * (level === 1 ? 0.30 : 0.03)).toLocaleString()}
+                    </div>
+                  </div>
+                </motion.li>
+              ))}
+            </ul>
+          )}
         </motion.div>
       </motion.div>
     </div>

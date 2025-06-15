@@ -10,6 +10,7 @@ type Transaction = {
   user_email: string
   amount: number
   reference: string
+  account_details: string // This should contain the sender's bank details
   status: 'pending' | 'completed' | 'rejected'
   admin_approved: boolean | null
 }
@@ -108,6 +109,7 @@ export default function DepositDashboard() {
                   <th className="py-3 px-4 text-left text-gray-800 dark:text-gray-100">Date</th>
                   <th className="py-3 px-4 text-left text-gray-800 dark:text-gray-100">Phone num</th>
                   <th className="py-3 px-4 text-left text-gray-800 dark:text-gray-100">Amount</th>
+                  <th className="py-3 px-4 text-left text-gray-800 dark:text-gray-100">senderBankDetails</th>
                   <th className="py-3 px-4 text-left text-gray-800 dark:text-gray-100">Reference</th>
                   <th className="py-3 px-4 text-left text-gray-800 dark:text-gray-100">Status</th>
                   <th className="py-3 px-4 text-left text-gray-800 dark:text-gray-100">Actions</th>
@@ -120,6 +122,7 @@ export default function DepositDashboard() {
                       <td className="py-3 px-4 text-gray-600 dark:text-gray-300">{new Date(tx.created_at).toLocaleString()}</td>
                       <td className="py-3 px-4 text-gray-600 dark:text-gray-300">{tx.user_email}</td>
                       <td className="py-3 px-4 text-gray-600 dark:text-gray-300">₦{tx.amount.toLocaleString()}</td>
+                      <td className="py-3 px-4 text-gray-600 dark:text-gray-300">{tx.account_details}</td>
                       <td className="py-3 px-4 text-gray-600 dark:text-gray-300">{tx.reference}</td>
                       <td className="py-3 px-4">
                         <span className={`px-2 py-1 rounded-full text-xs ${

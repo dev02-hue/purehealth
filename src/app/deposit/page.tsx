@@ -5,11 +5,12 @@ import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { initiateDeposit, confirmDeposit } from '../api/transactions/deposit'
 import { rewardReferrers } from '@/lib/referral/referrals'
-import { FiCopy, FiCheck, FiArrowRight, FiClock } from 'react-icons/fi'
+import { FiCopy, FiCheck, FiArrowRight, FiClock, FiInfo } from 'react-icons/fi'
 
 export default function DepositPage() {
   const [amount, setAmount] = useState('')
   const [phoneNumber, setPhoneNumber] = useState('')
+  const [senderBankDetails, setSenderBankDetails] = useState('')
   const [loading, setLoading] = useState(false)
   const [confirmLoading, setConfirmLoading] = useState(false)
   const [error, setError] = useState('')
@@ -81,8 +82,14 @@ export default function DepositPage() {
       return
     }
 
+    if (!senderBankDetails || senderBankDetails.trim().length < 5) {
+      setError('Please provide the bank details you are sending from')
+      setLoading(false)
+      return
+    }
+
     try {
-      const { success, error, paymentDetails } = await initiateDeposit(numAmount, phoneNumber)
+      const { success, error, paymentDetails } = await initiateDeposit(numAmount, phoneNumber, senderBankDetails)
       
       if (error) {
         setError(error)
@@ -131,7 +138,7 @@ export default function DepositPage() {
           }
         }
   
-        router.push('/dashboard')
+        router.push('/')
       }
     } catch {
       setError('An unexpected error occurred while confirming payment.')
@@ -429,6 +436,35 @@ export default function DepositPage() {
                 className="w-full p-5 border border-amber-200 dark:border-amber-900/50 rounded-xl focus:ring-2 focus:ring-amber-500 dark:focus:ring-amber-400 focus:border-amber-500 dark:focus:border-amber-400 outline-none bg-white dark:bg-gray-700/50 text-gray-900 dark:text-amber-100 placeholder-amber-300 dark:placeholder-amber-700"
                 placeholder="Your active phone number"
               />
+            </motion.div>
+
+            <motion.div 
+              className="mb-8"
+              variants={itemVariants}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <label htmlFor="senderBank" className="block text-sm font-medium text-amber-700 dark:text-amber-300">
+                  Your Bank Details (Where you&apos;re sending from)
+                </label>
+                <div className="relative group">
+                  <FiInfo className="text-amber-500 dark:text-amber-400 cursor-pointer" />
+                  <div className="absolute z-10 right-0 w-64 p-3 text-xs bg-white dark:bg-gray-700 border border-amber-200 dark:border-amber-900/50 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                    Include your bank name and account number (e.g., &apos;GTBank - 0123456789&apos;). This helps us verify your payment faster.
+                  </div>
+                </div>
+              </div>
+              <input
+                id="senderBank"
+                type="text"
+                value={senderBankDetails}
+                onChange={(e) => setSenderBankDetails(e.target.value)}
+                required
+                className="w-full p-5 border border-amber-200 dark:border-amber-900/50 rounded-xl focus:ring-2 focus:ring-amber-500 dark:focus:ring-amber-400 focus:border-amber-500 dark:focus:border-amber-400 outline-none bg-white dark:bg-gray-700/50 text-gray-900 dark:text-amber-100 placeholder-amber-300 dark:placeholder-amber-700"
+                placeholder="e.g., GTBank - 0123456789"
+              />
+              <p className="mt-2 text-xs text-amber-600 dark:text-amber-400">
+                Please provide the bank details you&apos;ll be transferring from
+              </p>
             </motion.div>
 
             <AnimatePresence>

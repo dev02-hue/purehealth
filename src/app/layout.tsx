@@ -16,9 +16,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Pure health",
-  description: "Global investment Pure health offering real-time market access...",
+  title: "Sheraton",
+  description: "Sheraton is a trusted investment company offering innovative financial solutions, secure wealth management, and real-time market opportunities tailored for growth.",
 };
+
 
 export default function RootLayout({
   children,
@@ -31,8 +32,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <AuthProvider>
-          <ThemeProvider attribute='class' defaultTheme="system" enableSystem>
-            
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>            
             {children}
           </ThemeProvider>
         </AuthProvider>

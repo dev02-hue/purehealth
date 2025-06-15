@@ -13,7 +13,7 @@ export type ReferralData = {
 }
 
 export async function getReferralData(): Promise<ReferralData> {
-  const cookieStore =await cookies()
+  const cookieStore = await cookies()
   const userId = cookieStore.get('user_id')?.value
 
   if (!userId) {
@@ -68,6 +68,7 @@ export async function rewardReferrers(refereeId: string, amount: number) {
     .from('referrals')
     .select('referrer_id, level')
     .eq('referee_id', refereeId)
+    .order('level', { ascending: true }) // Ensure level 1 comes first
 
   if (error || !referralChain || referralChain.length === 0) {
     console.warn('No referrers found for user:', refereeId)
@@ -75,13 +76,19 @@ export async function rewardReferrers(refereeId: string, amount: number) {
   }
 
   for (const { referrer_id, level } of referralChain) {
-    let rewardPercentage = 0
+    // Skip if not level 1 or 2
+    if (level > 2) continue;
 
-    if (level === 1) rewardPercentage = 30
-    else if (level === 2) rewardPercentage = 3
-    else continue // skip level 3+
+    // Calculate reward based on level
+    let rewardAmount = 0;
+    if (level === 1) {
+      rewardAmount = amount * 0.30; // 30% for level 1
+    } else if (level === 2) {
+      rewardAmount = amount * 0.03; // 3% for level 2
+    }
 
-    const rewardAmount = (rewardPercentage / 100) * amount
+    // Round to 2 decimal places to avoid floating point issues
+    rewardAmount = Math.round(rewardAmount * 100) / 100;
 
     // 1. Increment balance via function
     const { error: updateError } = await supabase.rpc('increment_balance', {
@@ -103,17 +110,16 @@ export async function rewardReferrers(refereeId: string, amount: number) {
         level,
         reward_amount: rewardAmount,
         transaction_amount: amount,
-        reward_percentage: rewardPercentage,
+        reward_percentage: level === 1 ? 30 : 3,
       })
 
     if (insertError) {
       console.error(`Failed to record reward for ${referrer_id}:`, insertError)
     }
 
-    console.log(`Rewarded ${referrer_id} at level ${level}: ${rewardAmount}`)
+    console.log(`Rewarded ${referrer_id} at level ${level}: $${rewardAmount.toFixed(2)}`)
   }
 }
-
 
 /**
  * Records a new referral when a user signs up with a referral code
@@ -150,14 +156,15 @@ export async function recordReferral(refereeId: string, referralCode: string) {
     .from('referrals')
     .select('referrer_id')
     .eq('referee_id', referrer.id)
-    .single()
+    .order('level', { ascending: true }) // Get the closest referrer
+    .limit(1)
 
-  if (!grandReferrerError && grandReferrerData) {
+  if (!grandReferrerError && grandReferrerData && grandReferrerData.length > 0) {
     // 4. Add level 2 referral (indirect)
     const { error: indirectError } = await supabase
       .from('referrals')
       .insert({
-        referrer_id: grandReferrerData.referrer_id,
+        referrer_id: grandReferrerData[0].referrer_id,
         referee_id: refereeId,
         level: 2,
       })

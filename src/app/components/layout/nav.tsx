@@ -25,7 +25,7 @@ export function Nav({ activeTab, setActiveTab }: NavProps) {
         {[
           { icon: <FiHome />, tab: '/', label: 'Home' },
           { icon: <FiUsers />, tab: 'invite', label: 'Friends' },
-          { icon: <FiPlusCircle />, tab: 'plans', label: 'New' },
+          { icon: <FiPlusCircle />, tab: 'plans', label: 'Invest' },
           { icon: <FiUser />, tab: 'profile', label: 'Me' },
           { icon: <FiSettings />, tab: 'settings', label: 'Settings' }
         ].map((item) => (
