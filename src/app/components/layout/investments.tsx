@@ -8,11 +8,9 @@ import { format, differenceInDays } from 'date-fns'
 import { motion } from 'framer-motion'
 import { 
   FiTrendingUp, 
-  FiClock, 
-  
+  FiClock,
   FiCheckCircle,
-  FiDollarSign,
-  FiPieChart,
+   FiPieChart,
   FiRefreshCw,
   FiPlus
 } from 'react-icons/fi'
@@ -20,6 +18,7 @@ import { toast } from 'react-hot-toast'
 import { processDailyEarnings } from '@/lib/investment-plan'
 import { AreaChart, Area, XAxis, YAxis,  Tooltip, ResponsiveContainer } from 'recharts'
 import Link from 'next/link'
+import { FaNairaSign } from 'react-icons/fa6'
 
 // Color palette
 const COLORS = {
@@ -113,6 +112,41 @@ function InvestmentCountdown({ nextPayoutDate }: { nextPayoutDate: string }) {
   )
 }
 
+function NextPayoutDisplay({ nextPayoutDate }: { nextPayoutDate: string }) {
+  // Get current Nigerian time (WAT - West Africa Time)
+  const now = new Date();
+  const nigeriaOffset = 60 * 60 * 1000; // Nigeria is UTC+1
+  const nigeriaNow = new Date(now.getTime() + nigeriaOffset);
+  
+  const payoutDate = new Date(nextPayoutDate);
+  const nigeriaPayoutDate = new Date(payoutDate.getTime() + nigeriaOffset);
+  
+  // Determine if payout is today or tomorrow in Nigerian time
+  const isToday = nigeriaPayoutDate.getDate() === nigeriaNow.getDate() && 
+                   nigeriaPayoutDate.getMonth() === nigeriaNow.getMonth() && 
+                   nigeriaPayoutDate.getFullYear() === nigeriaNow.getFullYear();
+  
+  const isTomorrow = nigeriaPayoutDate.getDate() === nigeriaNow.getDate() + 1 &&
+                     nigeriaPayoutDate.getMonth() === nigeriaNow.getMonth() &&
+                     nigeriaPayoutDate.getFullYear() === nigeriaNow.getFullYear();
+
+  const formattedTime = format(nigeriaPayoutDate, 'HH:mm');
+  const formattedDate = format(nigeriaPayoutDate, 'EEEE, MMMM d, yyyy');
+
+  return (
+    <div className="text-sm font-medium" style={{ color: COLORS.textDark }}>
+      {isToday ? (
+        <span>Today at {formattedTime}</span>
+      ) : isTomorrow ? (
+        <span>Tomorrow at {formattedTime}</span>
+      ) : (
+        <span>{format(nigeriaPayoutDate, 'MMMM d')} at {formattedTime}</span>
+      )}
+      <div className="text-xs opacity-75">{formattedDate}</div>
+    </div>
+  );
+}
+
 export default function InvestmentsPage() {
   const [investments, setInvestments] = useState<Investment[]>([])
   const [loading, setLoading] = useState(true)
@@ -187,7 +221,7 @@ export default function InvestmentsPage() {
   }
 
   return (
-    <div className="p-6 min-h-screen" style={{ backgroundColor: COLORS.primaryBg }}>
+    <div className="p-6 min-h-screen mb-20" style={{ backgroundColor: COLORS.primaryBg }}>
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -237,22 +271,22 @@ export default function InvestmentsPage() {
             </motion.button>
             
             <Link href="/plans" passHref>
-  <motion.div
-    whileHover={{ scale: 1.03 }}
-    whileTap={{ scale: 0.98 }}
-    className="flex items-center gap-2 px-4 py-2 rounded-lg shadow-sm cursor-pointer"
-    style={{ 
-      backgroundColor: COLORS.secondaryAccent,
-      color: '#FFFFFF'
-    }}
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    transition={{ delay: 0.5 }}
-  >
-    <FiPlus />
-    New Investment
-  </motion.div>
-</Link>
+              <motion.div
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.98 }}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg shadow-sm cursor-pointer"
+                style={{ 
+                  backgroundColor: COLORS.secondaryAccent,
+                  color: '#FFFFFF'
+                }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+              >
+                <FiPlus />
+                New Investment
+              </motion.div>
+            </Link>
           </div>
         </div>
         
@@ -266,7 +300,7 @@ export default function InvestmentsPage() {
           <div className="p-6 rounded-xl shadow-sm" style={{ backgroundColor: COLORS.secondaryBg }}>
             <div className="flex items-center gap-3">
               <div className="p-3 rounded-full" style={{ backgroundColor: COLORS.primaryAccent + '20' }}>
-                <FiDollarSign style={{ color: COLORS.primaryAccent }} />
+                <FaNairaSign style={{ color: COLORS.primaryAccent }} />
               </div>
               <div>
                 <p className="text-sm" style={{ color: COLORS.textLight }}>Total Invested</p>
@@ -478,9 +512,7 @@ export default function InvestmentsPage() {
                           </span>
                         </p>
                         <div className="flex justify-between items-center">
-                          <div className="font-mono text-sm font-medium" style={{ color: COLORS.textDark }}>
-                            <InvestmentCountdown nextPayoutDate={investment.next_payout_date} />
-                          </div>
+                          <NextPayoutDisplay nextPayoutDate={investment.next_payout_date} />
                         </div>
                       </>
                     )}

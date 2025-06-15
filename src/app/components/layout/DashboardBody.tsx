@@ -81,7 +81,7 @@ export default function SheratonDashboard() {
         ))}
       </div>
 
-      <div className="max-w-7xl mx-auto relative mt-16">
+      <div className="max-w-7xl mx-auto relative mt-16 mb-20">
         {/* Luxury Header */}
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <motion.div
@@ -122,7 +122,7 @@ export default function SheratonDashboard() {
               { icon: <FiDollarSign />, label: 'Deposit', href: '/deposit', color: 'bg-green-100 dark:bg-green-900/50 text-green-600 dark:text-green-400' },
               { icon: <FiCreditCard />, label: 'Withdraw', href: '/withdraw', color: 'bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400' },
               { icon: <FiUsers />, label: 'Check-in', href: '/checkin', color: 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400' },
-              { icon: <FiMail />, label: 'Concierge', href: '/contact', color: 'bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400' },
+              { icon: <FiMail />, label: 'Telegram', href: '/group', color: 'bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400' },
             ].map((action, i) => (
               <motion.div
                 key={i}
@@ -290,14 +290,14 @@ export default function SheratonDashboard() {
           
           <div className="p-6">
           <div className="w-full max-w-3xl mx-auto rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700">
-  <Image
-    src="/WhatsApp Image 2025-06-11 at 9.46.40 AM.jpeg"
-    alt="Sheraton Investment Plans"
-    width={1200}          // Adjust as needed for your layout
-    height={600}          // Keep aspect ratio consistent
-    className="w-full h-auto object-cover"
-  />
-</div>
+          <Image
+            src="/WhatsApp Image 2025-06-11 at 9.46.40 AM.jpeg"
+            alt="Sheraton Investment Plans"
+            width={1200}          // Adjust as needed for your layout
+            height={600}          // Keep aspect ratio consistent
+             className="w-full h-auto object-cover"
+                />
+           </div>
 
             
             <div className="mt-4 text-center text-gray-500 dark:text-gray-400">
