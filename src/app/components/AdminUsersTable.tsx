@@ -1,7 +1,7 @@
 'use client'
 
 import { UserWithAuth } from '@/types/supabase'
-import { FiEdit2, FiTrash2, FiSave, FiX, FiSearch } from 'react-icons/fi'
+import { FiEdit2, FiTrash2, FiSave, FiX, FiSearch, FiUser, FiMail, FiDollarSign, } from 'react-icons/fi'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { toast } from 'react-hot-toast'
@@ -9,6 +9,7 @@ import { deleteUserById } from '@/lib/adminUtils'
 import { updateUserBalance } from '@/lib/adminUtils'
 import { motion, AnimatePresence } from 'framer-motion'
 import { checkAdminAndFetchUsers } from '@/lib/adminUtils'
+import { useMediaQuery } from 'react-responsive'
 
 export default function AdminUsersTable({ initialUsers }: { initialUsers: UserWithAuth[] }) {
   const [users, setUsers] = useState<UserWithAuth[]>(initialUsers)
@@ -19,6 +20,7 @@ export default function AdminUsersTable({ initialUsers }: { initialUsers: UserWi
   const [editingUserId, setEditingUserId] = useState<string | null>(null)
   const [editedBalance, setEditedBalance] = useState<number>(0)
   const [isLoading, setIsLoading] = useState(false)
+  const isSmallScreen = useMediaQuery({ maxWidth: 640 })
 
   // Handle search
   useEffect(() => {
@@ -28,7 +30,6 @@ export default function AdminUsersTable({ initialUsers }: { initialUsers: UserWi
         try {
           const result = await checkAdminAndFetchUsers(searchTerm)
           
-          // Proper type checking
           if ('isAdmin' in result && result.isAdmin && 'users' in result) {
             setFilteredUsers(result.users)
           } else if ('error' in result) {
@@ -43,7 +44,7 @@ export default function AdminUsersTable({ initialUsers }: { initialUsers: UserWi
       } else {
         setFilteredUsers(users)
       }
-    }, 500) // Debounce for 500ms
+    }, 500)
   
     return () => clearTimeout(timer)
   }, [searchTerm, users])
@@ -110,21 +111,21 @@ export default function AdminUsersTable({ initialUsers }: { initialUsers: UserWi
   }
 
   return (
-    <div className="w-full max-w-[100vw] px-2 sm:px-4">
+    <div className="w-full px-1">
       {/* Search Bar */}
       <div className="mb-4 relative max-w-md mx-auto">
         <div className="relative">
-          <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+          <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
           <input
             type="text"
             placeholder="Search by name..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-9 pr-4 py-2 text-sm border rounded-lg dark:bg-gray-800 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           {isLoading && (
             <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-500"></div>
             </div>
           )}
         </div>
@@ -135,13 +136,33 @@ export default function AdminUsersTable({ initialUsers }: { initialUsers: UserWi
         <table className="min-w-full bg-white dark:bg-gray-800">
           <thead className="bg-gray-50 dark:bg-gray-700">
             <tr>
-              <th className="py-3 px-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">ID</th>
-              <th className="py-3 px-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Email</th>
-              <th className="py-3 px-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden sm:table-cell">Name</th>
-              <th className="py-3 px-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Balance</th>
-              <th className="py-3 px-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden xs:table-cell">Status</th>
-              <th className="py-3 px-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden md:table-cell">Last Active</th>
-              <th className="py-3 px-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+              {!isSmallScreen && (
+                <th className="py-2 px-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  ID
+                </th>
+              )}
+              <th className="py-2 px-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                {isSmallScreen ? <FiMail className="inline" /> : 'Email'}
+              </th>
+              <th className="py-2 px-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                {isSmallScreen ? <FiUser className="inline" /> : 'Name'}
+              </th>
+              <th className="py-2 px-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                {isSmallScreen ? <FiDollarSign className="inline" /> : 'Balance'}
+              </th>
+              {!isSmallScreen && (
+                <th className="py-2 px-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Status
+                </th>
+              )}
+              {!isSmallScreen && (
+                <th className="py-2 px-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Last Active
+                </th>
+              )}
+              <th className="py-2 px-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -156,64 +177,87 @@ export default function AdminUsersTable({ initialUsers }: { initialUsers: UserWi
                     exit="exit"
                     className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
                   >
-                    <td className="py-3 px-3 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
-                      <span className="font-mono">{user.id.substring(0, 6)}...</span>
+                    {!isSmallScreen && (
+                      <td className="py-2 px-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                        <span className="font-mono">{user.id.substring(0, 6)}...</span>
+                      </td>
+                    )}
+                    <td className="py-2 px-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap overflow-hidden text-ellipsis max-w-[120px]">
+                      {isSmallScreen ? (
+                        <div className="flex items-center">
+                          <FiMail className="mr-1 flex-shrink-0" />
+                          <span className="truncate">{user.auth_user?.email}</span>
+                        </div>
+                      ) : (
+                        user.auth_user?.email
+                      )}
                     </td>
-                    <td className="py-3 px-3 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap overflow-hidden text-ellipsis max-w-[120px]">
-                      {user.auth_user?.email}
+                    <td className="py-2 px-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap overflow-hidden text-ellipsis max-w-[120px]">
+                      {isSmallScreen ? (
+                        <div className="flex items-center">
+                          <FiUser className="mr-1 flex-shrink-0" />
+                          <span className="truncate">{user.first_name} {user.last_name}</span>
+                        </div>
+                      ) : (
+                        `${user.first_name} ${user.last_name}`
+                      )}
                     </td>
-                    <td className="py-3 px-3 text-sm text-gray-900 dark:text-gray-100 hidden sm:table-cell">
-                      {user.first_name} {user.last_name}
-                    </td>
-                    <td className="py-3 px-3 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                    <td className="py-2 px-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
                       {editingUserId === user.id ? (
                         <input
                           type="number"
                           value={editedBalance}
                           onChange={(e) => setEditedBalance(Number(e.target.value))}
-                          className="w-20 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600"
+                          className="w-16 px-1 py-1 text-sm border rounded dark:bg-gray-700 dark:border-gray-600"
                         />
                       ) : (
-                        <span className="font-medium">
-                          ${user.balance?.toLocaleString()}
-                        </span>
+                        <div className="flex items-center">
+                          {isSmallScreen && <FiDollarSign className="mr-1 flex-shrink-0" />}
+                          <span className="font-medium">
+                            ${user.balance?.toLocaleString()}
+                          </span>
+                        </div>
                       )}
                     </td>
-                    <td className="py-3 px-3 text-sm hidden xs:table-cell">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        user.auth_user?.email_confirmed_at 
-                          ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
-                          : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                      }`}>
-                        {user.auth_user?.email_confirmed_at ? 'Verified' : 'Pending'}
-                      </span>
-                    </td>
-                    <td className="py-3 px-3 text-sm text-gray-900 dark:text-gray-100 hidden md:table-cell">
-                      {user.auth_user?.last_sign_in_at 
-                        ? new Date(user.auth_user.last_sign_in_at).toLocaleDateString()
-                        : 'Never'}
-                    </td>
-                    <td className="py-3 px-3 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
-                      <div className="flex gap-2 items-center">
+                    {!isSmallScreen && (
+                      <td className="py-2 px-2 text-sm">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs ${
+                          user.auth_user?.email_confirmed_at 
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+                            : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                        }`}>
+                          {user.auth_user?.email_confirmed_at ? 'Verified' : 'Pending'}
+                        </span>
+                      </td>
+                    )}
+                    {!isSmallScreen && (
+                      <td className="py-2 px-2 text-sm text-gray-900 dark:text-gray-100">
+                        {user.auth_user?.last_sign_in_at 
+                          ? new Date(user.auth_user.last_sign_in_at).toLocaleDateString()
+                          : 'Never'}
+                      </td>
+                    )}
+                    <td className="py-2 px-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                      <div className="flex gap-1 items-center">
                         {editingUserId === user.id ? (
                           <>
                             <motion.button
                               whileHover={{ scale: 1.1 }}
                               whileTap={{ scale: 0.95 }}
                               onClick={() => handleBalanceUpdate(user.id)}
-                              className="p-1.5 text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300"
+                              className="p-1 text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300"
                               title="Save"
                             >
-                              <FiSave size={18} />
+                              <FiSave size={16} />
                             </motion.button>
                             <motion.button
                               whileHover={{ scale: 1.1 }}
                               whileTap={{ scale: 0.95 }}
                               onClick={cancelEditing}
-                              className="p-1.5 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-300"
+                              className="p-1 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-300"
                               title="Cancel"
                             >
-                              <FiX size={18} />
+                              <FiX size={16} />
                             </motion.button>
                           </>
                         ) : (
@@ -221,10 +265,10 @@ export default function AdminUsersTable({ initialUsers }: { initialUsers: UserWi
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={() => startEditing(user.id, user.balance || 0)}
-                            className="p-1.5 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                            className="p-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
                             title="Edit"
                           >
-                            <FiEdit2 size={18} />
+                            <FiEdit2 size={16} />
                           </motion.button>
                         )}
                         <motion.button
@@ -232,16 +276,16 @@ export default function AdminUsersTable({ initialUsers }: { initialUsers: UserWi
                           whileTap={{ scale: 0.95 }}
                           onClick={() => handleDelete(user.id)}
                           disabled={isDeleting === user.id}
-                          className={`p-1.5 ${isDeleting === user.id 
+                          className={`p-1 ${isDeleting === user.id 
                             ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed' 
                             : 'text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300'
                           }`}
                           title="Delete"
                         >
                           {isDeleting === user.id ? (
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
+                            <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-red-600"></div>
                           ) : (
-                            <FiTrash2 size={18} />
+                            <FiTrash2 size={16} />
                           )}
                         </motion.button>
                       </div>
@@ -254,7 +298,7 @@ export default function AdminUsersTable({ initialUsers }: { initialUsers: UserWi
                   animate={{ opacity: 1 }}
                   className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
                 >
-                  <td colSpan={7} className="py-6 text-center text-gray-500 dark:text-gray-400">
+                  <td colSpan={isSmallScreen ? 4 : 7} className="py-4 text-center text-sm text-gray-500 dark:text-gray-400">
                     {isLoading ? 'Searching...' : 'No users found'}
                   </td>
                 </motion.tr>

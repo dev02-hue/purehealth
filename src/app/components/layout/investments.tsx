@@ -4,19 +4,19 @@ import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { getInvestments } from '@/lib/investment-actions'
 import { formatCurrency } from '@/lib/utils'
-import { format, differenceInDays } from 'date-fns'
+import { format, differenceInDays, addDays, isAfter, isBefore} from 'date-fns'
 import { motion } from 'framer-motion'
 import { 
   FiTrendingUp, 
   FiClock,
   FiCheckCircle,
-   FiPieChart,
+  FiPieChart,
   FiRefreshCw,
   FiPlus
 } from 'react-icons/fi'
 import { toast } from 'react-hot-toast'
 import { processDailyEarnings } from '@/lib/investment-plan'
-import { AreaChart, Area, XAxis, YAxis,  Tooltip, ResponsiveContainer } from 'recharts'
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import Link from 'next/link'
 import { FaNairaSign } from 'react-icons/fa6'
 
@@ -34,16 +34,44 @@ const COLORS = {
   shiny: '#FFD700'
 }
 
+interface Investment {
+  id: string;
+  plan_name: string;
+  duration: string;
+  status: string;
+  amount_invested: number;
+  daily_income: number;
+  earnings_to_date: number;
+  total_income: number;
+  next_payout_date: string;
+  last_payout_date: string;
+  end_date: string;
+}
+
+
+
 // Generate mock performance data for charts
-const generatePerformanceData = () => {
+const generatePerformanceData = (investment: Investment) => {
   const data = []
-  for (let i = 0; i < 7; i++) {
+  const startDate = new Date(investment.last_payout_date || investment.next_payout_date)
+  const endDate = new Date(investment.end_date)
+  
+  let currentDate = new Date(startDate)
+  let cumulativeEarnings = investment.earnings_to_date - investment.daily_income // Start from previous day
+  
+  while (isBefore(currentDate, endDate)) {
+    cumulativeEarnings += investment.daily_income
     data.push({
-      day: `Day ${i+1}`,
-      value: Math.floor(Math.random() * 1000) + 500
+      day: format(currentDate, 'MMM d'),
+      value: cumulativeEarnings
     })
+    currentDate = addDays(currentDate, 1)
   }
-  return data
+  
+  return data.length > 0 ? data : [
+    { day: 'Today', value: investment.earnings_to_date },
+    { day: 'Tomorrow', value: investment.earnings_to_date + investment.daily_income }
+  ]
 }
 
 const container = {
@@ -61,18 +89,15 @@ const item = {
   show: { opacity: 1, y: 0, transition: { duration: 0.5 } }
 }
 
-interface Investment {
-  id: string;
-  plan_name: string;
-  duration: string;
-  status: string;
-  amount_invested: number;
-  daily_income: number;
-  earnings_to_date: number;
-  total_income: number;
-  next_payout_date: string;
-  last_payout_date: string;
-  end_date: string;
+
+
+interface NigeriaTime {
+  time: string;
+  date: string;
+  timezone: string;
+  isDaytime: boolean | null;
+  source: string;
+  error?: string;
 }
 
 function InvestmentCountdown({ nextPayoutDate }: { nextPayoutDate: string }) {
@@ -80,58 +105,127 @@ function InvestmentCountdown({ nextPayoutDate }: { nextPayoutDate: string }) {
     hours: '00',
     minutes: '00',
     seconds: '00'
-  })
+  });
 
   useEffect(() => {
     const calculateTimeLeft = () => {
-      const now = new Date()
-      const payoutDate = new Date(nextPayoutDate)
-      const difference = payoutDate.getTime() - now.getTime()
+      const now = new Date();
+      const payoutDate = new Date(nextPayoutDate);
+      const difference = payoutDate.getTime() - now.getTime();
 
-      if (difference <= 0) {
-        setTimeLeft({ hours: '00', minutes: '00', seconds: '00' })
-        return
-      }
+      // Always show the time difference, even if negative
+      const hours = Math.abs(Math.floor(difference / (1000 * 60 * 60)));
+      const minutes = Math.abs(Math.floor((difference / (1000 * 60)) % 60));
+      const seconds = Math.abs(Math.floor((difference / 1000) % 60));
 
       setTimeLeft({
-        hours: Math.floor((difference / (1000 * 60 * 60)) % 24).toString().padStart(2, '0'),
-        minutes: Math.floor((difference / 1000 / 60) % 60).toString().padStart(2, '0'),
-        seconds: Math.floor((difference / 1000) % 60).toString().padStart(2, '0')
-      })
-    }
+        hours: hours.toString().padStart(2, '0'),
+        minutes: minutes.toString().padStart(2, '0'),
+        seconds: seconds.toString().padStart(2, '0')
+      });
+    };
 
-    calculateTimeLeft()
-    const timer = setInterval(calculateTimeLeft, 1000)
-    return () => clearInterval(timer)
-  }, [nextPayoutDate])
+    calculateTimeLeft();
+    const timer = setInterval(calculateTimeLeft, 1000);
+    return () => clearInterval(timer);
+  }, [nextPayoutDate]);
 
   return (
     <div className="font-mono text-sm font-medium text-gray-700">
       {timeLeft.hours}:{timeLeft.minutes}:{timeLeft.seconds}
     </div>
-  )
+  );
 }
 
-function NextPayoutDisplay({ nextPayoutDate }: { nextPayoutDate: string }) {
-  // Get current Nigerian time (WAT - West Africa Time)
-  const now = new Date();
-  const nigeriaOffset = 60 * 60 * 1000; // Nigeria is UTC+1
-  const nigeriaNow = new Date(now.getTime() + nigeriaOffset);
-  
-  const payoutDate = new Date(nextPayoutDate);
-  const nigeriaPayoutDate = new Date(payoutDate.getTime() + nigeriaOffset);
-  
-  // Determine if payout is today or tomorrow in Nigerian time
-  const isToday = nigeriaPayoutDate.getDate() === nigeriaNow.getDate() && 
-                   nigeriaPayoutDate.getMonth() === nigeriaNow.getMonth() && 
-                   nigeriaPayoutDate.getFullYear() === nigeriaNow.getFullYear();
-  
-  const isTomorrow = nigeriaPayoutDate.getDate() === nigeriaNow.getDate() + 1 &&
-                     nigeriaPayoutDate.getMonth() === nigeriaNow.getMonth() &&
-                     nigeriaPayoutDate.getFullYear() === nigeriaNow.getFullYear();
+function NextPayoutDisplay({ investment }: { investment: Investment }) {
+  const [nigeriaTime, setNigeriaTime] = useState<NigeriaTime | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  const formattedTime = format(nigeriaPayoutDate, 'HH:mm');
-  const formattedDate = format(nigeriaPayoutDate, 'EEEE, MMMM d, yyyy');
+
+  
+
+  useEffect(() => {
+    const fetchNigeriaTime = async () => {
+      try {
+        const response = await fetch('/api/nigeria-time')
+        const data = await response.json()
+        setNigeriaTime(data)
+      } catch (error) {
+        console.error('Error fetching Nigeria time:', error)
+        // Fallback to client-side time with Nigeria timezone
+        const fallbackTime = new Date().toLocaleTimeString('en-US', {
+          timeZone: 'Africa/Lagos',
+          hour12: true,
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        })
+        
+        const fallbackDate = new Date().toLocaleDateString('en-US', {
+          timeZone: 'Africa/Lagos',
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        })
+
+        setNigeriaTime({
+          time: fallbackTime,
+          date: fallbackDate,
+          timezone: 'Africa/Lagos',
+          isDaytime: null,
+          source: 'client-fallback',
+          error: 'Failed to fetch Nigeria time'
+        })
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchNigeriaTime()
+  }, [])
+
+  // Get current Nigerian time (WAT - West Africa Time)
+  const now = new Date()
+  const payoutDate = new Date(investment.next_payout_date)
+  const endDate = new Date(investment.end_date)
+  
+  // Determine if investment is completed
+  const isCompleted = investment.status === 'completed' || isAfter(now, endDate)
+
+  if (isCompleted) {
+    return (
+      <div className="text-sm font-medium" style={{ color: COLORS.success }}>
+        <div className="flex items-center">
+          <FiCheckCircle className="mr-2" />
+          <span>Completed on {format(endDate, 'MMM d, yyyy')}</span>
+        </div>
+        <div className="text-xs opacity-75 mt-1">
+          Final payout: {format(new Date(investment.last_payout_date), 'MMM d, yyyy')}
+        </div>
+      </div>
+    )
+  }
+
+  // Determine if payout is today or tomorrow in Nigerian time
+  const isToday = payoutDate.getDate() === now.getDate() && 
+                 payoutDate.getMonth() === now.getMonth() && 
+                 payoutDate.getFullYear() === now.getFullYear()
+  
+  const isTomorrow = payoutDate.getDate() === now.getDate() + 1 &&
+                     payoutDate.getMonth() === now.getMonth() &&
+                     payoutDate.getFullYear() === now.getFullYear()
+
+  const formattedTime = format(payoutDate, 'HH:mm')
+  const formattedDate = format(payoutDate, 'EEEE, MMMM d, yyyy')
+
+  if (loading) {
+    return (
+      <div className="text-sm font-medium" style={{ color: COLORS.textDark }}>
+        Loading time data...
+      </div>
+    )
+  }
 
   return (
     <div className="text-sm font-medium" style={{ color: COLORS.textDark }}>
@@ -140,11 +234,19 @@ function NextPayoutDisplay({ nextPayoutDate }: { nextPayoutDate: string }) {
       ) : isTomorrow ? (
         <span>Tomorrow at {formattedTime}</span>
       ) : (
-        <span>{format(nigeriaPayoutDate, 'MMMM d')} at {formattedTime}</span>
+        <span>{format(payoutDate, 'MMMM d')} at {formattedTime}</span>
       )}
-      <div className="text-xs opacity-75">{formattedDate}</div>
+      <div className="text-xs opacity-75">
+        {formattedDate}
+        {nigeriaTime?.error && (
+          <span className="text-red-500 ml-2">({nigeriaTime.error})</span>
+        )}
+      </div>
+      <div className="text-xs opacity-50 mt-1">
+        Current Nigeria time: {nigeriaTime?.time} ({nigeriaTime?.timezone})
+      </div>
     </div>
-  );
+  )
 }
 
 export default function InvestmentsPage() {
@@ -156,7 +258,32 @@ export default function InvestmentsPage() {
   const loadInvestments = useCallback(async () => {
     try {
       const data = await getInvestments()
-      setInvestments(data)
+      // Process the investments data to ensure proper calculations
+      const processedData = data.map(investment => {
+        const now = new Date()
+        const endDate = new Date(investment.end_date)
+        const isCompleted = investment.status === 'completed' || isAfter(now, endDate)
+        
+        // Calculate proper earnings if needed
+        let earnings_to_date = investment.earnings_to_date
+        if (!isCompleted && investment.last_payout_date) {
+          const lastPayout = new Date(investment.last_payout_date)
+          const daysSinceLastPayout = differenceInDays(now, lastPayout)
+          if (daysSinceLastPayout > 0) {
+            earnings_to_date = Math.min(
+              investment.earnings_to_date + (daysSinceLastPayout * investment.daily_income),
+              investment.total_income
+            )
+          }
+        }
+
+        return {
+          ...investment,
+          earnings_to_date,
+          status: isCompleted ? 'completed' : investment.status
+        }
+      })
+      setInvestments(processedData)
     } catch (error) {
       console.error('Error loading investments:', error)
       router.push('/login')
@@ -193,13 +320,13 @@ export default function InvestmentsPage() {
     loadInvestments()
     const interval = setInterval(() => {
       handleProcessEarnings()
-    }, 60 * 60 * 1000)
+    }, 60 * 60 * 1000) // Check every hour
     return () => clearInterval(interval)
   }, [loadInvestments, handleProcessEarnings])
 
   const calculateProgress = (investment: Investment) => {
     const progress = (investment.earnings_to_date / investment.total_income) * 100
-    return Math.min(100, progress)
+    return Math.min(100, Math.max(0, progress)) // Ensure between 0-100
   }
 
   const getDaysRemaining = (endDate: string) => {
@@ -333,7 +460,7 @@ export default function InvestmentsPage() {
               <div>
                 <p className="text-sm" style={{ color: COLORS.textLight }}>Active Plans</p>
                 <p className="text-xl font-bold" style={{ color: COLORS.textDark }}>
-                  {investments.filter(i => i.status === 'active').length}
+                  {investments.filter(i => i.status !== 'completed').length}
                 </p>
               </div>
             </div>
@@ -341,7 +468,7 @@ export default function InvestmentsPage() {
         </motion.div>
 
         {/* Countdown Timer */}
-        {investments.length > 0 && (
+        {investments.filter(i => i.status !== 'completed').length > 0 && (
           <motion.div 
             className="mb-8 p-6 rounded-xl shadow-sm"
             style={{ backgroundColor: COLORS.primaryAccent }}
@@ -352,7 +479,12 @@ export default function InvestmentsPage() {
             <div className="flex flex-col items-center text-white">
               <p className="text-sm mb-2">Next Daily Payout In</p>
               <div className="text-3xl font-mono font-bold tracking-wider mb-2">
-                <InvestmentCountdown nextPayoutDate={investments[0].next_payout_date} />
+              <InvestmentCountdown 
+    nextPayoutDate={
+      investments.find(i => i.status !== 'completed')?.next_payout_date ?? 
+      new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // Default to 24 hours in future
+    } 
+  />
               </div>
               <p className="text-xs opacity-90 text-center">
                 All payouts will be processed automatically at reset time
@@ -380,17 +512,19 @@ export default function InvestmentsPage() {
             <p className="max-w-md mx-auto text-lg mb-6" style={{ color: COLORS.textLight }}>
               Start growing your wealth by creating your first investment
             </p>
-            <motion.button
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.98 }}
-              className="px-6 py-2 rounded-lg shadow-sm"
-              style={{ 
-                backgroundColor: COLORS.primaryAccent,
-                color: '#FFFFFF'
-              }}
-            >
-              Explore Investment Plans
-            </motion.button>
+            <Link href="/plans" passHref>
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.98 }}
+                className="px-6 py-2 rounded-lg shadow-sm"
+                style={{ 
+                  backgroundColor: COLORS.primaryAccent,
+                  color: '#FFFFFF'
+                }}
+              >
+                Explore Investment Plans
+              </motion.button>
+            </Link>
           </motion.div>
         ) : (
           <motion.div
@@ -436,7 +570,7 @@ export default function InvestmentsPage() {
                   {/* Performance Chart */}
                   <div className="h-40 mb-6">
                     <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={generatePerformanceData()}>
+                      <AreaChart data={generatePerformanceData(investment)}>
                         <defs>
                           <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="5%" stopColor={COLORS.primaryAccent} stopOpacity={0.8}/>
@@ -445,7 +579,10 @@ export default function InvestmentsPage() {
                         </defs>
                         <XAxis dataKey="day" tick={{ fontSize: 12 }} />
                         <YAxis tick={{ fontSize: 12 }} />
-                        <Tooltip />
+                        <Tooltip 
+                          formatter={(value) => [formatCurrency(Number(value)), 'Earnings']}
+                          labelFormatter={(label) => `Day: ${label}`}
+                        />
                         <Area 
                           type="monotone" 
                           dataKey="value" 
@@ -474,6 +611,9 @@ export default function InvestmentsPage() {
                       <p className="text-xs mb-1" style={{ color: COLORS.textLight }}>Earned</p>
                       <p className="font-medium" style={{ color: COLORS.textDark }}>
                         {formatCurrency(investment.earnings_to_date)}
+                        <span className="text-xs ml-1" style={{ color: COLORS.textLight }}>
+                          / {formatCurrency(investment.total_income)}
+                        </span>
                       </p>
                     </div>
                   </div>
@@ -495,28 +635,17 @@ export default function InvestmentsPage() {
                         }}
                       ></div>
                     </div>
+                    <p className="text-xs mb-2" style={{ color: COLORS.textLight }}>
+  Days remaining  <span className="font-medium" style={{ color: COLORS.primaryAccent }}>
+    {getDaysRemaining(investment.end_date)} days
+  </span>
+</p>
                   </div>
                   
                   {/* Status section */}
                   <div className="pt-4 border-t" style={{ borderColor: COLORS.secondaryBg }}>
-                    {investment.status === 'completed' ? (
-                      <div className="flex items-center text-sm" style={{ color: COLORS.success }}>
-                        <FiCheckCircle className="mr-2" />
-                        <span>Completed on {format(new Date(investment.end_date), 'MMM d, yyyy')}</span>
-                      </div>
-                    ) : (
-                      <>
-                        <p className="text-xs mb-2" style={{ color: COLORS.textLight }}>
-                          Next payout in <span className="font-medium" style={{ color: COLORS.primaryAccent }}>
-                            {getDaysRemaining(investment.end_date)} days
-                          </span>
-                        </p>
-                        <div className="flex justify-between items-center">
-                          <NextPayoutDisplay nextPayoutDate={investment.next_payout_date} />
-                        </div>
-                      </>
-                    )}
-                  </div>
+                    <NextPayoutDisplay investment={investment} />
+                   </div>
                 </div>
               </motion.div>
             ))}

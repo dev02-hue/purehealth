@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { signUp } from '@/app/api/auth/signup'
 import { motion } from 'framer-motion'
-import { FiUser, FiMail, FiPhone, FiLock, FiArrowRight,  FiGift, FiX } from 'react-icons/fi'
+import { FiUser, FiPhone, FiLock, FiArrowRight, FiGift, FiX } from 'react-icons/fi'
 import { Suspense } from 'react'
 
 function SignupFormContent() {
@@ -14,7 +14,6 @@ function SignupFormContent() {
   const [form, setForm] = useState({
     firstName: '',
     lastName: '',
-    email: '',
     phone: '',
     password: '',
     referredCode: defaultInviteCode,
@@ -66,23 +65,23 @@ function SignupFormContent() {
   if (success) {
     return (
       <motion.div
-        className="max-w-md mx-auto mt-24 px-8 py-12 bg-surface dark:bg-surface rounded-2xl shadow-lg border border-border dark:border-border text-center transition-all duration-300"
+        className="max-w-md mx-auto mt-24 px-8 py-12 bg-white rounded-2xl shadow-lg border border-gray-200 text-center transition-all duration-300"
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: 'easeOut' }}
       >
         <div className="mb-6">
-          <svg width="60" height="60" viewBox="0 0 24 24" className="mx-auto text-primary dark:text-primary">
+          <svg width="60" height="60" viewBox="0 0 24 24" className="mx-auto text-blue-500">
             <path fill="currentColor" d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10s10-4.5 10-10S17.5 2 12 2m-2 15l-5-5l1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9Z"/>
           </svg>
         </div>
-        <h2 className="text-2xl font-bold text-heading dark:text-heading mb-4">
+        <h2 className="text-2xl font-bold text-gray-800 mb-4">
           Welcome to Sheraton
         </h2>
-        <p className="text-text-muted dark:text-text-muted mb-6">
+        <p className="text-gray-600 mb-6">
           Your account has been created successfully. You&apos;ll be redirected to login shortly.
         </p>
-        <div className="animate-pulse text-text-muted dark:text-text-muted text-sm">
+        <div className="animate-pulse text-gray-500 text-sm">
           Redirecting...
         </div>
       </motion.div>
@@ -90,19 +89,19 @@ function SignupFormContent() {
   }
 
   return (
-    <div className="min-h-screen bg-background dark:bg-background flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <motion.form
         onSubmit={handleSubmit}
-        className="w-full max-w-lg bg-surface dark:bg-surface rounded-2xl shadow-xl overflow-hidden border border-border dark:border-border"
+        className="w-full max-w-lg bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200"
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.3 }}
       >
-        <div className="bg-primary dark:bg-primary p-6 text-center">
-          <h1 className="text-2xl font-bold text-button-text dark:text-button-text">
+        <div className="bg-blue-500 p-6 text-center">
+          <h1 className="text-2xl font-bold text-white">
             Sheraton 
           </h1>
-          <p className="text-button-text/80 dark:text-button-text/80 mt-1">
+          <p className="text-blue-100 mt-1">
             Create your member account
           </p>
         </div>
@@ -110,12 +109,12 @@ function SignupFormContent() {
         <div className="p-8 space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-text dark:text-text">
+              <label className="block text-sm font-medium text-gray-700">
                 First Name
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FiUser className="h-5 w-5 text-text-muted dark:text-text-muted" />
+                  <FiUser className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
                   name="firstName"
@@ -123,13 +122,13 @@ function SignupFormContent() {
                   value={form.firstName}
                   onChange={handleChange}
                   required
-                  className="block w-full pl-10 pr-3 py-2 border border-border dark:border-border rounded-lg bg-transparent text-text dark:text-text placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary dark:focus:ring-primary focus:border-transparent"
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
             </div>
 
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-text dark:text-text">
+              <label className="block text-sm font-medium text-gray-700">
                 Last Name
               </label>
               <input
@@ -138,56 +137,38 @@ function SignupFormContent() {
                 value={form.lastName}
                 onChange={handleChange}
                 required
-                className="block w-full px-3 py-2 border border-border dark:border-border rounded-lg bg-transparent text-text dark:text-text placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary dark:focus:ring-primary focus:border-transparent"
+                className="block w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
           </div>
 
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-text dark:text-text">
-              Email Address
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FiMail className="h-5 w-5 text-text-muted dark:text-text-muted" />
-              </div>
-              <input
-                name="email"
-                type="email"
-                placeholder="john@example.com"
-                value={form.email}
-                onChange={handleChange}
-                className="block w-full pl-10 pr-3 py-2 border border-border dark:border-border rounded-lg bg-transparent text-text dark:text-text placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary dark:focus:ring-primary focus:border-transparent"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-1">
-            <label className="block text-sm font-medium text-text dark:text-text">
+            <label className="block text-sm font-medium text-gray-700">
               Phone Number
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FiPhone className="h-5 w-5 text-text-muted dark:text-text-muted" />
+                <FiPhone className="h-5 w-5 text-gray-400" />
               </div>
               <input
                 name="phone"
                 type="tel"
-                placeholder="+1 (555) 123-4567"
+                placeholder="+234 8000000000"
                 value={form.phone}
                 onChange={handleChange}
-                className="block w-full pl-10 pr-3 py-2 border border-border dark:border-border rounded-lg bg-transparent text-text dark:text-text placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary dark:focus:ring-primary focus:border-transparent"
+                required
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
           </div>
 
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-text dark:text-text">
+            <label className="block text-sm font-medium text-gray-700">
               Password
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FiLock className="h-5 w-5 text-text-muted dark:text-text-muted" />
+                <FiLock className="h-5 w-5 text-gray-400" />
               </div>
               <input
                 name="password"
@@ -197,28 +178,28 @@ function SignupFormContent() {
                 onChange={handleChange}
                 required
                 minLength={6}
-                className="block w-full pl-10 pr-3 py-2 border border-border dark:border-border rounded-lg bg-transparent text-text dark:text-text placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary dark:focus:ring-primary focus:border-transparent"
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
-            <p className="text-xs text-text-muted dark:text-text-muted mt-1">
+            <p className="text-xs text-gray-500 mt-1">
               Minimum 6 characters
             </p>
           </div>
 
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-text dark:text-text">
+            <label className="block text-sm font-medium text-gray-700">
               Referral Code (optional)
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FiGift className="h-5 w-5 text-text-muted dark:text-text-muted" />
+                <FiGift className="h-5 w-5 text-gray-400" />
               </div>
               <input
                 name="referredCode"
                 placeholder="Enter referral code"
                 value={form.referredCode}
                 onChange={handleChange}
-                className="block w-full pl-10 pr-10 py-2 border border-border dark:border-border rounded-lg bg-transparent text-text dark:text-text placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary dark:focus:ring-primary focus:border-transparent"
+                className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
               {form.referredCode && (
                 <button
@@ -227,14 +208,14 @@ function SignupFormContent() {
                   className="absolute inset-y-0 right-0 pr-3 flex items-center"
                   aria-label="Clear invite code"
                 >
-                  <FiX className="h-5 w-5 text-text-muted dark:text-text-muted hover:text-text dark:hover:text-text" />
+                  <FiX className="h-5 w-5 text-gray-400 hover:text-gray-500" />
                 </button>
               )}
             </div>
           </div>
 
           {error && (
-            <div className="p-3 text-sm text-white bg-secondary dark:bg-secondary rounded-lg">
+            <div className="p-3 text-sm text-white bg-red-500 rounded-lg">
               {error}
             </div>
           )}
@@ -244,8 +225,8 @@ function SignupFormContent() {
             disabled={loading}
             className={`w-full py-3 px-4 rounded-lg font-medium transition flex items-center justify-center ${
               loading 
-                ? 'bg-primary/80 dark:bg-primary/80 cursor-not-allowed' 
-                : 'bg-primary hover:bg-primary-hover dark:bg-primary dark:hover:bg-primary-hover text-button-text dark:text-button-text'
+                ? 'bg-blue-400 cursor-not-allowed' 
+                : 'bg-blue-500 hover:bg-blue-600 text-white'
             }`}
           >
             {loading ? (
@@ -263,12 +244,12 @@ function SignupFormContent() {
             )}
           </button>
 
-          <div className="text-center text-sm text-text-muted dark:text-text-muted pt-2">
+          <div className="text-center text-sm text-gray-500 pt-2">
             Already a member?{' '}
             <button 
               type="button" 
               onClick={() => router.push('/login')}
-              className="font-medium text-secondary hover:text-secondary-hover dark:text-secondary dark:hover:text-secondary-hover cursor-pointer"
+              className="font-medium text-blue-600 hover:text-blue-700 cursor-pointer"
             >
               Sign in
             </button>
@@ -282,8 +263,8 @@ function SignupFormContent() {
 export default function SignupForm() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-background dark:bg-background flex items-center justify-center">
-        <div className="animate-pulse text-text dark:text-text">Loading Sheraton...</div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-pulse text-gray-700">Loading Sheraton...</div>
       </div>
     }>
       <SignupFormContent />
