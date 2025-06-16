@@ -1,337 +1,312 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { UserWithAuth } from '@/types/supabase'
+import { FiEdit2, FiTrash2, FiSave, FiX, FiSearch, FiUser, FiMail, FiDollarSign, } from 'react-icons/fi'
+import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { toast } from 'react-hot-toast'
+import { deleteUserById } from '@/lib/adminUtils'
+import { updateUserBalance } from '@/lib/adminUtils'
 import { motion, AnimatePresence } from 'framer-motion'
+import { checkAdminAndFetchUsers } from '@/lib/adminUtils'
 import { useMediaQuery } from 'react-responsive'
-import { getUserProfile } from '@/lib/profile/profile'
-import {  FiMenu, FiX, FiSun, FiMoon } from 'react-icons/fi'
-import { RiVipCrownFill } from 'react-icons/ri'
-import { FaNairaSign } from 'react-icons/fa6'
 
-export default function DashboardNav() {
-  const [userData, setUserData] = useState({
-    firstName: '',
-    lastName: '',
-    balance: '0',
-    profit: '0'
-  })
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [darkMode, setDarkMode] = useState(false)
+export default function AdminUsersTable({ initialUsers }: { initialUsers: UserWithAuth[] }) {
+  const [users, setUsers] = useState<UserWithAuth[]>(initialUsers)
+  const [filteredUsers, setFilteredUsers] = useState<UserWithAuth[]>(initialUsers)
+  const [searchTerm, setSearchTerm] = useState('')
+  const router = useRouter()
+  const [isDeleting, setIsDeleting] = useState<string | null>(null)
+  const [editingUserId, setEditingUserId] = useState<string | null>(null)
+  const [editedBalance, setEditedBalance] = useState<number>(0)
+  const [isLoading, setIsLoading] = useState(false)
+  const isSmallScreen = useMediaQuery({ maxWidth: 640 })
 
-  const isSmallScreen = useMediaQuery({ maxWidth: 768 })
-  const isVerySmallScreen = useMediaQuery({ maxWidth: 375 })
-  const isTinyScreen = useMediaQuery({ maxWidth: 320 })
-
+  // Handle search
   useEffect(() => {
-    const fetchUserProfile = async () => {
-      try {
-        const rawToken = localStorage.getItem('supabase.auth.token')
-        if (!rawToken) {
-          console.error('No token found in localStorage')
-          return
+    const timer = setTimeout(async () => {
+      if (searchTerm.trim() !== '') {
+        setIsLoading(true)
+        try {
+          const result = await checkAdminAndFetchUsers(searchTerm)
+          
+          if ('isAdmin' in result && result.isAdmin && 'users' in result) {
+            setFilteredUsers(result.users)
+          } else if ('error' in result) {
+            toast.error(result.error)
+          }
+        } catch (error) {
+          console.error('Error searching users:', error)
+          toast.error('Failed to search users')
+        } finally {
+          setIsLoading(false)
         }
-
-        const parsedToken = JSON.parse(rawToken)
-        const accessToken = parsedToken?.currentSession?.access_token
-
-        if (!accessToken) {
-          console.error('Access token not found in parsed token')
-          return
-        }
-
-        const profile = await getUserProfile()
-        
-        setUserData({
-          firstName: profile.first_name || '',
-          lastName: profile.last_name || '',
-          balance: profile.balance?.toString() || '0',
-          profit: '0'
-        })
-
-      } catch (err) {
-        if (err instanceof Error) {
-          console.error('Failed to fetch profile:', err.message)
-        } else {
-          console.error('Failed to fetch profile:', err)
-        }
+      } else {
+        setFilteredUsers(users)
       }
-    }
+    }, 500)
+  
+    return () => clearTimeout(timer)
+  }, [searchTerm, users])
 
-    fetchUserProfile()
-    
-    // Check for dark mode preference
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      setDarkMode(true)
+  const handleDelete = async (userId: string) => {
+    setIsDeleting(userId)
+    try {
+      const result = await deleteUserById(userId)
+      
+      if (result.success) {
+        setUsers(prev => prev.filter(user => user.id !== userId))
+        setFilteredUsers(prev => prev.filter(user => user.id !== userId))
+        toast.success('User deleted successfully')
+        router.refresh()
+      } else if (result.error) {
+        toast.error(result.error)
+      }
+    } catch (error) {
+      console.error('Error deleting user:', error)
+      toast.error('An error occurred while deleting the user')
+    } finally {
+      setIsDeleting(null)
     }
-  }, [])
+  }
 
-  // const profitValue = parseFloat(userData.profit)
-  // const isProfitPositive = profitValue >= 0
+  const startEditing = (userId: string, currentBalance: number) => {
+    setEditingUserId(userId)
+    setEditedBalance(currentBalance)
+  }
+
+  const cancelEditing = () => {
+    setEditingUserId(null)
+    setEditedBalance(0)
+  }
+
+  const handleBalanceUpdate = async (userId: string) => {
+    try {
+      const result = await updateUserBalance(userId, editedBalance)
+      
+      if (result.success) {
+        setUsers(prev => prev.map(user => 
+          user.id === userId ? { ...user, balance: result.updatedBalance || 0 } : user
+        ))
+        setFilteredUsers(prev => prev.map(user => 
+          user.id === userId ? { ...user, balance: result.updatedBalance || 0 } : user
+        ))
+        toast.success('Balance updated successfully')
+        setEditingUserId(null)
+        router.refresh()
+      } else if (result.error) {
+        toast.error(result.error)
+      }
+    } catch (error) {
+      console.error('Error updating balance:', error)
+      toast.error('An error occurred while updating the balance')
+    }
+  }
 
   // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
-  }
-
-  const itemVariants = {
-    hidden: { x: -20, opacity: 0 },
-    visible: {
-      x: 0,
-      opacity: 1,
-      transition: {
-        type: 'spring',
-        stiffness: 100,
-        damping: 10
-      }
-    }
-  }
-
-  const formatCompactNumber = (num: number) => {
-    if (isTinyScreen) {
-      if (num >= 1000000) return `₦${(num / 1000000).toFixed(1)}M`
-      if (num >= 1000) return `₦${(num / 1000).toFixed(1)}K`
-      return `₦${num.toFixed(0)}`
-    }
-    if (isVerySmallScreen) {
-      return `₦${num.toFixed(num >= 1000 ? 0 : 2)}`
-    }
-    return `₦${num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-  }
-
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode)
+  const rowVariants = {
+    hidden: { opacity: 0, y: 10 },
+    visible: { opacity: 1, y: 0 },
+    exit: { opacity: 0, x: -50 }
   }
 
   return (
-    <>
-      <motion.nav 
-        className={`${darkMode ? 'bg-[#121212] border-[#1E1E1E]' : 'bg-white border-[#F5F7FA]'} border-b fixed w-full z-20 `}
-        initial="hidden"
-        animate="visible"
-        variants={containerVariants}
-      >
-        <div className={`mx-auto ${isTinyScreen ? 'px-2' : 'px-4'} sm:px-6`}>
-          <div className="flex justify-between h-14 items-center">
-            {/* Balance Cards - Left Side */}
-            <motion.div 
-              className="flex items-center space-x-1 sm:space-x-2"
-              variants={containerVariants}
-            >
-              {/* Balance Card */}
-              <motion.div 
-                className={`${darkMode ? 'bg-[#1E1E1E] border-[#6366F1]' : 'bg-[#F5F7FA] border-[#3B82F6]'} ${isTinyScreen ? 'px-2 py-1' : 'px-3 py-1.5'} rounded-lg border-l-4 shadow-sm`}
-                variants={itemVariants}
-                whileHover={{ scale: 1.03, boxShadow: darkMode ? '0 0 8px rgba(99, 102, 241, 0.5)' : '0 0 8px rgba(59, 130, 246, 0.5)' }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <div className="flex items-center space-x-1 sm:space-x-2">
-                  <div className={`${darkMode ? 'bg-[#6366F1]' : 'bg-[#3B82F6]'} p-1 rounded-full`}>
-                    <FaNairaSign className="text-white" size={isTinyScreen ? 12 : 14} />
-                  </div>
-                  <div>
-                    <p className={`${isTinyScreen ? 'text-[8px]' : 'text-xs'} ${darkMode ? 'text-[#A0AEC0]' : 'text-[#4A5568]'}`}>
-                      Balance
-                    </p>
-                    <p className={`${isTinyScreen ? 'text-xs' : 'text-sm'} font-semibold ${darkMode ? 'text-[#E2E8F0]' : 'text-[#1A1A1A]'}`}>
-                      {formatCompactNumber(parseFloat(userData.balance))}
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
-
-              {/* Profit Card
-              <motion.div 
-                className={`${isProfitPositive ? 
-                  `${darkMode ? 'bg-[#1E1E1E] border-[#10B981]' : 'bg-[#F5F7FA] border-[#10B981]'}` : 
-                  `${darkMode ? 'bg-[#1E1E1E] border-[#EF4444]' : 'bg-[#F5F7FA] border-[#EF4444]'}`} 
-                  ${isTinyScreen ? 'px-2 py-1' : 'px-3 py-1.5'} rounded-lg border-l-4 shadow-sm`}
-                variants={itemVariants}
-                whileHover={{ 
-                  scale: 1.03, 
-                  boxShadow: isProfitPositive ? 
-                    (darkMode ? '0 0 8px rgba(16, 185, 129, 0.5)' : '0 0 8px rgba(16, 185, 129, 0.5)') : 
-                    (darkMode ? '0 0 8px rgba(239, 68, 68, 0.5)' : '0 0 8px rgba(239, 68, 68, 0.5)')
-                }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <div className="flex items-center space-x-1 sm:space-x-2">
-                  <div className={`${isProfitPositive ? 
-                    `${darkMode ? 'bg-[#10B981]' : 'bg-[#10B981]'}` : 
-                    `${darkMode ? 'bg-[#EF4444]' : 'bg-[#EF4444]'}`} p-1 rounded-full`}>
-                    {isProfitPositive ? 
-                      <FiTrendingUp className="text-white" size={isTinyScreen ? 12 : 14} /> : 
-                      <FiTrendingDown className="text-white" size={isTinyScreen ? 12 : 14} />}
-                  </div>
-                  <div>
-                    <p className={`${isTinyScreen ? 'text-[8px]' : 'text-xs'} ${darkMode ? 'text-[#A0AEC0]' : 'text-[#4A5568]'}`}>
-                      P/L Today
-                    </p>
-                    <p className={`${isTinyScreen ? 'text-xs' : 'text-sm'} font-semibold ${isProfitPositive ? 
-                      `${darkMode ? 'text-[#10B981]' : 'text-[#10B981]'}` : 
-                      `${darkMode ? 'text-[#EF4444]' : 'text-[#EF4444]'}`}`}>
-                      {isProfitPositive ? '+' : ''}{formatCompactNumber(Math.abs(profitValue))}
-                    </p>
-                  </div>
-                </div>
-              </motion.div> */}
-            </motion.div>
-
-            {/* Logo/Brand - Right Side */}
-            <motion.div 
-              className="flex items-center space-x-2"
-              variants={itemVariants}
-            >
-              {/* Mobile Menu Button */}
-              {isSmallScreen && (
-                <button 
-                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                  className={`${darkMode ? 'text-[#E2E8F0]' : 'text-[#1A1A1A]'} p-1 rounded-md`}
-                >
-                  {mobileMenuOpen ? <FiX size={20} /> : <FiMenu size={20} />}
-                </button>
-              )}
-              
-              {/* Dark Mode Toggle - Only on larger screens */}
-              {!isSmallScreen && (
-                <motion.button
-                  onClick={toggleDarkMode}
-                  className={`p-1 rounded-full ${darkMode ? 'bg-[#1E1E1E] text-[#00F0FF]' : 'bg-[#F5F7FA] text-[#EC4899]'}`}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                >
-                  {darkMode ? <FiSun size={16} /> : <FiMoon size={16} />}
-                </motion.button>
-              )}
-
-              {/* Logo */}
-              <motion.div 
-                className="flex items-center"
-                whileHover={{ scale: 1.05 }}
-              >
-                <motion.h1 
-                  className={`${isTinyScreen ? 'text-lg' : 'text-xl'} font-bold ${darkMode ? 'text-[#E2E8F0]' : 'text-[#1A1A1A]'}`}
-                >
-                  <span className={`${darkMode ? 'text-[#6366F1]' : 'text-[#3B82F6]'}`}>SHE</span>RATON
-                </motion.h1>
-                
-                <motion.div 
-                  className={`${isTinyScreen ? 'text-[10px] px-1 py-0.5' : 'text-xs px-2 py-1'} rounded-full flex items-center ${darkMode ? 'bg-[#1E1E1E] text-[#00F0FF]' : 'bg-[#F5F7FA] text-[#EC4899]'} ml-2`}
-                  whileHover={{ scale: 1.1 }}
-                >
-                  <RiVipCrownFill className="mr-1" /> {!isTinyScreen && 'PREMIUM'}
-                </motion.div>
-              </motion.div>
-
-              {/* User Profile - Only on larger screens */}
-              {!isSmallScreen && (
-                <motion.div 
-                  className="flex items-center space-x-2 ml-2"
-                  variants={itemVariants}
-                  whileHover={{ scale: 1.05 }}
-                >
-                  <div className="text-right">
-                    <p className={`text-xs sm:text-sm font-medium ${darkMode ? 'text-[#E2E8F0]' : 'text-[#1A1A1A]'}`}>
-                      {userData.firstName} {userData.lastName.charAt(0)}.
-                    </p>
-                    <p className={`text-[10px] sm:text-xs ${darkMode ? 'text-[#A0AEC0]' : 'text-[#4A5568]'}`}>
-                      Premium
-                    </p>
-                  </div>
-                  
-                  <motion.div 
-                    className={`relative ${darkMode ? 'bg-[#6366F1]' : 'bg-[#3B82F6]'} rounded-full ${isTinyScreen ? 'h-6 w-6' : 'h-7 w-7'} flex items-center justify-center text-white font-medium`}
-                    whileHover={{ rotate: 5 }}
-                    whileTap={{ scale: 0.9 }}
-                  >
-                    {userData.firstName.charAt(0)}{userData.lastName.charAt(0)}
-                    <motion.div 
-                      className="absolute -top-1 -right-1 bg-[#FFD700] rounded-full p-0.5"
-                      animate={{ 
-                        scale: [1, 1.1, 1],
-                        rotate: [0, 10, -10, 0]
-                      }}
-                      transition={{ 
-                        repeat: Infinity, 
-                        duration: 2,
-                        ease: "easeInOut" 
-                      }}
-                    >
-                      <RiVipCrownFill className="text-[#1A1A1A]" size={10} />
-                    </motion.div>
-                  </motion.div>
-                </motion.div>
-              )}
-            </motion.div>
-          </div>
-        </div>
-      </motion.nav>
-
-      {/* Mobile Menu */}
-      <AnimatePresence>
-        {mobileMenuOpen && isSmallScreen && (
-          <motion.div 
-            className={`${darkMode ? 'bg-[#1E1E1E]' : 'bg-[#F5F7FA]'} fixed w-full z-10 shadow-lg mt-14`}
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <div className={`${isTinyScreen ? 'px-2 py-2' : 'px-4 py-3'} space-y-3`}>
-              {/* User Profile */}
-              <motion.div 
-                className={`${darkMode ? 'bg-[#121212]' : 'bg-white'} p-3 rounded-lg shadow`}
-                initial={{ x: 20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ delay: 0.1 }}
-              >
-                <div className="flex items-center space-x-3">
-                  <div className={`${darkMode ? 'bg-[#6366F1]' : 'bg-[#3B82F6]'} rounded-full h-10 w-10 flex items-center justify-center text-white font-medium`}>
-                    {userData.firstName.charAt(0)}{userData.lastName.charAt(0)}
-                  </div>
-                  <div>
-                    <p className={`font-medium ${darkMode ? 'text-[#E2E8F0]' : 'text-[#1A1A1A]'}`}>
-                      {userData.firstName} {userData.lastName}
-                    </p>
-                    <p className={`text-xs ${darkMode ? 'text-[#A0AEC0]' : 'text-[#4A5568]'}`}>
-                      Premium Account
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
-              
-              {/* Dark Mode Toggle */}
-              <motion.div 
-                className={`${darkMode ? 'bg-[#121212]' : 'bg-white'} p-3 rounded-lg shadow`}
-                initial={{ x: 20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ delay: 0.2 }}
-              >
-                <button 
-                  onClick={toggleDarkMode}
-                  className={`w-full flex items-center justify-between ${darkMode ? 'text-[#E2E8F0]' : 'text-[#1A1A1A]'}`}
-                >
-                  <span>Dark Mode</span>
-                  <motion.div 
-                    className={`w-10 h-5 rounded-full flex items-center px-0.5 ${darkMode ? 'bg-[#6366F1] justify-end' : 'bg-[#3B82F6] justify-start'}`}
-                    layout
-                  >
-                    <motion.div 
-                      className="w-4 h-4 bg-white rounded-full"
-                      layout
-                    />
-                  </motion.div>
-                </button>
-              </motion.div>
+    <div className="w-full px-1">
+      {/* Search Bar */}
+      <div className="mb-4 relative max-w-md mx-auto">
+        <div className="relative">
+          <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+          <input
+            type="text"
+            placeholder="Search by name..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-9 pr-4 py-2 text-sm border rounded-lg dark:bg-gray-800 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          {isLoading && (
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-500"></div>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </>
+          )}
+        </div>
+      </div>
+
+      {/* Responsive Table Container */}
+      <div className="overflow-x-auto rounded-lg border dark:border-gray-700 shadow-sm">
+        <table className="min-w-full bg-white dark:bg-gray-800">
+          <thead className="bg-gray-50 dark:bg-gray-700">
+            <tr>
+              {!isSmallScreen && (
+                <th className="py-2 px-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  ID
+                </th>
+              )}
+              <th className="py-2 px-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                {isSmallScreen ? <FiMail className="inline" /> : 'Email'}
+              </th>
+              <th className="py-2 px-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                {isSmallScreen ? <FiUser className="inline" /> : 'Name'}
+              </th>
+              <th className="py-2 px-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                {isSmallScreen ? <FiDollarSign className="inline" /> : 'Balance'}
+              </th>
+              {!isSmallScreen && (
+                <th className="py-2 px-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Status
+                </th>
+              )}
+              {!isSmallScreen && (
+                <th className="py-2 px-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Last Active
+                </th>
+              )}
+              <th className="py-2 px-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+            <AnimatePresence>
+              {filteredUsers.length > 0 ? (
+                filteredUsers.map(user => (
+                  <motion.tr
+                    key={user.id}
+                    variants={rowVariants}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                    className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                  >
+                    {!isSmallScreen && (
+                      <td className="py-2 px-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                        <span className="font-mono">{user.id.substring(0, 6)}...</span>
+                      </td>
+                    )}
+                    <td className="py-2 px-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap overflow-hidden text-ellipsis max-w-[120px]">
+                      {isSmallScreen ? (
+                        <div className="flex items-center">
+                          <FiMail className="mr-1 flex-shrink-0" />
+                          <span className="truncate">{user.auth_user?.email}</span>
+                        </div>
+                      ) : (
+                        user.auth_user?.email
+                      )}
+                    </td>
+                    <td className="py-2 px-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap overflow-hidden text-ellipsis max-w-[120px]">
+                      {isSmallScreen ? (
+                        <div className="flex items-center">
+                          <FiUser className="mr-1 flex-shrink-0" />
+                          <span className="truncate">{user.first_name} {user.last_name}</span>
+                        </div>
+                      ) : (
+                        `${user.first_name} ${user.last_name}`
+                      )}
+                    </td>
+                    <td className="py-2 px-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                      {editingUserId === user.id ? (
+                        <input
+                          type="number"
+                          value={editedBalance}
+                          onChange={(e) => setEditedBalance(Number(e.target.value))}
+                          className="w-16 px-1 py-1 text-sm border rounded dark:bg-gray-700 dark:border-gray-600"
+                        />
+                      ) : (
+                        <div className="flex items-center">
+                          {isSmallScreen && <FiDollarSign className="mr-1 flex-shrink-0" />}
+                          <span className="font-medium">
+                            ${user.balance?.toLocaleString()}
+                          </span>
+                        </div>
+                      )}
+                    </td>
+                    {!isSmallScreen && (
+                      <td className="py-2 px-2 text-sm">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs ${
+                          user.auth_user?.email_confirmed_at 
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+                            : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                        }`}>
+                          {user.auth_user?.email_confirmed_at ? 'Verified' : 'Pending'}
+                        </span>
+                      </td>
+                    )}
+                    {!isSmallScreen && (
+                      <td className="py-2 px-2 text-sm text-gray-900 dark:text-gray-100">
+                        {user.auth_user?.last_sign_in_at 
+                          ? new Date(user.auth_user.last_sign_in_at).toLocaleDateString()
+                          : 'Never'}
+                      </td>
+                    )}
+                    <td className="py-2 px-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                      <div className="flex gap-1 items-center">
+                        {editingUserId === user.id ? (
+                          <>
+                            <motion.button
+                              whileHover={{ scale: 1.1 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => handleBalanceUpdate(user.id)}
+                              className="p-1 text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300"
+                              title="Save"
+                            >
+                              <FiSave size={16} />
+                            </motion.button>
+                            <motion.button
+                              whileHover={{ scale: 1.1 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={cancelEditing}
+                              className="p-1 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-300"
+                              title="Cancel"
+                            >
+                              <FiX size={16} />
+                            </motion.button>
+                          </>
+                        ) : (
+                          <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => startEditing(user.id, user.balance || 0)}
+                            className="p-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                            title="Edit"
+                          >
+                            <FiEdit2 size={16} />
+                          </motion.button>
+                        )}
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => handleDelete(user.id)}
+                          disabled={isDeleting === user.id}
+                          className={`p-1 ${isDeleting === user.id 
+                            ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed' 
+                            : 'text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300'
+                          }`}
+                          title="Delete"
+                        >
+                          {isDeleting === user.id ? (
+                            <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-red-600"></div>
+                          ) : (
+                            <FiTrash2 size={16} />
+                          )}
+                        </motion.button>
+                      </div>
+                    </td>
+                  </motion.tr>
+                ))
+              ) : (
+                <motion.tr
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                >
+                  <td colSpan={isSmallScreen ? 4 : 7} className="py-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                    {isLoading ? 'Searching...' : 'No users found'}
+                  </td>
+                </motion.tr>
+              )}
+            </AnimatePresence>
+          </tbody>
+        </table>
+      </div>
+    </div>
   )
 }
