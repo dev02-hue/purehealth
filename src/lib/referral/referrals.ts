@@ -127,15 +127,32 @@ export async function rewardReferrers(refereeId: string, amount: number) {
  * @param referralCode - The referral code used
  */
 export async function recordReferral(refereeId: string, referralCode: string) {
+  // 0. First check if this referral already exists
+  const { data: existingReferral, error: existingError } = await supabase
+    .from('referrals')
+    .select('id')
+    .eq('referee_id', refereeId)
+    .maybeSingle();
+
+  if (existingError) {
+    console.error('Error checking existing referral:', existingError);
+    throw new Error('Error checking referral status');
+  }
+
+  if (existingReferral) {
+    console.warn('Referral already exists for user:', refereeId);
+    return; // Skip since referral already exists
+  }
+
   // 1. Get direct referrer
   const { data: referrer, error: referrerError } = await supabase
     .from('profiles')
     .select('id')
     .eq('referral_code', referralCode)
-    .single()
+    .single();
 
   if (referrerError || !referrer) {
-    throw new Error('Invalid referral code')
+    throw new Error('Invalid referral code');
   }
 
   // 2. Add level 1 referral (direct)
@@ -145,10 +162,11 @@ export async function recordReferral(refereeId: string, referralCode: string) {
       referrer_id: referrer.id,
       referee_id: refereeId,
       level: 1,
-    })
+    });
 
   if (directError) {
-    throw new Error('Failed to record direct referral')
+    console.error('Detailed referral error:', directError);
+    throw new Error(`Failed to record direct referral: ${directError.message}`);
   }
 
   // 3. Find indirect referrer (who referred the direct referrer)
@@ -156,8 +174,8 @@ export async function recordReferral(refereeId: string, referralCode: string) {
     .from('referrals')
     .select('referrer_id')
     .eq('referee_id', referrer.id)
-    .order('level', { ascending: true }) // Get the closest referrer
-    .limit(1)
+    .order('level', { ascending: true })
+    .limit(1);
 
   if (!grandReferrerError && grandReferrerData && grandReferrerData.length > 0) {
     // 4. Add level 2 referral (indirect)
@@ -167,10 +185,10 @@ export async function recordReferral(refereeId: string, referralCode: string) {
         referrer_id: grandReferrerData[0].referrer_id,
         referee_id: refereeId,
         level: 2,
-      })
+      });
 
     if (indirectError) {
-      console.error('Failed to record indirect referral:', indirectError)
+      console.error('Failed to record indirect referral:', indirectError);
     }
   }
 }
