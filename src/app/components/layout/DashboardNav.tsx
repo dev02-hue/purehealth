@@ -11,7 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { checkAdminAndFetchUsers } from '@/lib/adminUtils'
 import { useMediaQuery } from 'react-responsive'
 
-export default function AdminUsersTable({ initialUsers }: { initialUsers: UserWithAuth[] }) {
+export default function AdminUsersTable({ initialUsers = [] }: { initialUsers?: UserWithAuth[] }) {
   const [users, setUsers] = useState<UserWithAuth[]>(initialUsers)
   const [filteredUsers, setFilteredUsers] = useState<UserWithAuth[]>(initialUsers)
   const [searchTerm, setSearchTerm] = useState('')
