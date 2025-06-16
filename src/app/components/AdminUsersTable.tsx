@@ -1,7 +1,7 @@
 'use client'
 
 import { UserWithAuth } from '@/types/supabase'
-import { FiEdit2, FiTrash2, FiSave, FiX, FiSearch } from 'react-icons/fi'
+import { FiEdit2, FiTrash2, FiSave, FiX, FiSearch, FiUser, FiMail, FiDollarSign, } from 'react-icons/fi'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { toast } from 'react-hot-toast'
@@ -9,6 +9,7 @@ import { deleteUserById } from '@/lib/adminUtils'
 import { updateUserBalance } from '@/lib/adminUtils'
 import { motion, AnimatePresence } from 'framer-motion'
 import { checkAdminAndFetchUsers } from '@/lib/adminUtils'
+import { useMediaQuery } from 'react-responsive'
 
 export default function AdminUsersTable({ initialUsers }: { initialUsers: UserWithAuth[] }) {
   const [users, setUsers] = useState<UserWithAuth[]>(initialUsers)
@@ -19,6 +20,7 @@ export default function AdminUsersTable({ initialUsers }: { initialUsers: UserWi
   const [editingUserId, setEditingUserId] = useState<string | null>(null)
   const [editedBalance, setEditedBalance] = useState<number>(0)
   const [isLoading, setIsLoading] = useState(false)
+  const isSmallScreen = useMediaQuery({ maxWidth: 640 })
 
   // Handle search
   useEffect(() => {
@@ -109,7 +111,7 @@ export default function AdminUsersTable({ initialUsers }: { initialUsers: UserWi
   }
 
   return (
-    <div className="w-full max-w-[100vw] px-1">
+    <div className="w-full px-1">
       {/* Search Bar */}
       <div className="mb-4 relative max-w-md mx-auto">
         <div className="relative">
@@ -130,56 +132,95 @@ export default function AdminUsersTable({ initialUsers }: { initialUsers: UserWi
       </div>
 
       {/* Responsive Table Container */}
-      <div className="overflow-x-auto overflow-y-hidden rounded-lg border dark:border-gray-700 shadow-sm">
-        <div className="min-w-[320px]"> {/* Changed from 600px to 320px */}
-          <table className="w-full bg-white dark:bg-gray-800">
-            <thead className="bg-gray-50 dark:bg-gray-700">
-              <tr>
-                <th className="py-2 px-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider xs:table-cell hidden">ID</th>
-                <th className="py-2 px-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Email</th>
-                <th className="py-2 px-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Name</th> {/* Removed sm:hidden */}
-                <th className="py-2 px-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Balance</th>
-                <th className="py-2 px-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider xs:table-cell hidden">Status</th>
-                <th className="py-2 px-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider md:table-cell hidden">Last Active</th>
-                <th className="py-2 px-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              <AnimatePresence>
-                {filteredUsers.length > 0 ? (
-                  filteredUsers.map(user => (
-                    <motion.tr
-                      key={user.id}
-                      variants={rowVariants}
-                      initial="hidden"
-                      animate="visible"
-                      exit="exit"
-                      className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
-                    >
-                      <td className="py-2 px-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap xs:table-cell hidden">
+      <div className="overflow-x-auto rounded-lg border dark:border-gray-700 shadow-sm">
+        <table className="min-w-full bg-white dark:bg-gray-800">
+          <thead className="bg-gray-50 dark:bg-gray-700">
+            <tr>
+              {!isSmallScreen && (
+                <th className="py-2 px-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  ID
+                </th>
+              )}
+              <th className="py-2 px-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                {isSmallScreen ? <FiMail className="inline" /> : 'Email'}
+              </th>
+              <th className="py-2 px-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                {isSmallScreen ? <FiUser className="inline" /> : 'Name'}
+              </th>
+              <th className="py-2 px-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                {isSmallScreen ? <FiDollarSign className="inline" /> : 'Balance'}
+              </th>
+              {!isSmallScreen && (
+                <th className="py-2 px-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Status
+                </th>
+              )}
+              {!isSmallScreen && (
+                <th className="py-2 px-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Last Active
+                </th>
+              )}
+              <th className="py-2 px-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+            <AnimatePresence>
+              {filteredUsers.length > 0 ? (
+                filteredUsers.map(user => (
+                  <motion.tr
+                    key={user.id}
+                    variants={rowVariants}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                    className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                  >
+                    {!isSmallScreen && (
+                      <td className="py-2 px-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
                         <span className="font-mono">{user.id.substring(0, 6)}...</span>
                       </td>
-                      <td className="py-2 px-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap overflow-hidden text-ellipsis max-w-[80px] sm:max-w-[120px]">
-                        {user.auth_user?.email}
-                      </td>
-                      <td className="py-2 px-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap overflow-hidden text-ellipsis max-w-[80px]">
-                        {user.first_name} {user.last_name}
-                      </td>
-                      <td className="py-2 px-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
-                        {editingUserId === user.id ? (
-                          <input
-                            type="number"
-                            value={editedBalance}
-                            onChange={(e) => setEditedBalance(Number(e.target.value))}
-                            className="w-16 px-1 py-1 text-sm border rounded dark:bg-gray-700 dark:border-gray-600"
-                          />
-                        ) : (
+                    )}
+                    <td className="py-2 px-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap overflow-hidden text-ellipsis max-w-[120px]">
+                      {isSmallScreen ? (
+                        <div className="flex items-center">
+                          <FiMail className="mr-1 flex-shrink-0" />
+                          <span className="truncate">{user.auth_user?.email}</span>
+                        </div>
+                      ) : (
+                        user.auth_user?.email
+                      )}
+                    </td>
+                    <td className="py-2 px-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap overflow-hidden text-ellipsis max-w-[120px]">
+                      {isSmallScreen ? (
+                        <div className="flex items-center">
+                          <FiUser className="mr-1 flex-shrink-0" />
+                          <span className="truncate">{user.first_name} {user.last_name}</span>
+                        </div>
+                      ) : (
+                        `${user.first_name} ${user.last_name}`
+                      )}
+                    </td>
+                    <td className="py-2 px-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                      {editingUserId === user.id ? (
+                        <input
+                          type="number"
+                          value={editedBalance}
+                          onChange={(e) => setEditedBalance(Number(e.target.value))}
+                          className="w-16 px-1 py-1 text-sm border rounded dark:bg-gray-700 dark:border-gray-600"
+                        />
+                      ) : (
+                        <div className="flex items-center">
+                          {isSmallScreen && <FiDollarSign className="mr-1 flex-shrink-0" />}
                           <span className="font-medium">
                             ${user.balance?.toLocaleString()}
                           </span>
-                        )}
-                      </td>
-                      <td className="py-2 px-2 text-sm xs:table-cell hidden">
+                        </div>
+                      )}
+                    </td>
+                    {!isSmallScreen && (
+                      <td className="py-2 px-2 text-sm">
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs ${
                           user.auth_user?.email_confirmed_at 
                             ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
@@ -188,81 +229,83 @@ export default function AdminUsersTable({ initialUsers }: { initialUsers: UserWi
                           {user.auth_user?.email_confirmed_at ? 'Verified' : 'Pending'}
                         </span>
                       </td>
-                      <td className="py-2 px-2 text-sm text-gray-900 dark:text-gray-100 md:table-cell hidden">
+                    )}
+                    {!isSmallScreen && (
+                      <td className="py-2 px-2 text-sm text-gray-900 dark:text-gray-100">
                         {user.auth_user?.last_sign_in_at 
                           ? new Date(user.auth_user.last_sign_in_at).toLocaleDateString()
                           : 'Never'}
                       </td>
-                      <td className="py-2 px-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
-                        <div className="flex gap-1 items-center">
-                          {editingUserId === user.id ? (
-                            <>
-                              <motion.button
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => handleBalanceUpdate(user.id)}
-                                className="p-1 text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300"
-                                title="Save"
-                              >
-                                <FiSave size={16} />
-                              </motion.button>
-                              <motion.button
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={cancelEditing}
-                                className="p-1 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-300"
-                                title="Cancel"
-                              >
-                                <FiX size={16} />
-                              </motion.button>
-                            </>
-                          ) : (
+                    )}
+                    <td className="py-2 px-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                      <div className="flex gap-1 items-center">
+                        {editingUserId === user.id ? (
+                          <>
                             <motion.button
                               whileHover={{ scale: 1.1 }}
                               whileTap={{ scale: 0.95 }}
-                              onClick={() => startEditing(user.id, user.balance || 0)}
-                              className="p-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                              title="Edit"
+                              onClick={() => handleBalanceUpdate(user.id)}
+                              className="p-1 text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300"
+                              title="Save"
                             >
-                              <FiEdit2 size={16} />
+                              <FiSave size={16} />
                             </motion.button>
-                          )}
+                            <motion.button
+                              whileHover={{ scale: 1.1 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={cancelEditing}
+                              className="p-1 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-300"
+                              title="Cancel"
+                            >
+                              <FiX size={16} />
+                            </motion.button>
+                          </>
+                        ) : (
                           <motion.button
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.95 }}
-                            onClick={() => handleDelete(user.id)}
-                            disabled={isDeleting === user.id}
-                            className={`p-1 ${isDeleting === user.id 
-                              ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed' 
-                              : 'text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300'
-                            }`}
-                            title="Delete"
+                            onClick={() => startEditing(user.id, user.balance || 0)}
+                            className="p-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                            title="Edit"
                           >
-                            {isDeleting === user.id ? (
-                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-red-600"></div>
-                            ) : (
-                              <FiTrash2 size={16} />
-                            )}
+                            <FiEdit2 size={16} />
                           </motion.button>
-                        </div>
-                      </td>
-                    </motion.tr>
-                  ))
-                ) : (
-                  <motion.tr
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
-                  >
-                    <td colSpan={7} className="py-4 text-center text-sm text-gray-500 dark:text-gray-400">
-                      {isLoading ? 'Searching...' : 'No users found'}
+                        )}
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => handleDelete(user.id)}
+                          disabled={isDeleting === user.id}
+                          className={`p-1 ${isDeleting === user.id 
+                            ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed' 
+                            : 'text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300'
+                          }`}
+                          title="Delete"
+                        >
+                          {isDeleting === user.id ? (
+                            <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-red-600"></div>
+                          ) : (
+                            <FiTrash2 size={16} />
+                          )}
+                        </motion.button>
+                      </div>
                     </td>
                   </motion.tr>
-                )}
-              </AnimatePresence>
-            </tbody>
-          </table>
-        </div>
+                ))
+              ) : (
+                <motion.tr
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                >
+                  <td colSpan={isSmallScreen ? 4 : 7} className="py-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                    {isLoading ? 'Searching...' : 'No users found'}
+                  </td>
+                </motion.tr>
+              )}
+            </AnimatePresence>
+          </tbody>
+        </table>
       </div>
     </div>
   )
