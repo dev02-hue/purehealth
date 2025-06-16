@@ -234,7 +234,7 @@ function NextPayoutDisplay({ investment }: { investment: Investment }) {
       ) : isTomorrow ? (
         <span>Tomorrow at {formattedTime}</span>
       ) : (
-        <span>{format(payoutDate, 'MMMM d')} at {formattedTime}</span>
+        <span>last payout :  {format(payoutDate, 'MMMM d')} at {formattedTime}</span>
       )}
       <div className="text-xs opacity-75">
         {formattedDate}
@@ -243,7 +243,7 @@ function NextPayoutDisplay({ investment }: { investment: Investment }) {
         )}
       </div>
       <div className="text-xs opacity-50 mt-1">
-        Current Nigeria time: {nigeriaTime?.time} ({nigeriaTime?.timezone})
+        Current time: {nigeriaTime?.time} ({nigeriaTime?.timezone})
       </div>
     </div>
   )

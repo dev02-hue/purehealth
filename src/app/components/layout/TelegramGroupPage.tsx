@@ -5,7 +5,7 @@ import { FaTelegram, FaArrowRight, FaUsers, FaComments } from 'react-icons/fa'
 import { FiExternalLink } from 'react-icons/fi'
 
 export default function TelegramGroupPage() {
-  const telegramGroupLink = 'https://t.me/+sNlISBgVcSw2YmNk'
+  const telegramGroupLink = 'https://t.me/+4ZZr8t165lY2MWJk'
   
   const features = [
     {
