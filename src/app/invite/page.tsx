@@ -451,9 +451,9 @@ export default function InviteProfileClient() {
                         style={{ width: `${Math.min(100, (count / 10) * 100)}%` }}
                       />
                     </div>
-                    <div className="mt-1 text-xs text-amber-200/80">
+                    {/* <div className="mt-1 text-xs text-amber-200/80">
                       Potential Earnings: ₦{(count * exampleAmount * (level === 1 ? 0.30 : 0.03)).toLocaleString()}
-                    </div>
+                    </div> */}
                   </div>
                 </motion.li>
               ))}
