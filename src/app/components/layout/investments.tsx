@@ -107,7 +107,7 @@ interface NigeriaTime {
 //     seconds: '00'
 //   });
 
-//   useEffect(() => {
+//   useEffect(() => {   
 //     const calculateTimeLeft = () => {
 //       const now = new Date();
 //       const payoutDate = new Date(nextPayoutDate);
