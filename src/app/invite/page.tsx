@@ -3,16 +3,12 @@
 import { getReferralData } from '@/lib/referral/referrals'
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar
-} from 'recharts'
+ 
 import { FaCopy, FaFacebook, FaTwitter, FaWhatsapp, FaLinkedin, FaTelegram, FaLink } from 'react-icons/fa'
-import { FiShare2, FiUsers, FiTrendingUp, FiAward } from 'react-icons/fi'
+import { FiShare2, FiUsers, FiTrendingUp} from 'react-icons/fi'
 import { toast } from 'react-hot-toast'
 
-const COLORS = ['#B45309', '#92400E', '#D97706', '#F59E0B', '#FCD34D'];
-
+ 
 export default function InviteProfileClient() {
   const [referralCode, setReferralCode] = useState('')
   const [levels, setLevels] = useState<{ level: number; count: number }[]>([])
@@ -75,17 +71,7 @@ export default function InviteProfileClient() {
     window.open(url, '_blank', 'noopener,noreferrer')
   }
 
-  // Data for charts - only showing levels 1 and 2
-  const pieData = [
-    { name: 'Direct (30%)', value: levels[0]?.count || 0 },
-    { name: 'Level 2 (3%)', value: levels[1]?.count || 0 }
-  ]
-
-  const radarData = levels.map(level => ({
-    subject: `Level ${level.level}`,
-    referrals: level.count,
-    fullMark: Math.max(10, levels.reduce((max, l) => Math.max(max, l.count), 0))
-  }))
+ 
 
   if (isLoading) {
     return (
@@ -143,147 +129,7 @@ export default function InviteProfileClient() {
           <p className="text-amber-100 text-lg">Earn 30% on direct referrals and 3% on level 2</p>
         </div>
 
-        {/* Three-Chart Dashboard */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          {/* Bar Chart - Referral Levels */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-amber-500/20 backdrop-blur-md rounded-2xl p-6 shadow-lg border border-amber-300/30"
-          >
-            <div className="flex items-center gap-2 mb-6">
-              <FiUsers className="text-amber-200 text-xl" />
-              <h2 className="text-xl font-semibold text-white">Referral Levels</h2>
-            </div>
-            
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={levels}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                  <XAxis 
-                    dataKey="level" 
-                    tick={{ fill: '#FCD34D' }}
-                    label={{ value: 'Level', position: 'insideBottom', fill: '#FCD34D', offset: -5 }}
-                  />
-                  <YAxis 
-                    tick={{ fill: '#FCD34D' }}
-                    label={{ value: 'Referrals', angle: -90, position: 'insideLeft', fill: '#FCD34D' }}
-                  />
-                  <Tooltip 
-                    contentStyle={{
-                      background: 'rgba(30, 30, 30, 0.9)',
-                      borderColor: '#B45309',
-                      borderRadius: '0.5rem',
-                      color: 'white'
-                    }}
-                    formatter={(value, name, props) => [
-                      `${value} referral${value === 1 ? '' : 's'}`,
-                      `Level ${props.payload.level}`
-                    ]}
-                  />
-                  <Bar 
-                    dataKey="count" 
-                    fill="url(#barGradient)"
-                    radius={[4, 4, 0, 0]}
-                  >
-                    <defs>
-                      <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#F59E0B" />
-                        <stop offset="100%" stopColor="#B45309" />
-                      </linearGradient>
-                    </defs>
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </motion.div>
-
-          {/* Pie Chart - Referral Distribution */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="bg-amber-500/20 backdrop-blur-md rounded-2xl p-6 shadow-lg border border-amber-300/30"
-          >
-            <div className="flex items-center gap-2 mb-6">
-              <FiTrendingUp className="text-amber-200 text-xl" />
-              <h2 className="text-xl font-semibold text-white">Referral Distribution</h2>
-            </div>
-            
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={pieData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
-                    paddingAngle={5}
-                    dataKey="value"
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  >
-                    {pieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    contentStyle={{
-                      background: 'rgba(30, 30, 30, 0.9)',
-                      borderColor: '#B45309',
-                      borderRadius: '0.5rem',
-                      color: 'white'
-                    }}
-                    formatter={(value, name) => [
-                      `${value} referral${value === 1 ? '' : 's'}`,
-                      name
-                    ]}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </motion.div>
-
-          {/* Radar Chart - Performance */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.4 }}
-            className="bg-amber-500/20 backdrop-blur-md rounded-2xl p-6 shadow-lg border border-amber-300/30"
-          >
-            <div className="flex items-center gap-2 mb-6">
-              <FiAward className="text-amber-200 text-xl" />
-              <h2 className="text-xl font-semibold text-white">Network Performance</h2>
-            </div>
-            
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <RadarChart data={radarData}>
-                  <PolarGrid stroke="rgba(255,255,255,0.2)" />
-                  <PolarAngleAxis dataKey="subject" tick={{ fill: '#FCD34D' }} />
-                  <PolarRadiusAxis angle={30} tick={{ fill: '#FCD34D' }} />
-                  <Radar
-                    name="Referrals"
-                    dataKey="referrals"
-                    stroke="#B45309"
-                    fill="#F59E0B"
-                    fillOpacity={0.6}
-                  />
-                  <Tooltip 
-                    contentStyle={{
-                      background: 'rgba(30, 30, 30, 0.9)',
-                      borderColor: '#B45309',
-                      borderRadius: '0.5rem',
-                      color: 'white'
-                    }}
-                    formatter={(value) => [`${value} referral${value === 1 ? '' : 's'}`, 'Count']}
-                  />
-                </RadarChart>
-              </ResponsiveContainer>
-            </div>
-          </motion.div>
-        </div>
+         
 
         {/* Referral Link Card */}
         <motion.div
