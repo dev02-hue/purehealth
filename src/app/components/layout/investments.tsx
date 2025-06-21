@@ -100,42 +100,42 @@ interface NigeriaTime {
   error?: string;
 }
 
-function InvestmentCountdown({ nextPayoutDate }: { nextPayoutDate: string }) {
-  const [timeLeft, setTimeLeft] = useState({
-    hours: '00',
-    minutes: '00',
-    seconds: '00'
-  });
+// function InvestmentCountdown({ nextPayoutDate }: { nextPayoutDate: string }) {
+//   const [timeLeft, setTimeLeft] = useState({
+//     hours: '00',
+//     minutes: '00',
+//     seconds: '00'
+//   });
 
-  useEffect(() => {
-    const calculateTimeLeft = () => {
-      const now = new Date();
-      const payoutDate = new Date(nextPayoutDate);
-      const difference = payoutDate.getTime() - now.getTime();
+//   useEffect(() => {
+//     const calculateTimeLeft = () => {
+//       const now = new Date();
+//       const payoutDate = new Date(nextPayoutDate);
+//       const difference = payoutDate.getTime() - now.getTime();
 
-      // Always show the time difference, even if negative
-      const hours = Math.abs(Math.floor(difference / (1000 * 60 * 60)));
-      const minutes = Math.abs(Math.floor((difference / (1000 * 60)) % 60));
-      const seconds = Math.abs(Math.floor((difference / 1000) % 60));
+//       // Always show the time difference, even if negative
+//       const hours = Math.abs(Math.floor(difference / (1000 * 60 * 60)));
+//       const minutes = Math.abs(Math.floor((difference / (1000 * 60)) % 60));
+//       const seconds = Math.abs(Math.floor((difference / 1000) % 60));
 
-      setTimeLeft({
-        hours: hours.toString().padStart(2, '0'),
-        minutes: minutes.toString().padStart(2, '0'),
-        seconds: seconds.toString().padStart(2, '0')
-      });
-    };
+//       setTimeLeft({
+//         hours: hours.toString().padStart(2, '0'),
+//         minutes: minutes.toString().padStart(2, '0'),
+//         seconds: seconds.toString().padStart(2, '0')
+//       });
+//     };
 
-    calculateTimeLeft();
-    const timer = setInterval(calculateTimeLeft, 1000);
-    return () => clearInterval(timer);
-  }, [nextPayoutDate]);
+//     calculateTimeLeft();
+//     const timer = setInterval(calculateTimeLeft, 1000);
+//     return () => clearInterval(timer);
+//   }, [nextPayoutDate]);
 
-  return (
-    <div className="font-mono text-sm font-medium text-gray-700">
-      {timeLeft.hours}:{timeLeft.minutes}:{timeLeft.seconds}
-    </div>
-  );
-}
+//   return (
+//     <div className="font-mono text-sm font-medium text-gray-700">
+//       {timeLeft.hours}:{timeLeft.minutes}:{timeLeft.seconds}
+//     </div>
+//   );
+// }
 
 function NextPayoutDisplay({ investment }: { investment: Investment }) {
   const [nigeriaTime, setNigeriaTime] = useState<NigeriaTime | null>(null)
@@ -468,7 +468,7 @@ export default function InvestmentsPage() {
         </motion.div>
 
         {/* Countdown Timer */}
-        {investments.filter(i => i.status !== 'completed').length > 0 && (
+        {/* {investments.filter(i => i.status !== 'completed').length > 0 && (
           <motion.div 
             className="mb-8 p-6 rounded-xl shadow-sm"
             style={{ backgroundColor: COLORS.primaryAccent }}
@@ -491,7 +491,7 @@ export default function InvestmentsPage() {
               </p>
             </div>
           </motion.div>
-        )}
+        )} */}
 
         {/* Investments Grid */}
         {investments.length === 0 ? (
