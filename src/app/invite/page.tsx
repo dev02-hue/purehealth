@@ -15,7 +15,7 @@ export default function InviteProfileClient() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isCopied, setIsCopied] = useState(false)
-  const [exampleAmount] = useState(10000) // Example transaction amount for calculations
+  const [exampleAmount] = useState(10000)  
 
   useEffect(() => {
     const fetchReferralData = async () => {
