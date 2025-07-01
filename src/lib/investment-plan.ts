@@ -20,47 +20,57 @@ let isInitialized = false;
 
 // Initialize the earnings processor
 function initializeEarningsProcessor() {
-  if (isInitialized) return;
-  isInitialized = true;
+  if (isInitialized) return
+  isInitialized = true
 
-  console.log('Initializing earnings processor...');
-  
-  const processWithRetry = async (attempt = 1) => {
-    if (isProcessing) return;
+  const runProcessor = async () => {
+    if (isProcessing) return
     
     try {
-      isProcessing = true;
-      console.log('Running earnings processing...');
-      const result = await processEarnings();
-      console.log('Earnings processing complete:', result);
+      isProcessing = true
+      console.log('[Earnings Processor] Starting scheduled earnings processing...')
       
-      // Reset attempt counter on success
-      attempt = 1;
+      // Process earnings
+      const result = await processEarnings()
+      console.log('[Earnings Processor] Processing results:', {
+        updated: 'updatedInvestments' in result ? result.updatedInvestments.length : 0,
+        completed: 'completedInvestments' in result ? result.completedInvestments.length : 0,
+        failed: 'failedUpdates' in result ? result.failedUpdates.length : 0
+      })
+      
     } catch (error) {
-      console.error(`Error processing earnings (attempt ${attempt}):`, error);
-      
-      // Exponential backoff for retries
-      const retryDelay = Math.min(1000 * Math.pow(2, attempt), PAYOUT_INTERVAL_MS);
-      console.log(`Retrying in ${retryDelay / 1000} seconds...`);
-      
-      setTimeout(() => processWithRetry(attempt + 1), retryDelay);
-      return;
+      console.error('[Earnings Processor] Processing error:', error)
     } finally {
-      isProcessing = false;
+      isProcessing = false
+      
+      // Schedule next run in exactly 20 hours
+      processingInterval = setTimeout(runProcessor, PAYOUT_INTERVAL_MS)
+      const nextRun = new Date(Date.now() + PAYOUT_INTERVAL_MS)
+      console.log('[Earnings Processor] Next automatic processing at:', nextRun.toISOString())
     }
+  }
+
+  // Calculate time until next 20:00 (8 PM) payout
+  const now = new Date()
+  const nextTarget = new Date(now)
+  nextTarget.setHours(20, 0, 0, 0) // Set target hour to 20:00 (8 PM)
+  
+  // If it's already past 20:00 today, set for 20:00 tomorrow
+  if (nextTarget < now) {
+    nextTarget.setDate(nextTarget.getDate() + 1)
+  }
+  
+  const initialDelay = nextTarget.getTime() - now.getTime()
+  
+  console.log('[Earnings Processor] Initializing... First run in:', 
+    `${(initialDelay / MS_IN_HOUR).toFixed(2)} hours (at ${nextTarget.toISOString()})`)
     
-    // Schedule next processing
-    processingInterval = setTimeout(() => processWithRetry(), PAYOUT_INTERVAL_MS);
-  };
-
-  // Start the initial processing
-  processWithRetry();
+  // Start the processor
+  processingInterval = setTimeout(runProcessor, initialDelay)
 }
 
-// Initialize when module loads (only in production)
-if (process.env.NODE_ENV === 'production') {
-  initializeEarningsProcessor();
-}
+// Initialize when module loads (remove NODE_ENV check for development)
+initializeEarningsProcessor()
 
 export async function investInPlan(plan: {
   name: string;
@@ -69,13 +79,11 @@ export async function investInPlan(plan: {
   totalIncome: number;
   duration: string;
 }) {
-  console.log('[investInPlan] Starting investment process');
-  console.log('[investInPlan] Plan details:', JSON.stringify(plan, null, 2));
+  
 
   const cookieStore = await cookies();
   const userId = cookieStore.get('user_id')?.value;
-  console.log('[investInPlan] User ID from cookies:', userId);
-
+ 
   if (!userId) {
     console.error('[investInPlan] Error: No user ID found in cookies');
     throw new Error('User not authenticated');
@@ -84,12 +92,10 @@ export async function investInPlan(plan: {
   // Validate plan calculations
   const durationInDays = parseInt(plan.duration.split(' ')[0]);
   const expectedTotalIncome = plan.dailyIncome * durationInDays;
-  console.log('[investInPlan] Calculated duration (days):', durationInDays);
-  console.log('[investInPlan] Expected total income:', expectedTotalIncome);
+ 
   
   if (Math.abs(plan.totalIncome - expectedTotalIncome) > 0.01) {
-    console.error('[investInPlan] Plan validation failed: totalIncome mismatch');
-    throw new Error(`Invalid plan: totalIncome should be ${expectedTotalIncome} (dailyIncome * duration)`);
+     throw new Error(`Invalid plan: totalIncome should be ${expectedTotalIncome} (dailyIncome * duration)`);
   }
 
   // Calculate hourly rate and payout amount
@@ -99,19 +105,16 @@ export async function investInPlan(plan: {
   console.log('[investInPlan] Payout per interval:', payoutPerInterval);
 
   // First check if user has enough balance
-  console.log('[investInPlan] Fetching user profile for ID:', userId);
-  const { data: profile, error: profileError } = await supabase
+   const { data: profile, error: profileError } = await supabase
     .from('profiles')  // <-- NOTE: Typo here? Should it be 'profiles' or 'profiles'?
     .select('balance')
     .eq('id', userId)
     .single();
 
   if (profileError || !profile) {
-    console.error('[investInPlan] Error fetching profile:', profileError);
-    throw new Error('Failed to fetch user profile');
+     throw new Error('Failed to fetch user profile');
   }
-  console.log('[investInPlan] Current user balance:', profile.balance);
-
+ 
   if (profile.balance < plan.price) {
     console.error('[investInPlan] Insufficient balance:', {
       balance: profile.balance,
@@ -121,15 +124,13 @@ export async function investInPlan(plan: {
   }
 
   // Deduct investment amount
-  console.log('[investInPlan] Deducting investment amount from balance');
-  const { error: updateError } = await supabase
+   const { error: updateError } = await supabase
     .from('profiles')
     .update({ balance: profile.balance - plan.price })
     .eq('id', userId);
 
   if (updateError) {
-    console.error('[investInPlan] Error updating balance:', updateError);
-    throw new Error('Failed to update balance');
+     throw new Error('Failed to update balance');
   }
 
   // Calculate dates
@@ -148,7 +149,7 @@ export async function investInPlan(plan: {
     plan_name: plan.name,
     amount_invested: plan.price,
     daily_income: plan.dailyIncome,
-    // payout_per_interval: payoutPerInterval,
+    payout_per_interval: payoutPerInterval,
     total_income: plan.totalIncome,
     duration_days: durationInDays,
     start_date: now.toISOString(),
@@ -299,13 +300,15 @@ export async function processEarnings() {
 
 // Cleanup on process exit
 process.on('SIGTERM', () => {
-  if (processingInterval) {
-    clearTimeout(processingInterval);
-  }
-});
+  if (processingInterval) clearTimeout(processingInterval)
+})
 
 process.on('SIGINT', () => {
-  if (processingInterval) {
-    clearTimeout(processingInterval);
-  }
-});
+  if (processingInterval) clearTimeout(processingInterval)
+})
+
+// Manual trigger for development/testing
+export async function manualTriggerEarningsProcessing() {
+  console.log('Manually triggering earnings processing...')
+  return await processEarnings()
+}
