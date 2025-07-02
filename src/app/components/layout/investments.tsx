@@ -14,7 +14,7 @@ import {
   FiRefreshCw,
   FiPlus
 } from 'react-icons/fi'
-import { toast } from 'react-hot-toast'
+// import { toast } from 'react-hot-toast'
 import { processEarnings } from '@/lib/investment-plan'
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import Link from 'next/link'
@@ -182,7 +182,7 @@ function NextPayoutDisplay({ investment }: { investment: Investment }) {
 export default function InvestmentsPage() {
   const [investments, setInvestments] = useState<Investment[]>([])
   const [loading, setLoading] = useState(true)
-  const [processing, setProcessing] = useState(false)
+  // const [processing, setProcessing] = useState(false)
   const router = useRouter()
 
   const loadInvestments = useCallback(async () => {
@@ -208,29 +208,42 @@ export default function InvestmentsPage() {
     }
   }, [router])
 
-  const handleProcessEarnings = useCallback(async () => {
-    setProcessing(true)
+  const handleTrigger = async () => {
+    setLoading(true); // Assuming this is the same as setting 'processing' state
     try {
-      const result = await processEarnings()
-      if (result.success) {
-        if ('updatedInvestments' in result && (result.updatedInvestments.length > 0 || result.completedInvestments.length > 0)) {
-          await loadInvestments()
-          toast.success(
-            `Processed ${result.updatedInvestments.length} updates and ${result.completedInvestments.length} completions`
-          )
-        } else {
-          toast.success('No earnings to process at this time')
-        }
-      } else {
-        toast.error('Error processing earnings')
-      }
+      await processEarnings(); // Just await the process without storing or setting the result
+      // Remove the setResult(data) line
     } catch (error) {
-      console.error('Error processing earnings:', error)
-      toast.error('Failed to process earnings')
+      console.error('[Manual Trigger Error]:', error);
+      // You can keep error handling if needed, just remove any result setting
     } finally {
-      setProcessing(false)
+      setLoading(false);
     }
-  }, [loadInvestments])
+  };
+
+  // const handleProcessEarnings = useCallback(async () => {
+  //   setProcessing(true)
+  //   try {
+  //     const result = await processEarnings()
+  //     if (result.success) {
+  //       if ('updatedInvestments' in result && (result.updatedInvestments.length > 0 || result.completedInvestments.length > 0)) {
+  //         await loadInvestments()
+  //         toast.success(
+  //           `Processed ${result.updatedInvestments.length} updates and ${result.completedInvestments.length} completions`
+  //         )
+  //       } else {
+  //         toast.success('No earnings to process at this time')
+  //       }
+  //     } else {
+  //       toast.error('Error processing earnings')
+  //     }
+  //   } catch (error) {
+  //     console.error('Error processing earnings:', error)
+  //     toast.error('Failed to process earnings')
+  //   } finally {
+  //     setProcessing(false)
+  //   }
+  // }, [loadInvestments])
 
   useEffect(() => {
     loadInvestments()
@@ -300,23 +313,23 @@ export default function InvestmentsPage() {
           </div>
           
           <div className="flex gap-3">
-            <motion.button
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={handleProcessEarnings}
-              disabled={processing}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg shadow-sm"
-              style={{ 
-                backgroundColor: processing ? COLORS.textLight : COLORS.primaryAccent,
-                color: '#FFFFFF'
-              }}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.4 }}
-            >
-              <FiRefreshCw className={processing ? 'animate-spin' : ''} />
-              {processing ? 'Processing...' : 'Refresh Earnings'}
-            </motion.button>
+          <motion.button
+  whileHover={{ scale: 1.03 }}
+  whileTap={{ scale: 0.98 }}
+  onClick={handleTrigger} // Use the modified handler here
+  disabled={loading} // Use your loading state (or processing if they're the same)
+  className="flex items-center gap-2 px-4 py-2 rounded-lg shadow-sm"
+  style={{ 
+    backgroundColor: loading ? COLORS.textLight : COLORS.primaryAccent,
+    color: '#FFFFFF'
+  }}
+  initial={{ opacity: 0 }}
+  animate={{ opacity: 1 }}
+  transition={{ delay: 0.4 }}
+>
+  <FiRefreshCw className={loading ? 'animate-spin' : ''} />
+  {loading ? 'Processing...' : 'Refresh Earnings'}
+</motion.button>
             
             <Link href="/plans" passHref>
               <motion.div
