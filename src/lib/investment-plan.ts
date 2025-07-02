@@ -8,8 +8,8 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
-// Constants for payout interval
-const PAYOUT_INTERVAL_HOURS = 20;
+// Constants for payout interval - CHANGED TO 24 HOURS
+const PAYOUT_INTERVAL_HOURS = 24;
 const MS_IN_HOUR = 1000 * 60 * 60;
 const PAYOUT_INTERVAL_MS = PAYOUT_INTERVAL_HOURS * MS_IN_HOUR;
 
@@ -30,7 +30,6 @@ function initializeEarningsProcessor() {
       isProcessing = true
       console.log('[Earnings Processor] Starting scheduled earnings processing...')
       
-      // Process earnings
       const result = await processEarnings()
       console.log('[Earnings Processor] Processing results:', {
         updated: 'updatedInvestments' in result ? result.updatedInvestments.length : 0,
@@ -43,7 +42,7 @@ function initializeEarningsProcessor() {
     } finally {
       isProcessing = false
       
-      // Schedule next run in exactly 20 hours
+      // Schedule next run in exactly 24 hours - CHANGED FROM 20
       processingInterval = setTimeout(runProcessor, PAYOUT_INTERVAL_MS)
       const nextRun = new Date(Date.now() + PAYOUT_INTERVAL_MS)
       console.log('[Earnings Processor] Next automatic processing at:', nextRun.toISOString())
@@ -53,9 +52,8 @@ function initializeEarningsProcessor() {
   // Calculate time until next 20:00 (8 PM) payout
   const now = new Date()
   const nextTarget = new Date(now)
-  nextTarget.setHours(20, 0, 0, 0) // Set target hour to 20:00 (8 PM)
+  nextTarget.setHours(20, 0, 0, 0) // Keep target hour at 20:00 (8 PM)
   
-  // If it's already past 20:00 today, set for 20:00 tomorrow
   if (nextTarget < now) {
     nextTarget.setDate(nextTarget.getDate() + 1)
   }
@@ -65,11 +63,9 @@ function initializeEarningsProcessor() {
   console.log('[Earnings Processor] Initializing... First run in:', 
     `${(initialDelay / MS_IN_HOUR).toFixed(2)} hours (at ${nextTarget.toISOString()})`)
     
-  // Start the processor
   processingInterval = setTimeout(runProcessor, initialDelay)
 }
 
-// Initialize when module loads (remove NODE_ENV check for development)
 initializeEarningsProcessor()
 
 export async function investInPlan(plan: {
@@ -79,8 +75,6 @@ export async function investInPlan(plan: {
   totalIncome: number;
   duration: string;
 }) {
-  
-
   const cookieStore = await cookies();
   const userId = cookieStore.get('user_id')?.value;
  
@@ -93,20 +87,17 @@ export async function investInPlan(plan: {
   const durationInDays = parseInt(plan.duration.split(' ')[0]);
   const expectedTotalIncome = plan.dailyIncome * durationInDays;
  
-  
   if (Math.abs(plan.totalIncome - expectedTotalIncome) > 0.01) {
      throw new Error(`Invalid plan: totalIncome should be ${expectedTotalIncome} (dailyIncome * duration)`);
   }
 
-  // Calculate hourly rate and payout amount
-  const hourlyRate = plan.dailyIncome / 24;
-  const payoutPerInterval = hourlyRate * PAYOUT_INTERVAL_HOURS;
-  console.log('[investInPlan] Hourly rate:', hourlyRate);
+  // CHANGED TO DIRECT DAILY PAYOUT - NO HOURLY CALCULATION NEEDED
+  const payoutPerInterval = plan.dailyIncome; // Direct daily payout
   console.log('[investInPlan] Payout per interval:', payoutPerInterval);
 
-  // First check if user has enough balance
-   const { data: profile, error: profileError } = await supabase
-    .from('profiles')  // <-- NOTE: Typo here? Should it be 'profiles' or 'profiles'?
+  // Check user balance
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
     .select('balance')
     .eq('id', userId)
     .single();
@@ -124,7 +115,7 @@ export async function investInPlan(plan: {
   }
 
   // Deduct investment amount
-   const { error: updateError } = await supabase
+  const { error: updateError } = await supabase
     .from('profiles')
     .update({ balance: profile.balance - plan.price })
     .eq('id', userId);
@@ -137,11 +128,6 @@ export async function investInPlan(plan: {
   const now = new Date();
   const endDate = new Date(now.getTime() + durationInDays * 24 * MS_IN_HOUR);
   const nextPayoutDate = new Date(now.getTime() + PAYOUT_INTERVAL_MS);
-  console.log('[investInPlan] Date calculations:', {
-    now: now.toISOString(),
-    endDate: endDate.toISOString(),
-    nextPayoutDate: nextPayoutDate.toISOString()
-  });
 
   // Prepare investment data
   const investmentData = {
@@ -149,7 +135,7 @@ export async function investInPlan(plan: {
     plan_name: plan.name,
     amount_invested: plan.price,
     daily_income: plan.dailyIncome,
-    payout_per_interval: payoutPerInterval,
+    payout_per_interval: payoutPerInterval, // Now equals dailyIncome
     total_income: plan.totalIncome,
     duration_days: durationInDays,
     start_date: now.toISOString(),
@@ -159,10 +145,8 @@ export async function investInPlan(plan: {
     status: 'active',
     earnings_to_date: 0
   };
-  console.log('[investInPlan] Investment data to insert:', JSON.stringify(investmentData, null, 2));
 
   // Create investment record
-  console.log('[investInPlan] Attempting to create investment record');
   const { data: investment, error: investmentError } = await supabase
     .from('investments')
     .insert([investmentData])
@@ -170,23 +154,15 @@ export async function investInPlan(plan: {
     .single();
 
   if (investmentError || !investment) {
-    console.error('[investInPlan] Investment creation failed:', {
-      error: investmentError,
-      data: investment
-    });
-    
     // Rollback balance update
-    console.log('[investInPlan] Attempting balance rollback');
-    const rollbackResult = await supabase
+    await supabase
       .from('profiles')
       .update({ balance: profile.balance })
       .eq('id', userId);
     
-    console.log('[investInPlan] Rollback result:', rollbackResult);
     throw new Error(`Failed to create investment: ${investmentError?.message}`);
   }
 
-  console.log('[investInPlan] Investment created successfully:', investment);
   revalidatePath('/');
   return { success: true };
 }
@@ -195,12 +171,11 @@ export async function processEarnings() {
   const now = new Date();
   const nowISO = now.toISOString();
 
-  // Get all active investments due for payout
   const { data: investments, error } = await supabase
     .from('investments')
     .select('*')
     .eq('status', 'active')
-    .lt('next_payout_date', nowISO);
+    .lte('next_payout_date', nowISO);
 
   if (error) {
     console.error('Error fetching investments:', error.message);
@@ -218,29 +193,25 @@ export async function processEarnings() {
     try {
       const lastPayoutDate = new Date(inv.last_payout_date);
       
-      // Calculate how many intervals have passed
       const intervalsPassed = Math.floor(
         (now.getTime() - lastPayoutDate.getTime()) / PAYOUT_INTERVAL_MS
       );
 
       if (intervalsPassed < 1) continue;
 
-      // Calculate payout amount
       const payoutAmount = Math.min(
         inv.payout_per_interval * intervalsPassed,
         inv.total_income - inv.earnings_to_date
       );
 
-      // Calculate new earnings
       const newEarnings = inv.earnings_to_date + payoutAmount;
       const isCompleted = newEarnings >= inv.total_income;
 
-      // Calculate next payout date (skip if completed)
       const nextPayout = isCompleted 
         ? null 
         : new Date(lastPayoutDate.getTime() + (intervalsPassed + 1) * PAYOUT_INTERVAL_MS);
 
-      // Update investment record
+      // Update investment
       const updateResult = await supabase
         .from('investments')
         .update({
@@ -251,9 +222,7 @@ export async function processEarnings() {
         })
         .eq('id', inv.id);
 
-      if (updateResult.error) {
-        throw new Error(`Investment update failed: ${updateResult.error.message}`);
-      }
+      if (updateResult.error) throw updateResult.error;
 
       // Update user balance
       if (payoutAmount > 0) {
@@ -263,22 +232,16 @@ export async function processEarnings() {
           .eq('id', inv.user_id)
           .single();
 
-        if (profileError || !userProfile) {
-          throw new Error('Failed to fetch user balance');
-        }
+        if (profileError) throw profileError;
 
-        const newBalance = userProfile.balance + payoutAmount;
         const balanceUpdate = await supabase
           .from('profiles')
-          .update({ balance: newBalance })
+          .update({ balance: userProfile.balance + payoutAmount })
           .eq('id', inv.user_id);
 
-        if (balanceUpdate.error) {
-          throw new Error('Failed to update user balance');
-        }
+        if (balanceUpdate.error) throw balanceUpdate.error;
       }
 
-      // Record results
       if (isCompleted) {
         results.completedInvestments.push(inv.id);
       } else {
@@ -298,16 +261,10 @@ export async function processEarnings() {
   return results;
 }
 
-// Cleanup on process exit
-process.on('SIGTERM', () => {
-  if (processingInterval) clearTimeout(processingInterval)
-})
+// Cleanup handlers
+process.on('SIGTERM', () => processingInterval && clearTimeout(processingInterval))
+process.on('SIGINT', () => processingInterval && clearTimeout(processingInterval))
 
-process.on('SIGINT', () => {
-  if (processingInterval) clearTimeout(processingInterval)
-})
-
-// Manual trigger for development/testing
 export async function manualTriggerEarningsProcessing() {
   console.log('Manually triggering earnings processing...')
   return await processEarnings()
